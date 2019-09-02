@@ -1,0 +1,135 @@
+<template>
+  <div class="content">
+    <el-form ref="form" label-width="80px">
+      <el-row>
+        <el-col :span="8">
+          <el-form-item label="商户编号" class="search_lable">
+            <el-input v-model="customer_code" placeholder="请输入商户名称"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="商户名称" class="search_lable">
+            <el-input v-model="customer_name" placeholder="请输入商户编号"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8" align="center" class="search_lable">
+          <el-button align="center" type="primary" @click="onSecher()">查询</el-button>
+        </el-col>
+      </el-row>
+    </el-form>
+    <el-table
+      :data="customer_list"
+      style="width: 100%;text-align: center;height: 100%"
+      border
+      :show-overflow-tooltip="true"
+      align: center
+      max-height="350">
+      <el-table-column
+        align="center"
+        prop="customer_code"
+        label="商户编号"
+        :show-overflow-tooltip="true"
+        resizable: true>
+      </el-table-column>
+      <el-table-column
+        align="center"
+        prop="customer_name"
+        :show-overflow-tooltip="true"
+        label="商户名称">
+      </el-table-column>
+      <el-table-column
+        prop="legal"
+        align="center"
+        label="法人">
+      </el-table-column>
+      <el-table-column
+        prop="address"
+        align="center"
+        :show-overflow-tooltip="true"
+        label="地址">
+      </el-table-column>
+      <el-table-column
+        fixed="right"
+        label="操作"
+        align="center"
+        width="100">
+        <template slot-scope="scope">
+          <el-button @click="choice(scope.row)" type="text" size="small">选择</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <el-pagination
+      background
+      layout="prev, pager, next"
+      @current-change="pageinations"
+      :total="total">
+    </el-pagination>
+  </div>
+</template>
+<script>
+var data = {};
+export default {
+  data() {
+    return {
+      customer_code: '',
+      customer_name: '',
+      customer_list: [],
+      total:0,
+    }
+  },
+  created() {
+    data = {
+      page: 1,
+      limit: 10,
+    };
+    this.getCustomer(data)
+  },
+  methods: {
+    onSecher() {
+      data = {
+        customer_code: this.customer_code,
+        customer_name: this.customer_name,
+      };
+      this.getCustomer(data);
+    },
+    pageinations(val) {
+      data = {
+        customer_code: this.customer_code,
+        customer_name: this.customer_name,
+        page: val,
+        limit: 10,
+      };
+      this.getCustomer(data);
+    },
+    getCustomer(data) {
+      let that = this;
+      this.axios
+        .post(process.env.BASE_API + "customer/getCustomerList",data)
+        .then(function(res) {
+          if (res.data.code == 0) {
+            that.total = res.data.count;
+            that.customer_list = res.data.data;
+          }
+        })
+        .catch(function(err) {
+          this.$message.error(err.response.data.msg);
+        });
+    },
+    choice(data) {
+      this.$emit('choiceData',data);
+    }
+  }
+}
+</script>
+
+<style lang="scss">
+  .search_lable {
+    margin-bottom: 0px !important;
+  }
+  .search_lable>.el-form-item__label {
+    width: 80px !important;
+  }
+ .search_lable .el-form-item__content{
+    margin-left: 80px !important;
+  }
+</style>

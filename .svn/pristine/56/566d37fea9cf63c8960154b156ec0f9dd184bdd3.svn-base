@@ -1,0 +1,330 @@
+<template>
+  <div class="content" :style="height">
+    <el-form ref="form" label-width="80px">
+      <el-row class="search_lable">
+        <el-col :span="8">
+          <el-form-item label="门店">
+            <el-select v-model="building.mall_id" clearable class="label_required" placeholder="请选择项目名称" prop="mall_id" @change="mallChoice">
+              <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name"
+                         :value="parseInt(mall.mall_id)" ></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="楼栋">
+            <el-select v-model="building.building_id" clearable placeholder="请选择" @change="buildings($event)">
+              <el-option value="">请选择</el-option>
+              <el-option
+                v-for="item in allBuild"
+                :key="item.building_id"
+                :label="item.building_name"
+                :value="item.building_id">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="楼层">
+            <el-select v-model="building.floor_id" clearable placeholder="请选择">
+              <el-option
+                v-for="item in allFloor"
+                :key="item.floor_id"
+                :label="item.floor_name"
+                :value="item.floor_id">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="8">
+          <el-form-item label="品类">
+            <el-input v-model="operation_type_name" suffix-icon="el-icon-search" clearable ref="getPayWayChang"
+                      @focus="categoryChoiceShow"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="店铺状态">
+            <el-select v-model="building.enabled" placeholder="请选择" clearable>
+              <el-option value="" label="请选择"></el-option>
+              <el-option value="1" label="有效"></el-option>
+              <el-option value="0" label="无效"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="数据收集方式" class="width_100">
+            <el-select v-model="building.sales_data_collection_type" clearable placeholder="请选择">
+              <el-option value="" label="请选择"></el-option>
+              <el-option value="1" label="租用POS"></el-option>
+              <el-option value="2" label="接口数据 "></el-option>
+              <el-option value="3" label="自动收集 "></el-option>
+              <el-option value="4" label="互动平台"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="8">
+          <el-form-item label="商铺编号">
+            <el-input v-model="building.store_code" clearable placeholder="请输入公司名称"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="商铺名称">
+            <el-input v-model="building.store_name" clearable placeholder="请输入公司名称"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="合同编号">
+            <el-input v-model="building.contract_code" clearable placeholder="请输入公司名称"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="8">
+          <el-form-item label="商户名称">
+            <el-input v-model="building.customer_name" clearable placeholder="请输入公司名称"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="商户编号">
+            <el-input v-model="building.customer_code" clearable placeholder="请输入公司名称"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8" align="center" class="search_lable" style="margin-top: 5px">
+          <el-button align="center" type="primary" size="small" @click="onSecher()">查询</el-button>
+          <el-button align="center" type="primary" size="small" @click="onSelectSub()">多选</el-button>
+        </el-col>
+      </el-row>
+    </el-form>
+    <el-table
+      :data="customer_list"
+      :height="heightTwo"
+      style="width: 100%;text-align: center;height: 100%"
+      @selection-change="onSelect"
+      border
+      :show-overflow-tooltip="true"
+      ref="multipleTable"
+      align: center
+      max-height="350">
+      <el-table-column
+        fixed
+        prop="unit_code"
+        type="selection"
+        align="center"
+        width="55">
+      </el-table-column>
+      <el-table-column
+        align="center"
+        prop="store_code"
+        label="商铺编码"
+        :show-overflow-tooltip="true"
+        resizable: true>
+      </el-table-column>
+      <el-table-column
+        align="center"
+        prop="store_name"
+        label="商铺名称"
+        :show-overflow-tooltip="true"
+        resizable: true>
+      </el-table-column>
+      <el-table-column
+        align="center"
+        prop="customer_name"
+        :show-overflow-tooltip="true"
+        label="商户名称">
+      </el-table-column>
+      <el-table-column
+        prop="customer_code"
+        :show-overflow-tooltip="true"
+        align="center"
+        label="商户编码">
+      </el-table-column>
+      <el-table-column
+        prop="contract_code"
+        align="center"
+        :show-overflow-tooltip="true"
+        min-width="110"
+        label="合同编码">
+      </el-table-column>
+      <el-table-column
+        fixed="right"
+        label="操作"
+        align="center"
+        width="100">
+        <template slot-scope="scope">
+          <el-button @click="choice(scope.row)" type="text" size="small">选择</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <el-pagination
+      :page-sizes="[10, 20, 30, 40, 50]"
+      :page-size="pageSize"
+      :current-page.sync="currentPage"
+      :total="total"
+      background
+      layout="prev, pager, next, total, sizes"
+      @current-change="pagination"
+      @size-change="handleSizeChange"/>
+    <el-dialog title="品类选择" :visible.sync="categoryChoice" v-if="categoryChoice" :append-to-body="true" width="70%"
+               height="70%" :close-on-click-modal="false">
+      <category v-on:categoryData="categoryData"></category>
+      <span slot="footer">
+        <el-button @click="categoryChoice = false">取 消</el-button>
+        <el-button type="primary" @click="categoryDataList">确 定</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+<script>
+  import category from '@/components/contract/category.vue' //品类
+  import building from '@/utils/building'
+
+  var data = {}
+  export default {
+    name: 'shops',
+    components: {
+      category
+    },
+    data() {
+      return {
+        mall_name: [], // 门店信息
+        building: {
+          mall_id:''
+        },
+        height: {
+          height: window.innerHeight * 0.7 + 'px'
+        },
+        heightTwo: window.innerHeight * 0.7 - 243 + 'px',
+        customer_list: [],
+        total: 0,//分页总数据
+        currentPage: 1,//当前页码
+        pageSize: 20,//当前页码
+        mall_id: 0,
+        multipleSelection: [],
+        allBuild: [],//楼栋
+        allFloor: [], //楼层
+        operation_type_name: '',//品类name
+        categoryChoice: false
+      }
+    },
+    props: ['mall', 'endtime'],
+    watch: {
+      mall: function(newVal, oldVal) {
+        this.building.mall_id = newVal;
+        this.getCustomer(this.building);
+        this.getAllBuild();
+      },
+      endtime: function(newVal, oldVal) {
+        this.building.mall_id = this.mall
+        this.building.endtime = newVal;
+        this.getCustomer(this.building);
+        this.getAllBuild();
+      }
+    },
+    created() {
+      building.Mall(this) // 先获取门店数据
+      if(this.mall) {
+        this.building.mall_id = this.mall;
+        this.getAllBuild(this.mall);
+        this.getCustomer(this.building)
+      }
+      if (!this.endtime) {
+        this.building.endtime = this.endtime;
+      }
+
+    },
+    methods: {
+      mallChoice(val) {
+        this.getAllBuild(val)
+      },
+      onSecher() {
+        this.getCustomer(this.building)
+      },
+      getCustomer(data) {//根据门店Id获取场地信息
+        let that = this
+        that.http.post('Repayment/getStoreListBycon', data).then(res => {
+          that.total = res.data.count
+          that.customer_list = res.data.data
+        }).catch((err) => {
+          that.$message.error(err.response.data.msg);
+        });
+      },
+      pagination(val) {
+        this.building.mall_id = this.mall
+        if (this.endtime != undefined && this.endtime != '') {
+          this.building.endtime = this.endtime
+        }
+        this.building.page = val
+        this.getCustomer(this.building)
+      },
+      handleSizeChange(val) {// 列表分页
+        this.building.mall_id = this.mall
+        if (this.endtime != undefined && this.endtime != '') {
+          this.building.endtime = this.endtime
+        }
+        this.building.limit = val
+        this.getCustomer(this.building)
+      },
+      buildings(val) {
+        let that = this;
+        that.http.post('floor_info/getAllFloor',   { mall_id: this.building.mall_id, building_id: val }).then(res => {
+          that.allFloor = res.data.data
+        }).catch((err) => {
+          that.$message.error(err.response.data.msg);
+        });
+      },
+      getAllBuild(val) {//商铺查询
+        let that = this;
+        that.http.post('building_info/getAllBuild', { mall_id: val }).then(res => {
+          that.allBuild = res.data.data;
+        }).catch((err) => {
+          that.$message.error(err.response.data.msg);
+        });
+      },
+      onSelect(val) {
+        let that = this
+        that.multipleSelection = val
+      },
+      onSelectSub() {
+        this.choice(this.multipleSelection)
+      },
+      choice(data) {
+        this.$emit('fieldData', data)
+      },
+      categoryData(data) {//品类赋值
+        this.building.operation_type = data.id
+        this.operation_type_name = data.text
+      },
+      categoryChoiceShow() {
+        if (this.building.operation_type == '' || this.building.operation_type == undefined) {
+          this.categoryChoice = true
+        } else {
+          this.operation_type_name = ''
+          this.building.operation_type = ''
+          this.$nextTick(() => {
+            this.$refs.getPayWayChang.blur()
+          })
+        }
+      },
+      categoryDataList() {
+        this.categoryChoice = false
+      }
+    }
+  }
+</script>
+
+<style lang="scss">
+  .el-form-item {
+    margin-bottom: 5px;
+  }
+
+  .search_lable > .el-form-item__label {
+    width: 80px !important;
+  }
+
+  .search_lable .el-form-item__content {
+    margin-left: 80px !important;
+  }
+</style>

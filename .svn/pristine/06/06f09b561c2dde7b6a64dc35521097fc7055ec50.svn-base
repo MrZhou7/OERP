@@ -1,0 +1,101 @@
+<template>
+  <main>
+    <el-tabs v-loading="loading" type="border-card">
+      <el-tab-pane label="总裁级">
+        <div><el-button size="small" @click="request(0)">一键导出</el-button></div>
+        <el-button v-for="(item, index) in tableData[0]" :key="index" @click="change(item)" type = "text" size="medium">{{ item.lastname }}</el-button>
+      </el-tab-pane>
+      <el-tab-pane label="总监级">
+        <div><el-button size="small" @click="request(1)">一键导出</el-button></div>
+        <el-button v-for="(item, index) in tableData[1]" :key="index" @click="change(item)" type = "text" size="medium">{{ item.lastname }}</el-button>
+      </el-tab-pane>
+      <el-tab-pane label="部长级">
+        <div><el-button size="small" @click="request(2)">一键导出</el-button></div>
+        <el-button v-for="(item, index) in tableData[2]" :key="index" @click="change(item)" type = "text" size="medium">{{ item.lastname }}</el-button>
+      </el-tab-pane>
+      <el-tab-pane label="高级经理级">
+        <div><el-button size="small" @click="request(3)">一键导出</el-button></div>
+        <el-button v-for="(item, index) in tableData[3]" :key="index" @click="change(item)" type = "text" size="medium">{{ item.lastname }}</el-button>
+      </el-tab-pane>
+      <el-tab-pane label="经理级">
+        <div><el-button size="small" @click="request(4)">一键导出</el-button></div>
+        <el-button v-for="(item, index) in tableData[4]" :key="index" @click="change(item)" type = "text" size="medium">{{ item.lastname }}</el-button>
+      </el-tab-pane>
+    </el-tabs>
+  </main>
+</template>
+
+<script>
+export default {
+  name: 'Index',
+  data() {
+    return {
+      loading: false,
+      tableData: [],
+    }
+  },
+  created() {
+    this.getUser();
+  },
+  methods: {
+    getUser() {
+      this.loading = true;
+      this.axios.post('http://10.1.200.173/oa/User/getUserList').then(res => {
+        console.log(res.data.data);
+        this.loading = false;
+        this.tableData = res.data.data;
+      });
+    },
+    change(data) {
+      this.$router.push({
+        path: '/person/form',
+        query: {
+          id: data.id
+        }
+      });
+    },
+    request(index) {
+      this.loading = true;
+      fetch('http://10.1.2.159:8080/v1/Excel/export?type=' + index, {
+        method: 'get',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+        .then(res => res.blob())
+        .then(data => {
+          console.log(data)
+          this.loading = false;
+          let blobUrl = window.URL.createObjectURL(data);
+          this.download(blobUrl);
+        });
+    },
+    download(blobUrl) {
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.download = '<员工信息>';
+      a.href = blobUrl;
+      a.click();
+      document.body.removeChild(a);
+    }
+  }
+};
+</script>
+
+<style scoped>
+.el-tabs{ margin: 10px; }
+  .wrap a{
+    padding: 8px 10px;
+    display: inline-block;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    background: #fff;
+    border: 1px solid #dcdfe6;
+    color: #606266;
+    text-align: center;
+    box-sizing: border-box;
+    font-size: 12px;
+    border-radius: 3px;
+    outline: 0;}
+</style>

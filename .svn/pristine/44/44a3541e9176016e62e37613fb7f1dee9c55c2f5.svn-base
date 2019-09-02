@@ -1,0 +1,76 @@
+<template>
+    <div id="businessWrap">
+      <div class="businessWrapTitle">商戶管理</div>
+      <el-form :inline="true" :model="formInline" class="demo-form-inline">
+        <el-form-item label="商户编号">
+          <el-input v-model="formInline.customer_code" placeholder="请输入商户编号"></el-input>
+        </el-form-item>
+        <el-form-item label="商户名称">
+          <el-input v-model="formInline.customer_name" placeholder="请输入商户名称"></el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="inquire">搜索</el-button>
+        </el-form-item>
+        <div class="demo-input-size">
+          <el-form-item>
+            <el-button type="primary" @click="addBusiness">新增商户</el-button>
+          </el-form-item>
+        </div>
+      </el-form>
+      <BusinessTable :tableData="inquireData"></BusinessTable>
+    </div>
+</template>
+
+<script>
+  import BusinessTable from '@/components/business/businessTable'
+    export default {
+        name: "businessManage",
+        components:{ BusinessTable },
+        data() {
+          return {
+            formInline: {
+              customer_code: '',
+              customer_name: ''
+            },
+            inquireData:[]//查询获取的数据
+          }
+        },
+        methods: {
+          //搜索
+          inquire() {
+            let busine = {
+              customer_code :this.formInline.customer_code,
+              customer_name :this.formInline.customer_name
+            };
+            this.axios({
+              method:'post',
+              data:busine,
+              url:process.env.BASE_API + 'customer/getCustomerList'
+            }).then((res)=>{
+              this.inquireData = res.data.data;
+                //console.log(this.inquireData)
+            })
+          },
+          //新增商户
+          addBusiness :function(){
+            this.$router.push({path:'/business/addBusiness'})
+          }
+        }
+    }
+</script>
+
+<style scoped lang="scss">
+  #businessWrap{
+    padding: 15px;
+    .businessWrapTitle{
+      position: relative;
+      height: 42px;
+      line-height: 42px;
+      padding: 0 15px;
+      border-bottom: 1px solid #f6f6f6;
+      color: #333;
+      border-radius: 2px 2px 0 0;
+      font-size: 14px;
+    }
+  }
+</style>

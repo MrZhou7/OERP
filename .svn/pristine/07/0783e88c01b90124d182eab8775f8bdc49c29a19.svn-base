@@ -1,0 +1,667 @@
+<template>
+  <el-main>
+    <el-form ref="form" :model="formInline" label-width="80px" class="search">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="门店选择">
+            <el-select v-model="formInline.mall_id" placeholder="请选择">
+              <el-option
+                v-for="(item,index) in preData.mall"
+                :key="index"
+                :label="item.mall_name"
+                store_name :value="parseInt(item.mall_id)">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="订单编号">
+            <el-input v-model="formInline.code" placeholder="请输入公司名称"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="订单起始日期" class="width_110">
+            <el-date-picker
+              v-model="start_date"
+              @change="startDate($event)"
+              type="daterange"
+              value-format="yyyy-MM-dd"
+              :picker-options="pickerOptions"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              align="right">
+            </el-date-picker>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="商铺">
+            <el-input v-model="store_name" suffix-icon="el-icon-search" @focus="fieldClick"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="配送状态">
+            <el-select v-model="formInline.deliver_status" placeholder="请选择">
+              <el-option value="" label="全部"></el-option>
+              <el-option value="1" label="已配送"></el-option>
+              <el-option value="2" label="未配送"></el-option>
+              <el-option value="3" label="已收货"></el-option>
+              <el-option value="4" label="部分配送"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="付款状态">
+            <el-select v-model="formInline.paid_status" placeholder="请选择">
+              <el-option value="" label="全部"></el-option>
+              <el-option value="1" label="付款完成"></el-option>
+              <el-option value="2" label="部分收款完成"></el-option>
+              <el-option value="3" label="首付完成"></el-option>
+              <el-option value="4" label="未付款"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="单据状态">
+            <el-select v-model="formInline.enabled" placeholder="请选择">
+              <el-option value="" label="全部"></el-option>
+              <el-option value="1" label="有效"></el-option>
+              <el-option value="2" label="无效"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="12">
+          <el-form-item label="配送日期">
+            <el-date-picker
+              v-model="deliver_start_date"
+              @change="deliverStartDate($event)"
+              type="daterange"
+              value-format="yyyy-MM-dd"
+              :picker-options="pickerOptions"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              align="right">
+            </el-date-picker>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="手机号码">
+            <el-input v-model="formInline.moblie_no" placeholder="请输入公司名称"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="合同编号">
+            <el-input v-model="formInline.contract_code" placeholder="请输入公司名称"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="导购姓名">
+            <el-input v-model="formInline.store_person_id" placeholder="请输入公司名称"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="导购电话">
+            <el-input v-model="formInline.corp_name" placeholder="请输入公司名称"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="回访状态">
+            <el-select v-model="formInline.end_type" placeholder="请选择">
+              <el-option value="" label="全部"></el-option>
+              <el-option value="1" label="已送货"></el-option>
+              <el-option value="2" label="未买"></el-option>
+              <el-option value="3" label="停机"></el-option>
+              <el-option value="4" label="未留电话"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6" align="center">
+          <el-button align="center" type="primary" @click="onSecher(formInline)">查询</el-button>
+        </el-col>
+      </el-row>
+    </el-form>
+    <div class="btn_bottom">
+      <el-button @click="deliveryDate()" :disabled="btnDisabled">配送日期调整</el-button>
+      <el-button @click="returnVisit('retrunVisit')" :disabled="btnDisabled">回访</el-button>
+      <el-button @click="returnVisit('scoreView')" :disabled="btnDisabled">评分查看</el-button>
+    </div>
+    <div class="contract_table">
+      <el-table
+        :data="tableData"
+        style="width: 100%;text-align: center"
+        border
+        align: center
+        ref="multipleTable"
+        highlight-current-row
+        tooltip-effect="dark"
+        @row-click="clickRow"
+        @selection-change="changFun"
+        :height="tableHeight">
+        <el-table-column
+          prop="id"
+          type="selection"
+          width="55">
+        </el-table-column>
+        <el-table-column
+          fixed
+          prop="code"
+          :show-overflow-tooltip="true"
+          label="订单编号"
+          resizable: true
+          algin:center
+          width="140">
+        </el-table-column>
+        <el-table-column
+          prop="contract_code"
+          :show-overflow-tooltip="true"
+          label="合同编号"
+          resizable: true
+          algin:center
+          width="140">
+        </el-table-column>
+        <el-table-column
+          prop="mobile_no"
+          label="手机号"
+          :show-overflow-tooltip="true"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="store_code"
+          :show-overflow-tooltip="true"
+          label="商铺编码"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="store_name"
+          :show-overflow-tooltip="true"
+          label="商铺名称"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="total_amt"
+          label="订单金额"
+          :show-overflow-tooltip="true"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="paid_amt"
+          label="支付金额"
+          width="120">
+        </el-table-column>
+
+        <el-table-column
+          prop="discount_amt"
+          label="订单折扣"
+          :show-overflow-tooltip="true"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="order_date"
+          label="订单日期"
+          :show-overflow-tooltip="true"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="paid_status"
+          label="付款状态"
+          :show-overflow-tooltip="true"
+          width="120">
+          <template slot-scope="scope">
+            <span v-if='scope.row.paid_status==0'>未付款</span>
+            <span v-if='scope.row.paid_status==1'>首付款完成</span>
+            <span v-if='scope.row.paid_status==2'>付款完成</span>
+            <span v-if='scope.row.paid_status==3'>部分收款完成</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="deliver_type"
+          :show-overflow-tooltip="true"
+          label="配送方式"
+          width="120">
+          <template slot-scope="scope">
+            <span v-if='scope.row.deliver_type==0'>不需要配送</span>
+            <span v-if='scope.row.deliver_type==1'>全天可配送</span>
+            <span v-if='scope.row.deliver_type==2'>工作日配送</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="deliver_status"
+          :show-overflow-tooltip="true"
+          label="配送状态"
+          width="120">
+          <template slot-scope="scope">
+            <span v-if='scope.row.deliver_status==0'>未配送</span>
+            <span v-if='scope.row.deliver_status==1'>部分配送</span>
+            <span v-if='scope.row.deliver_status==2'>已配送</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="deliver_date"
+          :show-overflow-tooltip="true"
+          label="配送日期"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="remark"
+          :show-overflow-tooltip="true"
+          label="订单备注"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="enabled"
+          label="订单状态"
+          :show-overflow-tooltip="true"
+          width="120">
+          <template slot-scope="scope">
+            {{ scope.row.enabled == 0 ? '无效' : '有效' }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="full_name"
+          label="顾客名称"
+          :show-overflow-tooltip="true"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="address_info"
+          label="详细地址"
+          :show-overflow-tooltip="true"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="created_time"
+          :show-overflow-tooltip="true"
+          label="创建日期"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="call_back_time"
+          :show-overflow-tooltip="true"
+          label="回访日期"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="end_type"
+          :show-overflow-tooltip="true"
+          label="回访状态"
+          width="120">
+          <template slot-scope="scope">
+            <span v-if='scope.row.end_type==0'>未知</span>
+            <span v-if='scope.row.end_type==1'>已送货</span>
+            <span v-if='scope.row.end_type==2'>送货中</span>
+            <span v-if='scope.row.end_type==3'>未送货</span>
+            <span v-if='scope.row.end_type==4'>联系不上</span>
+            <span v-if='scope.row.end_type==5'>问题处理中</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="note"
+          :show-overflow-tooltip="true"
+          label="回访记录"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="count"
+          :show-overflow-tooltip="true"
+          label="回访次数"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          fixed="right"
+          algin="center"
+          label="操作"
+          width="130">
+          <template slot-scope="scope">
+            <el-button
+              @click.native.prevent="viewRow(scope.$index, tableData)"
+              type="text"
+              size="small">
+              查看
+            </el-button>
+            <el-button v-if="scope.row.enabled == 0 ? false : true"
+                       @click.native.prevent="deleteRow(scope.$index, tableData)"
+                       type="text"
+                       size="small">
+              作废
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        background
+        layout="prev, pager, next"
+        @current-change="pageinations"
+        :current-page.sync="currentPage"
+        :total="total">
+      </el-pagination>
+    </div>
+    <!--配送日期修改-->
+    <el-dialog
+      title="修改配送方式"
+      width="500px"
+      top="3%"
+      :visible.sync="refundVisible" v-if="refundVisible">
+      <el-tabs type="border-card">
+        <el-tab-pane label="配送方式信息">
+          <el-form ref="delivery" :model="deliveryData" :rules="delivery" label-width="110px">
+            <el-form-item label="订单编号">
+              <el-input v-model="deliveryData.code" disabled></el-input>
+            </el-form-item>
+            <el-form-item label="原配送日期">
+              <el-input v-model="deliveryData.old_date" disabled></el-input>
+            </el-form-item>
+            <el-form-item label="新修改日期" class="label_required " prop="deliver_date">
+              <el-date-picker
+                v-model="deliveryData.deliver_date"
+                value-format="yyyy-MM-dd"
+                type="date"
+                style="width:100%"
+                placeholder="选择日期">
+              </el-date-picker>
+            </el-form-item>
+            <el-form-item label="修改配送方式" class="label_required " prop="deliver_type">
+              <el-select v-model="deliveryData.deliver_type" placeholder="请选择合同状态" disabled>
+                <el-option label="全部" value=""></el-option>
+                <el-option label="全天可配送" :value="0"></el-option>
+                <el-option label="假期配送" :value="1"></el-option>
+                <el-option label="工作日配送" :value="2"></el-option>
+                <el-option label="自提" :value="3"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="是否电话联系" class="label_required " prop="phone_first">
+              <el-select v-model="deliveryData.phone_first" placeholder="请选择合同状态" disabled>
+                <el-option label="需要" :value="1"></el-option>
+                <el-option label="不需要" :value="0"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="配送地址" class="label_required" prop="address_info">
+              <el-input v-model="deliveryData.address_info" disabled></el-input>
+            </el-form-item>
+          </el-form>
+        </el-tab-pane>
+        <el-tab-pane label="修改记录"></el-tab-pane>
+      </el-tabs>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="determineClick('delivery')">确 定</el-button>
+        <el-button @click="refundVisible = false">取 消</el-button>
+      </div>
+    </el-dialog>
+    <el-dialog
+      :title="name"
+      :visible.sync="viewVisible"
+      v-if="viewVisible" width="80%">
+      <OrderAdmin v-on:orderAdmin="orderAdmin" :view="view" :type="type"></OrderAdmin>
+    </el-dialog>
+    <el-dialog title="商铺选择" :visible.sync="fieldChoice" width="70%" height="70%" :close-on-click-modal="false">
+      <Shops v-on:fieldData="fieldData" :mall="formInline.mall_id"></Shops>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>var data = {}
+import { common } from '@/common/common'
+import OrderAdmin from '@/components/order/orderAdmin.vue' //新增订单退款
+import Shops from '@/components/order/shops.vue' //场地
+export default {
+  components: {
+    OrderAdmin,
+    Shops
+  },
+
+  data() {
+    return {
+      formInline: {},
+      tableData: [],
+      pickerOptions: {
+        shortcuts: [{
+          text: '最近一周',
+          onClick(picker) {
+            const end = new Date()
+            const start = new Date()
+            start.setTime(start.getTime())
+            end.setTime(end.getTime() + 3600 * 1000 * 24 * 7)
+            picker.$emit('pick', [start, end])
+          }
+        }, {
+          text: '最近一个月',
+          onClick(picker) {
+            const end = new Date()
+            const start = new Date()
+            start.setTime(start.getTime())
+            end.setTime(end.getTime() + 3600 * 1000 * 24 * 30)
+            picker.$emit('pick', [start, end])
+          }
+        }, {
+          text: '最近一年',
+          onClick(picker) {
+            const end = new Date()
+            const start = new Date()
+            start.setTime(start.getTime())
+            end.setTime(start.getTime() + 3600 * 1000 * 24 * 365)
+            picker.$emit('pick', [start, end])
+          }
+        }]
+      },
+      total: 0,//分页
+      name: '查看订单信息',
+      currentPage: 1,//当前页码
+      tableHeight: window.innerHeight - 395,
+      refundVisible: false, // 配送日期修改
+      deliveryData: {
+        deliver_date: '',
+        deliver_type: '',
+        phone_first: '',
+        address_info: ''
+      }, // 配送方式修改
+      preData: {}, // 预渲染数据
+      delivery: {
+        deliver_date: [{ required: true, message: '请选择修改日期', trigger: 'blur' }]
+        // deliver_type: [{ required: true, message: '请选择配送方式', trigger: 'change' }],
+        // phone_first: [{ required: true, message: '请填写是否电话联系', trigger: 'change' }],
+        // address_info: [{ required: true, message: '修改配送地址', trigger: 'blur' }]
+      },
+      viewVisible: false, // 查看
+      view: '',
+      type: '',
+      btnDisabled: true,
+      fieldChoice: false,
+      checkData: {}, //选中数据
+      store_name: '',//商铺名
+      start_date: '',//订单起始日期
+      deliver_start_date: ''//配送日期
+    }
+  },
+  created: function() {
+    this.getData()//预加载数据
+    const searchHistory = common.get('orderSearch')
+    if (searchHistory != null) {
+      this.formInline = searchHistory.search
+      if (searchHistory.search.start != undefined) {
+        this.start_date = [searchHistory.search.start, searchHistory.search.end]
+      } else if (searchHistory.search.deliver_start_date != undefined) {
+        this.deliver_start_date = [searchHistory.search.deliver_start_date, searchHistory.search.deliver_end_date]
+      }
+      common.getPreData(searchHistory.search, 'OrderMain/orderManage', this, 'orderSearch')
+    }
+  },
+  methods: {
+    getData() {//预渲染参数
+      let that = this
+      this.axios
+        .post(process.env.BASE_API + 'table_util/getPreData', { act: 'contract' })
+        .then(function(res) {
+          if (res.status == 200) {
+            that.preData = res.data.data
+          }
+        })
+        .catch(function(err) {
+          this.$message.error(err.response.data.msg)
+        })
+    },
+    clickRow(row) {//选择当前行
+      this.$refs.multipleTable.toggleRowSelection(row)
+      this.checkData = row
+      this.checkedList(row)
+    },
+    changFun(row) {//获取当前行数据
+      if (row.length > 1) { //去除多选
+        this.$refs.multipleTable.clearSelection()
+        this.$refs.multipleTable.toggleRowSelection(row.pop())
+      } else {
+        if (row.length != 0) {
+          this.checkedList(row[0])
+        }
+      }
+    },
+    checkedList(row) {
+      if (row != undefined) {
+        if (row.enabled != 0) {
+          switch (row.enabled) {
+            case 1:
+              this.btnDisabled = false
+              break
+            default:
+          }
+        }
+      }
+    },
+    pageinations(val) {
+      data = this.formInline
+      data.page = val
+      data.limit = 10
+      common.getPreData(data, 'OrderMain/orderManage', this, 'orderSearch')
+      common.set('orderSearch', { 'search': data })
+    },
+    startDate(e) {
+      if (e == null) {
+        common.remove('orderSearch')
+        this.formInline.start = ''
+        this.formInline.end = ''
+      } else {
+        this.formInline.start = e[0]
+        this.formInline.end = e[1]
+      }
+    },
+    deliverStartDate(e) {
+      if (e == null) {
+        common.remove('orderSearch')
+        this.formInline.deliver_start_date = ''
+        this.formInline.deliver_end_date = ''
+      } else {
+        this.formInline.deliver_start_date = e[0]
+        this.formInline.deliver_end_date = e[1]
+      }
+    },
+    onSecher() {//查询
+      const data = this.formInline
+      common.getPreData(data, 'OrderMain/orderManage', this, 'orderSearch')
+      common.set('orderSearch', { 'search': data })
+    },
+    //查看
+    viewRow(index, row) {
+      this.view = row[index].id
+      this.type = 'orderInfo'
+      this.viewVisible = true
+    },
+
+    // 新增
+    deliveryDate(row) {
+      this.deliveryData.code = this.view = this.checkData.code
+      this.deliveryData.id = this.view = this.checkData.id
+      this.deliveryData.old_date = this.view = this.checkData.deliver_date
+      this.deliveryData.deliver_type = this.view = this.checkData.deliver_type
+      this.deliveryData.phone_first = this.view = this.checkData.phone_first
+      this.deliveryData.address_info = this.view = this.checkData.address_info
+      this.refundVisible = true
+    },
+    // 修改配送方式
+    determineClick(formName) {
+      let that = this
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          this.axios
+            .post(process.env.BASE_API + 'OrderMain/editOrder', {
+              id: that.deliveryData.id,
+              deliver_date: that.deliveryData.deliver_date,
+              deliver_type: that.deliveryData.deliver_type,
+              phone_first: that.deliveryData.phone_first,
+              address_info: that.deliveryData.address_info
+            })
+            .then(function(res) {
+              if (res.data.errorCode == 0) {
+                that.$message.success('修改成功')
+                that.refundVisible = false
+                that.btnDisabled = true
+                const data = that.formInline
+                common.getPreData(data, 'OrderMain/orderManage', that, 'orderSearch')
+              }
+            }, err => {
+              that.$message.error(err.response.data.msg)
+            })
+        } else {
+          this.$message.error('请填写完整')
+        }
+      })
+    },
+    //回访
+    returnVisit(name) {
+      this.view = this.checkData.id
+      this.viewVisible = true
+      this.type = name;
+    },
+    fieldData(data) {//场地赋值
+      if (data.length == undefined) {
+        this.store_name = data.store_name
+        this.formInline.store_id = data.store_id
+      } else {
+        let store_id = '', store_name = ''
+        data.forEach((index, i) => {
+          if (i != data.length - 1) {
+            store_id += index.store_id + ','
+            store_name += index.store_name + ','
+          } else {
+            store_id += index.store_id
+            store_name += index.store_name
+          }
+          this.store_name = store_name
+          this.formInline.store_id = store_id
+        })
+      }
+      this.fieldChoice = false
+    },
+    fieldClick() {
+      //场地点击
+      if (this.formInline.mall_id == undefined) {
+        this.$message({
+          message: '请选择门店',
+          type: 'warning'
+        })
+      } else {
+        this.fieldChoice = false
+        this.$nextTick(() => {
+          this.fieldChoice = true
+        })
+      }
+    },
+    orderAdmin(data) {
+      if (data == 1) {
+        const data = this.formInline
+        common.getPreData(data, 'OrderMain/orderManage', this, 'orderSearch')
+      }
+    }
+  }
+}
+</script>
+
+<style rel="stylesheet/scss" lang="scss" scoped>
+  .search > .el-row > div > .el-form-item {
+    margin-bottom: 5px !important;
+  }
+</style>

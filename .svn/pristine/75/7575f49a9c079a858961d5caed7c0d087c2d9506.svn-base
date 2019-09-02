@@ -1,0 +1,171 @@
+<template>
+  <el-main>
+    <h5 class="storeType">场地类型列表</h5>
+    <div class="btn_bottom">
+      <el-button type="primary" @click="addStore">新增</el-button>
+    </div>
+    <div class="contract_table">
+      <el-table
+        ref="table"
+        :height="height"
+        :data="tableData"
+        :show-overflow-tooltip="true"
+        :highlight-current-row="true"
+        border
+        tooltip-effect="dark"
+        style="width: 100%">
+        <el-table-column
+          type="index"
+          label="序号"
+          width="55"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="notice_code"
+          min-width="120"
+          label="资源类别"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="contract_code"
+          min-width="100"
+          label="场地类型"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="contract_main_id"
+          min-width="100"
+          label="编号"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="mall_name"
+          min-width="100"
+          label="描述"/>
+        <el-table-column
+          fixed="right"
+          label="操作"
+          min-width="150">
+          <template slot-scope="scope">
+            <el-button type = "text" size="small" @click.native.prevent="edit(scope.$index, tableData)">编 辑</el-button>
+            <el-button type = "text" size="small" @click.native.prevent="deleteStore(scope.$index, tableData)">删 除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        :page-sizes="[20, 30, 40, 50]"
+        :page-size="20"
+        :current-page.sync="currentPage"
+        :total="total"
+        background
+        layout="prev, pager, next, total, sizes"
+        @size-change="handleSizeChange"
+        @current-change="pagination"/>
+    </div>
+    <!--新增和编辑的弹窗-->
+    <el-dialog
+      :close-on-click-modal="false"
+      :visible.sync="dialogVisible"
+      :title="title"
+      top="5%"
+      width="40%"
+      @close="handleClose('ruleForm')">
+      <div class="contract_table">
+        <el-tabs type="border-card">
+          <el-form ref="ruleForm" :model="ruleForm" label-width="100px" class="demo-ruleForm">
+            <el-form-item label="资源类别" prop="region">
+              <el-select v-model="ruleForm.unit_kind" placeholder="请选择资源类别">
+                <el-option v-for="item in BusinessUnit" :key="item.values_code" :label="item.values_name" :value="item.values_code"/>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="场地类型" prop="name">
+              <el-input v-model="ruleForm.name"/>
+            </el-form-item>
+            <el-form-item label="编号" prop="name">
+              <el-input v-model="ruleForm.name"/>
+            </el-form-item>
+            <el-form-item label="描述" prop="desc">
+              <el-input v-model="ruleForm.desc" type="textarea" autosize/>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="submitForm('ruleForm')">保 存</el-button>
+            </el-form-item>
+          </el-form>
+        </el-tabs>
+      </div>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+import { common } from '@/common/common';
+export default {
+  name: 'StoreType',
+  data() {
+    return {
+      loading: false,
+      total: 0,
+      currentPage: 1, // 页码
+      height: window.innerHeight - 250 + 'px',
+      tableData: [], // 场地类型列表
+      BusinessUnit: [], // 场地类型
+      title: '', // 新增或者编辑的title
+      dialogVisible: false, // 新增或者编辑的弹窗
+      index: 1, // 控制是新增保存还是编辑保存
+      ruleForm: {} // 表单
+    };
+  },
+  created() {
+    common.lookup('L013', this).then((res) => {
+      this.BusinessUnit = res;
+    });
+  },
+  methods: {
+    addStore() { // 新增
+      this.title = '新增场地类型信息';
+      this.dialogVisible = true;
+      this.index = 1;
+    },
+    edit() { // 编辑
+      this.title = '编辑场地类型信息';
+      this.dialogVisible = true;
+      this.index = 2;
+    },
+    deleteStore() { // 删除
+      common.del();
+    },
+    handleClose(formName) { // 关闭弹窗回调
+      this.$refs[formName].resetFields();
+    },
+    submitForm(formName) { // 新增编辑保存
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (this.index == 1) {
+
+          } else if (this.index == 2) {
+
+          }
+        } else {
+          this.$message({
+            message: '请输入完整信息！！！',
+            type: 'warning'
+          })
+          return false;
+        }
+      });
+    },
+    pagination(val) { // 分页功能
+      const data = this.formInline;
+      data.page = val;
+      common.getPreData(data, 'ChargeNotice/getList', this, 'costList');
+      common.set('costList', { 'search': data });
+    },
+    handleSizeChange(val) {
+      const data = this.formInline;
+      data.limit = val;
+      common.getPreData(data, 'ChargeNotice/getList', this, 'costList');
+      common.set('costList', { 'search': data });
+    }
+  }
+};
+</script>
+
+<style scoped>
+  .storeType{line-height: 22px;font-size: 14px;color: #606266;margin: 10px;padding: 10px;background: #f8f8f8 !important;box-sizing: border-box;font-weight: bold;}
+</style>

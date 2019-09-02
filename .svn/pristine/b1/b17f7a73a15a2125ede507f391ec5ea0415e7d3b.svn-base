@@ -1,0 +1,270 @@
+<template>
+  <div class="editSiteWrap">
+    <div class="siteStyle">编辑场地</div>
+    <blockquote class="topTitle">基本信息</blockquote>
+    <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm">
+      <el-form-item label="门店名称" prop="mall_id">
+        <el-col :span="6">
+          <el-select v-model="ruleForm.mall_id" placeholder="请选择活动区域" @change="getBuild" disabled>
+            <el-option v-for="(maill ,index) in mall_name" :key="index" :label="maill.mall_name" :value="maill.mall_id"></el-option>
+          </el-select>
+        </el-col>
+      </el-form-item>
+      <el-form-item label="所属楼栋" prop="building_id">
+        <el-col :span="6">
+          <el-select v-model="ruleForm.building_id" placeholder="请选择所属楼栋" @change="getFloor" disabled>
+            <el-option v-for="(build, index) in building_name" :key="index" :label="build.building_name" :value="build.building_id"></el-option>
+          </el-select>
+        </el-col>
+      </el-form-item>
+      <el-form-item label="所属楼层" prop="floor_id">
+        <el-col :span="6">
+          <el-select v-model="ruleForm.floor_id" placeholder="请选择所属楼层" disabled>
+            <el-option v-for="(floor,index) in floor_name" :key="index" :label="floor.floor_name" :value="floor.floor_id"></el-option>
+          </el-select>
+        </el-col>
+      </el-form-item>
+      <el-form-item label="资源类别" prop="unit_type">
+        <el-col :span="6">
+          <el-select v-model="ruleForm.unit_type" placeholder="请选择资源类别">
+            <el-option label="商铺" value="1"></el-option>
+            <el-option label="仓库" value="2"></el-option>
+            <el-option label="广告位" value="3"></el-option>
+            <el-option label="商铺外摆" value="4"></el-option>
+            <el-option label="展位" value="5"></el-option>
+          </el-select>
+        </el-col>
+      </el-form-item>
+      <el-form-item label="场地类型" prop="merchant_type_id">
+        <el-col :span="6">
+          <el-select v-model="ruleForm.merchant_type_id" placeholder="请选择场地类型">
+            <el-option label="户外场地" value="1"></el-option>
+            <el-option label="室内场地" value="2"></el-option>
+          </el-select>
+        </el-col>
+      </el-form-item>
+      <el-form-item label="经营区域" prop="operate_area_id">
+        <el-col :span="6">
+          <el-select v-model="ruleForm.operate_area_id" placeholder="请选择经营区域">
+            <el-option label="户外场地" value="1"></el-option>
+            <el-option label="室内场地" value="2"></el-option>
+          </el-select>
+        </el-col>
+      </el-form-item>
+      <el-form-item label="备注">
+        <el-col :span="6">
+          <el-input type="textarea" v-model="ruleForm.note"></el-input>
+        </el-col>
+      </el-form-item>
+      <blockquote class="topTitle">面积信息</blockquote>
+      <el-row v-for="(item,index) in ruleForm.siteList" :key="index" style="margin-bottom: 10px;">
+        <el-col :span="2"><div class="siteNav"><span>*</span>场地</div></el-col>
+        <el-col :span="16" class="field-border">
+          <el-col :span="10">
+            <el-form-item label="场地编号"
+                          :prop="'siteList.' + index + '.unit_code'"
+                          :rules="[{ required: true, message: '场地编号不能为空',trigger: 'change'},{max:10, message: '不超过10个字符', trigger: 'change'}]">
+              <el-input v-model="item.unit_code" disabled placeholder="英文、数字、限10个字符"/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="10">
+            <el-form-item label="测量面积"
+                          :prop="'siteList.' + index + '.building_area'"
+                          :rules="[{ required: true, message: '计租面积不能为空',trigger: 'change'}]">
+              <el-input v-model="item.building_area" autocomplete="off" placeholder="数字保留两位小数"/>
+            </el-form-item>
+          </el-col>
+        </el-col>
+        <el-col :span="2">
+          <div class="siteNav">
+            <el-button type="danger" v-if="ruleForm.siteList.length > 1" size="medium" @click="removeRow(index)">
+              删除
+            </el-button>
+          </div>
+        </el-col>
+      </el-row>
+      <el-form-item>
+        <el-button type="primary" size="medium" @click="addRow">新增场地</el-button>
+      </el-form-item>
+      <el-form-item style="padding: 10px 0;background-color: #f2f2f2;text-align: center;">
+        <el-button type="primary" @click="saveForm('ruleForm')">保存</el-button>
+        <el-button @click="cancle()">取消</el-button>
+      </el-form-item>
+    </el-form>
+  </div>
+</template>
+
+<script>
+  export default {
+    name: "editSite",
+    props:{
+      editSiteData:{
+        type:Object
+      }
+    },
+    data(){
+      return{
+        mall_name:"",//项目名称信息
+        building_name:"",//楼栋信息
+        floor_name:"",//获取楼层信息
+        ruleForm: {
+          mall_id: '',
+          building_id:"",
+          floor_id:"",
+          unit_type: '',
+          merchant_type_id:null,
+          operate_area_id:"",
+          note:"",
+          siteList: [{
+            building_area: '',
+            unit_code: '',
+          }]
+        },
+        rules: {
+          mall_id:[
+            { required: true, message: '请选择项目名称', trigger: 'change' }
+          ],
+          building_id: [
+            { required: true, message: '请选择所属楼栋', trigger: 'change' }
+          ],
+          floor_id: [
+            { required: true, message: '请选择所属楼层', trigger: 'change' }
+          ],
+          unit_type:[
+            { required: true, message: '请选择资源类别', trigger: 'change' }
+          ],
+          merchant_type_id:[
+            { required: true, message: '请选择场地类型', trigger: 'change' }
+          ],
+          operate_area_id:[
+            { required: true, message: '请选择经营区域', trigger: 'change' }
+          ]
+        }
+      }
+    },
+    watch:{
+      editSiteData:{
+        handler(val){
+          this.ruleForm = val;
+        },
+        immediate:true
+      }
+    },
+    methods:{
+      // 删除属性列
+      removeRow(index) {
+        this.ruleForm.siteList.splice(index, 1);
+      },
+      addRow(){
+        this.ruleForm.siteList.push({
+          building_area: '',
+          unit_code: '',
+        });
+      },
+      //获取项目名称信息
+      getSiteData(){
+        this.axios({
+          method:'post',
+          url:process.env.BASE_API + 'mall_info/getAllMall'
+        }).then((res)=>{
+          this.mall_name = res.data.data;
+        })
+      },
+      //获取楼栋信息
+      getBuild(index){
+        this.ruleForm.floor_id = '';
+        this.ruleForm.building_id = '';
+        let mallId = {mall_id : index};
+        this.axios({
+          method:'post',
+          data:mallId,
+          url:process.env.BASE_API + 'building_info/getAllBuild'
+        }).then((res)=>{
+          this.building_name = res.data.data;
+        })
+      },
+      //获取楼层信息
+      getFloor(index){
+        this.ruleForm.floor_id = '';
+        let foolId = {building_id:index};
+        this.axios({
+          method:'post',
+          data:foolId,
+          url:process.env.BASE_API + 'floor_info/getAllFloor'
+        }).then((res)=>{
+          this.floor_name = res.data.data;
+        })
+      },
+      //保存信息
+      saveForm(formName) {
+        console.log(this.ruleForm);
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            this.axios({
+              method:'post',
+              data:{
+                ruleForm:JSON.stringify(this.ruleForm)
+              },
+              url:process.env.BASE_API + 'property_unit/addUnit'
+            }).then((res)=>{
+              this.$emit("isEditShow",false)
+              this.$message({
+                message: '新增成功',
+                type: 'success'
+              });
+            })
+          } else {
+            this.$message({
+              message: '请完善信息！！！',
+              type: 'warning'
+            });
+          }
+        });
+      },
+      //取消
+      cancle(){
+        this.$emit("isEditShow",false)
+      }
+    },
+    created() {
+      this.getSiteData()//先获取数据
+    }
+  }
+</script>
+
+<style scoped lang="scss">
+  .editSiteWrap{
+    padding: 15px;
+  }
+  .siteStyle{
+    position: relative;
+    height: 42px;
+    line-height: 42px;
+    padding: 0 15px;
+    border-bottom: 1px solid #f6f6f6;
+    color: #333;
+    border-radius: 2px 2px 0 0;
+    font-size: 14px;
+  }
+  .topTitle{
+    margin-bottom: 10px;
+    padding: 10px 15px;
+    line-height: 22px;
+    border-left: 5px solid #009688;
+    border-radius: 0 2px 2px 0;
+    background-color: #f2f2f2;
+  }
+  .field-border {
+    border: 1px solid #e2e2e2;
+    border-radius: 5px;
+    padding: 10px;
+  }
+  .siteNav{
+    line-height: 84px;
+    text-align: center;
+    span{
+      color:red;
+    }
+  }
+</style>
+

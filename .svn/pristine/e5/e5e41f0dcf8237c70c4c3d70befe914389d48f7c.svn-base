@@ -1,0 +1,690 @@
+<script src="../../../icons/index.js"></script>
+<template>
+  <el-main>
+    <el-form ref="formInline" :model="formInline" label-width="100px" class="demo-ruleForm">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="门店">
+            <el-select v-model="formInline.mall_id" placeholder="请选择门店名称">
+              <el-option
+                v-for="(item,index) in preData.mall"
+                :key="index"
+                :label="item.mall_name"
+                store_name :value="parseInt(item.mall_id)">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="合同编号">
+            <el-input v-model="formInline.contract_code" clearable placeholder="请输入订单编号"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="单据类型">
+            <el-select v-model="formInline.customer_name" placeholder="请选择费用类型">
+              <el-option value="" label="请选择"></el-option>
+              <el-option label="已生效的收费单" value="1"></el-option>
+              <el-option label="待确认的收费单" value="2"></el-option>
+              <el-option label="取消中的收费单" value="3"></el-option>
+              <el-option label="以取消的收费单" value="4"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="收费单号">
+            <el-input v-model="formInline.code" clearable placeholder="请输入订单编号"></el-input>
+          </el-form-item>
+        </el-col>
+        </el-col>
+      </el-row>
+      <el-row v-show="formShow">
+        <el-col :span="6">
+          <el-form-item label="商铺编号">
+            <el-input v-model="formInline.store_code" clearable placeholder="请输入商铺编号"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商铺">
+            <el-input v-model="store_name" suffix-icon="el-icon-search" clearable ref="getPayWayChang"
+                      @focus="fieldClick"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商户名称">
+            <el-input v-model="formInline.customer_name" clearable placeholder="请输入商户名称"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商户编号">
+            <el-input v-model="formInline.customer_code" clearable placeholder="请输入商户编号"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row v-show="formShow">
+        <el-col :span="12">
+          <el-form-item label="立账起止日期">
+            <el-date-picker
+              v-model="start_date"
+              @change="startDate($event,1)"
+              type="daterange"
+              value-format="yyyy-MM-dd"
+              align="right"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              :picker-options="pickerOptions">
+            </el-date-picker>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="收款起止日期">
+            <el-date-picker
+              v-model="payment_start_date"
+              @change="startDate($event,2)"
+              type="daterange"
+              value-format="yyyy-MM-dd"
+              align="right"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              :picker-options="pickerOptions">
+            </el-date-picker>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row v-show="formShow">
+        <el-col :span="6">
+          <el-form-item label="是否同步">
+            <el-select v-model="formInline.sync_tag" clearable placeholder="请选择费用类型">
+              <el-option value="" label="全部"></el-option>
+              <el-option label="是" value="1"></el-option>
+              <el-option label="否" value="2"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="付款来源">
+            <el-select v-model="formInline.payment_type" clearable placeholder="请选择费用类型">
+              <el-option value="" label="请选择"></el-option>
+              <el-option label="直接付款" value="1"></el-option>
+              <el-option label="押金转付款" value="2"></el-option>
+              <el-option label="商户余额转付款" value="3"></el-option>
+              <el-option label="银行POS返款转付款" value="4"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6" align="center">
+          <el-button align="center" type="primary" @click="onSecher(formInline)">查询</el-button>
+          <span class="searchRight" @click="moreSearch">{{ formShow ? '收起' : '展开' }}<i :class="searchRight"/></span>
+        </el-col>
+      </el-row>
+    </el-form>
+    <div class="btn_bottom">
+      <el-button @click="receivables" :disabled="statusClick.receivables">收款</el-button>
+      <el-button @click="cancle" :disabled="statusClick.cancle">取消收款</el-button>
+      <el-button @click="confirmCancel" :disabled="statusClick.confirmCancel">确认取消收款</el-button>
+      <el-button @click="rvokeCancel" :disabled="statusClick.rvokeCancel">撤销取消中</el-button>
+      <el-button @click="openAnAccount" :disabled="statusClick.openAnAccount">修改立账日期</el-button>
+    </div>
+    <div class="contract_table">
+      <el-table
+        ref="multipleTable"
+        :height="tableHeight"
+        :data="tableData"
+        :show-overflow-tooltip="true"
+        border
+        tooltip-effect="dark"
+        style="width: 100%"
+        @row-click="clickRow"
+        @selection-change="changFun">
+        <el-table-column
+          type="selection"
+          width="55">
+        </el-table-column>
+        <el-table-column
+          prop="invoice_pay_code"
+          width="180"
+          :show-overflow-tooltip="true"
+          label="单据编码">
+        </el-table-column>
+        <el-table-column
+          prop="customer_name"
+          :show-overflow-tooltip="true" width="120"
+          label="商户名称">
+        </el-table-column>
+        <el-table-column
+          prop="total_amount"
+          :show-overflow-tooltip="true"
+          width="100"
+          label="收款金额">
+        </el-table-column>
+        <el-table-column
+          prop="paied_amount"
+          :show-overflow-tooltip="true"
+          width="100"
+          label="收款总额">
+        </el-table-column>
+        <el-table-column
+          prop="is_delete"
+          :show-overflow-tooltip="true"
+          width="100"
+          label="取消状态">
+          <template slot-scope="scope">
+            <span v-if="scope.row.is_delete == 0">未取消</span>
+            <span v-else-if="scope.row.is_delete == 1">取消确认中</span>
+            <span v-else-if="scope.row.is_delete == 2">取消生效</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column
+          prop="status"
+          :show-overflow-tooltip="true"
+          width="100"
+          label="单据状态">
+          <template slot-scope="scope">
+            <span v-if="scope.row.status == 0">取消</span>
+            <span v-else-if="scope.row.status == 1">编辑</span>
+            <span v-else-if="scope.row.status == 2">生效</span>
+            <span v-else-if="scope.row.status == 3">财务同步</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="user_id"
+          :show-overflow-tooltip="true"
+          width="100"
+          label="收费人">
+          <template slot-scope="scope">
+            <span v-if="scope.row.user_id == 0">李琳</span>
+            <span v-else-if="scope.row.user_id == 1">张瑞</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="payment_date"
+          :show-overflow-tooltip="true"
+          width="160"
+          label="收款日期">
+        </el-table-column>
+        <el-table-column
+          prop="created_time"
+          :show-overflow-tooltip="true"
+          width="160"
+          label="录入日期">
+        </el-table-column>
+        <el-table-column
+          prop="payment_type"
+          :show-overflow-tooltip="true"
+          width="140"
+          label="付款来源">
+          <template slot-scope="scope">
+            <span v-if="scope.row.payment_type == 1">直接付款</span>
+            <span v-else-if="scope.row.payment_type == 2">押金转付款</span>
+            <span v-else-if="scope.row.payment_type == 3">商户余额转付款</span>
+            <span v-else-if="scope.row.payment_type == 2">银行POS返款转付款</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="pay_media_type"
+          :show-overflow-tooltip="true"
+          width="140"
+          label="支付方式">
+          <template slot-scope="scope">
+            <span v-if="scope.row.pay_media_type == 0">账户转账</span>
+            <span v-if="scope.row.pay_media_type == 1">现金</span>
+            <span v-else-if="scope.row.pay_media_type == 2">银行POS刷卡</span>
+            <span v-else-if="scope.row.pay_media_type == 3">支票</span>
+            <span v-else-if="scope.row.pay_media_type == 4">汇票</span>
+            <span v-else-if="scope.row.pay_media_type == 5">转账</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="account_date"
+          :show-overflow-tooltip="true"
+          width="140"
+          label="立账日期">
+        </el-table-column>
+        <el-table-column
+          prop="sync_tag"
+          :show-overflow-tooltip="true"
+          width="100"
+          label="是否同步">
+          <template slot-scope="scope">
+            <span v-if="scope.row.sync_tag == 0">未同步</span>
+            <span v-if="scope.row.sync_tag == 1">已同步</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="sync_date"
+          :show-overflow-tooltip="true"
+          width="100"
+          label="同步时间">
+        </el-table-column>
+        <el-table-column
+          fixed="right"
+          label="操作"
+          width="80">
+          <template slot-scope="scope">
+            <el-button type="text" size="small" @click.native.prevent="checkCost(scope.row)">查 看
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        :page-sizes="[10, 20, 30, 40, 50]"
+        :page-size="pageSize"
+        :current-page.sync="currentPage"
+        :total="total"
+        background
+        layout="prev, pager, next, total, sizes"
+        @current-change="pagination"
+        @size-change="handleSizeChange"/>
+    </div>
+    <!--立账日期-->
+    <el-dialog
+      title="立账日期"
+      :visible.sync="accountsVisible"
+      width="70%" height="70%">
+      <el-form label-width="80px" :model="editClose" :rules="rentDetailRules" ref="rentDetailRules">
+        <el-row :gutter="20">
+          <el-col :span="16">
+            <el-form-item label="立账日期" class="label_required width_130" prop="accounts_date">
+              <el-date-picker
+                v-model="editClose.accounts_date"
+                type="date"
+                placeholder="选择日期">
+              </el-date-picker>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div slot="footer">
+        <el-button type="primary" @click="delaySub('rentDetailRules')">提交审核</el-button>
+        <el-button @click="accountsVisible = false">取 消</el-button>
+      </div>
+    </el-dialog>
+    <el-dialog title="商铺选择" :visible.sync="fieldChoice"  v-if="fieldChoice" width="70%" height="70%"  top="3%" :close-on-click-modal="false">
+      <Shops v-on:fieldData="fieldData" :mall="formInline.mall_id"></Shops>
+    </el-dialog>
+    <!--账单收款-->
+    <el-dialog title="收款" v-if="building" :fullscreen="true" :visible.sync="building" width="100%" height="60%" top="0%"
+               :close-on-click-modal="false">
+      <costRefund v-on:billAdminIndex="billAdminIndex" :cost="cost" :checkData="checkData"
+                  :invoiceHeaderId="invoiceHeaderId" :costName="costName"></costRefund>
+    </el-dialog>
+    <!--查看-->
+    <el-dialog title="查看" :visible.sync="costViewLists" width="80%" height="60%"
+               :close-on-click-modal="false">
+      <costViewList :costViewListId="costViewListId"></costViewList>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+  var data = {}
+  import { common } from '@/common/common'
+  import Shops from '@/components/order/shops.vue' //商铺
+  import costRefund from '@/components/costComponent/costRefund.vue' //
+  import costViewList from '@/components/costComponent/costViewList.vue' //
+
+  export default {
+    name: 'receivablesList',
+    components: {
+      Shops,
+      costRefund,
+      costViewList
+    },
+    data() {
+      return {
+        formInline: {},
+        tableData: [],
+        preData: {},
+        total: 0,//分页总数据
+        currentPage: 1,//当前页码
+        pageSize: 20,//当前页码
+        start_date: '', // 订单起始日期
+        fieldChoice: false,
+        pickerOptions: {
+          shortcuts: [{
+            text: '最近一周',
+            onClick(picker) {
+              const end = new Date()
+              const start = new Date()
+              start.setTime(start.getTime())
+              end.setTime(end.getTime() - 3600 * 1000 * 24 * 7)
+              picker.$emit('pick', [end, start]);
+            }
+          }, {
+            text: '最近一个月',
+            onClick(picker) {
+              const end = new Date()
+              const start = new Date()
+              start.setTime(start.getTime())
+              end.setTime(end.getTime() - 3600 * 1000 * 24 * 30)
+              picker.$emit('pick', [end, start]);
+            }
+          }, {
+            text: '最近一年',
+            onClick(picker) {
+              const end = new Date()
+              const start = new Date()
+              start.setTime(start.getTime())
+              end.setTime(start.getTime() - 3600 * 1000 * 24 * 365)
+              picker.$emit('pick', [end, start]);
+            }
+          }]
+        },
+        tableHeight: window.innerHeight - 295,
+        rentDetailRules: {
+          'accounts_date': [{ required: true, message: '立账日期不能为空', trigger: 'change' }]
+        },
+        formShow: false, // 更多搜索
+        searchRight: 'el-icon-arrow-down',
+        statusClick: {
+          receivables: false, //收款
+          cancle: true, //取消退款
+          confirmCancel: true, // 确认取消退款
+          rvokeCancel: true, // 撤销取消中
+          openAnAccount: true // 修改立账日期
+        },
+        editClose: {},
+        accountsVisible: false,// 修改立账日期
+        store_name: '',
+        checkData: {}, // 点击当前行数据
+        payment_start_date: '',
+        costName: '',//账单退收款title
+        cost: 'costList',
+        building: false,
+        invoiceHeaderId: '',
+        costViewLists: false,
+        costViewListId: ''
+      }
+    },
+    computed: {
+      act() {
+        return this.$store.getters.act
+      }
+    },
+    created() {
+      this.getData()
+      const searchHistory = common.get('receivablesListSearch')
+      if (searchHistory != null) {
+        this.formInline = searchHistory.search;
+        this.pageSize = searchHistory.search.limit;
+        common.getPreData(this.formInline, 'InvoicePayHeader/getList', this, 'receivablesListSearch')
+      }
+    },
+    methods: {
+      getData() {//预渲染参数
+        this.http.post('table_util/getPreData', { act: 'contract' }).then(res => {
+          this.preData = res.data.data
+        }).catch((err) => {
+          this.$message.error(err.response.data.msg);
+        });
+      },
+      moreSearch() {
+        if (this.searchRight == 'el-icon-arrow-down') {
+          this.formShow = true //更多搜索
+          this.searchRight = 'el-icon-arrow-up'
+          this.tableHeight = window.innerHeight - 432
+        } else {
+          this.formShow = false //更多搜索
+          this.searchRight = 'el-icon-arrow-down'
+          this.tableHeight = window.innerHeight - 295
+        }
+      },
+      onSecher() {
+        let that = this
+        data = that.formInline;
+        data.type = '+'
+        data.limit = this.pageSize;
+        let dataSearch = {
+          mall_id: that.formInline.mall_id,
+          type: '+',
+          limit: this.pageSize
+        }
+        common.getPreData(data, 'InvoicePayHeader/getList', this, 'receivablesListSearch')
+        common.set('receivablesListSearch', { 'search': dataSearch })
+      },
+      clickRow(row) {//选择当前行
+        this.$refs.multipleTable.toggleRowSelection(row)
+        this.checkData = row
+
+      },
+      changFun(row) {//获取当前行数据
+        if (row.length > 1) { //去除多选
+          this.$refs.multipleTable.clearSelection()
+          this.$refs.multipleTable.toggleRowSelection(row.pop())
+        }else {
+          if(row.length != 0) {
+           this.checkedList(row[0]);
+          }else {
+            this.checkType();
+          }
+        }
+      },
+      checkType(){
+        this.checkData = {};
+        this.statusClick.cancle = true //取消退款
+        this.statusClick.confirmCancel = true//确认取消退款
+        this.statusClick.rvokeCancel = true//确认取消退款
+        this.statusClick.openAnAccount = true//修改立账日期
+      },
+      checkedList(row) {
+        // if (row.enabled != 0) {
+          switch (parseInt(row.is_delete)) {
+            case 0:  //未取消
+              this.statusClick.cancle = false //取消退款
+              this.statusClick.confirmCancel = true//确认取消退款
+              this.statusClick.rvokeCancel = true//确认取消退款
+              if (row.sync_tag == 0) { // 判断是否同步
+                this.statusClick.openAnAccount = false//修改立账日期
+              } else {
+                this.statusClick.openAnAccount = true//修改立账日期
+              }
+              break
+            case 1: //取消确认中
+              this.statusClick.cancle = true
+              this.statusClick.confirmCancel = false
+              this.statusClick.rvokeCancel = false
+              if (row.sync_tag == 0) {
+                this.statusClick.openAnAccount = false//修改立账日期
+              } else {
+                this.statusClick.openAnAccount = true//修改立账日期
+              }
+              break
+            case 2: //取消生效
+              this.statusClick.cancle = true
+              this.statusClick.confirmCancel = true
+              this.statusClick.rvokeCancel = true
+              this.statusClick.openAnAccount = true
+              break
+          }
+        // }
+      },
+      pagination(val) { // 分页功能
+        const data = this.formInline
+        data.page = val
+        let dataSearch = {
+          mall_id: this.formInline.mall_id,
+          type: '+',
+          page: val
+        }
+        common.getPreData(data, 'InvoicePayHeader/getList', this, 'receivablesListSearch')
+        common.set('receivablesListSearch', { 'search': dataSearch })
+      },
+      handleSizeChange(val) {
+        const data = this.formInline;
+        data.limit = val;
+        let dataSearch = {
+          mall_id: this.formInline.mall_id,
+          type: '+',
+          limit: val
+        }
+        common.getPreData(data, 'InvoicePayHeader/getList', this, 'receivablesListSearch')
+        common.set('receivablesListSearch', { 'search': dataSearch })
+      },
+      checkCost(row) {
+        this.costViewLists = true
+        this.costViewListId = row.invoice_pay_id
+      },
+      startDate(e, index) { // 搜索日期赋值
+        switch (index) {
+          case 1:
+            e ? this.formInline.account_start_date = e[0] : this.formInline.account_start_date = '';
+            e ? this.formInline.account_end_date = e[1] : this.formInline.account_end_date = '';
+            break;
+          case 2:
+            e ? this.formInline.payment_start_date = e[0] : this.formInline.payment_start_date = '';
+            e ? this.formInline.payment_end_date = e[1] : this.formInline.payment_end_date = '';
+            break;
+        }
+      },
+      //收款
+      receivables() {
+        this.building = true
+      },
+      //取消退款
+      cancle() {
+        this.open(this, 'Bill/cancelCollection', this.checkData.invoice_pay_id, 1, 'InvoicePayHeader/getList', 'receivablesListSearch')
+      },
+      //确认取消退款
+      confirmCancel() {
+        this.open(this, 'Bill/cancelCollection', this.checkData.invoice_pay_id, 2, 'InvoicePayHeader/getList', 'receivablesListSearch')
+      },
+      //撤销取消中
+      rvokeCancel() {
+        this.open(this, 'Bill/cancelCollection', this.checkData.invoice_pay_id, 0, 'InvoicePayHeader/getList', 'receivablesListSearch')
+      },
+      cancleAll() {
+        this.statusClick.cancle = true //取消退款
+        this.statusClick.confirmCancel = true//确认取消退款
+        this.statusClick.rvokeCancel = true//确认取消退款
+        this.statusClick.openAnAccount = true//修改立账日期
+      },
+      //修改立账日期
+      openAnAccount() {
+        this.accountsVisible = true
+      },
+      delaySub(formName) { //立账日期保存
+        let that = this
+        let closeType = {
+          invoice_pay_id: this.checkData.invoice_pay_id,
+          account_date: common.dateFormat(that.editClose.accounts_date)
+        }
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            that.http.post('InvoicePayHeader/editAccountDate', closeType).then(res => {
+              that.$message({
+                message: '提交成功',
+                type: 'success'
+              })
+              that.accountsVisible = false
+              common.getPreData(that.formInline, 'InvoicePayHeader/getList', that, 'receivablesListSearch')
+            }).catch((err) => {
+              that.$message.error(err.response.data.msg);
+            });
+
+          } else {
+            this.$message({
+              message: '您有信息尚未填写完',
+              type: 'warning'
+            })
+            return false
+          }
+        })
+      },
+      fieldClick() {
+        //场地点击
+        if (!this.formInline.mall_id) {
+          this.$message({
+            message: '请选择门店',
+            type: 'warning'
+          })
+        } else {
+          console.log(this.formInline.store_id)
+          console.log(this.store_name)
+          if (this.formInline.store_id == '' || this.formInline.store_id == undefined && this.store_name == '') {
+            this.fieldChoice = true
+          } else {
+            this.formInline.store_id = ''
+            this.store_name = ''
+            this.$nextTick(() => {
+              this.$refs.getPayWayChang.blur()
+            })
+          }
+        }
+      },
+      fieldData(data) {//场地赋值
+        if (data.length == undefined) {
+          this.store_name = data.store_name
+          this.formInline.store_id = data.store_id
+        } else {
+          let store_id = '', store_name = ''
+          data.forEach((index, i) => {
+            if (i != data.length - 1) {
+              store_id += index.store_id + ','
+              store_name += index.store_name + ','
+            } else {
+              store_id += index.store_id
+              store_name += index.store_name
+            }
+            this.store_name = store_name
+            this.formInline.store_id = store_id
+          })
+        }
+        this.fieldChoice = false
+      },
+      open(that, url, data, num, update, search) {
+        that.$prompt('请输入原因', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          inputValidator: function(v) {
+            let returns = false
+            if (v == null || v == '') {
+              returns = false
+            } else {
+              returns = true
+            }
+            return returns
+          },
+          inputErrorMessage: '请输入内容'
+        }).then(({ value }) => {
+          this.http.post(url,{
+            invoice_pay_id: data,
+            is_delete: num,
+            note: value
+          }).then(res => {
+            that.$message({ type: 'success', message: '成功!' })
+            if (num = 2) {
+              that.checkData.status = 0
+            }
+            common.getPreData(that.formInline, 'InvoicePayHeader/getList', that, 'receivablesListSearch')
+          }).catch((err) => {
+            that.$message.error(err.response.data.msg);
+          });
+        }).catch(() => {
+          that.$message({ type: 'info', message: '已取消' })
+        })
+      },
+      // 收款-退货后
+      billAdminIndex(data) {
+        if (data == 0) {
+          setTimeout(() => {
+            this.building = false
+            common.getPreData(data, 'InvoicePayHeader/getList', this, 'receivablesListSearch')
+          }, 500)
+        } else {
+          this.viewRow(data)
+        }
+      }
+    }
+  }
+</script>
+
+<style scoped>
+  .el-form-item {
+    margin-bottom: 5px;
+  }
+</style>

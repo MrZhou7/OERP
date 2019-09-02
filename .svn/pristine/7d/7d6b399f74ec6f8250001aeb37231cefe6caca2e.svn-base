@@ -1,0 +1,73 @@
+export default {
+  Mall(that) { // 获取项目名称信息
+    that.http.post('mall_info/getAllMall').then((res) => {
+      that.mall_name = res.data.data;
+    });
+  },
+  build(that, index) { // 获取楼栋信息
+    that.http.post('building_info/getAllBuild', { mall_id: index }).then((res) => {
+      that.building_name = res.data.data;
+    });
+  },
+  floor(that, index) { // 获取楼层信息
+    that.http.post('floor_info/getAllFloor', { building_id: index }).then((res) => {
+      that.floor_name = res.data.data;
+    });
+  },
+  getPayType(that) { // 获取支付大类
+    that.http.post('order_pay/getPayType').then((res) => {
+      console.log(res)
+      that.getPayTypeList = res.data.data;
+    });
+  },
+  getAllMerchantType(that) { // 获取所有的场地类型
+    that.http.post('merchantType/getAreaList').then((res) => {
+      that.allMerchantType = res.data.data;
+    });
+  },
+  find(str, cha, num) { // 截取字符位置
+    var x = str.indexOf(cha);
+    for (var i = 0;i < num; i++) {
+      x = str.indexOf(cha, x + 1);
+    }
+    return x;
+  },
+  radioBtn(row, item) { // 获取当前行数据
+    if (row.length > 1) { // 去除多选
+      item.clearSelection();
+      item.toggleRowSelection(row.pop());
+    }
+  },
+  publicTime() { // 公用的时间事件
+    return {
+      shortcuts: [{
+        text: '最近一周',
+        onClick(picker) {
+          const end = new Date();
+          const start = new Date();
+          start.setTime(start.getTime());
+          end.setTime(end.getTime() - 3600 * 1000 * 24 * 7);
+          picker.$emit('pick', [end, start]);
+        }
+      }, {
+        text: '最近一个月',
+        onClick(picker) {
+          const end = new Date();
+          const start = new Date();
+          start.setTime(start.getTime());
+          end.setTime(end.getTime() - 3600 * 1000 * 24 * 30);
+          picker.$emit('pick', [end, start]);
+        }
+      }, {
+        text: '最近一年',
+        onClick(picker) {
+          const end = new Date();
+          const start = new Date();
+          start.setTime(start.getTime());
+          end.setTime(start.getTime() - 3600 * 1000 * 24 * 365);
+          picker.$emit('pick', [end, start]);
+        }
+      }]
+    };
+  }
+};

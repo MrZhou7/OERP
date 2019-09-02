@@ -1,0 +1,376 @@
+<template>
+  <el-main>
+    <el-form :model="formInline" class="demo-form-inline" label-width="80px">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="门店名称">
+            <el-select v-model="formInline.mall_id" clearable placeholder="请选择门店名称">
+              <el-option
+                v-for="(item,index) in preData.mall"
+                :key="index"
+                :label="item.mall_name"
+                :value="item.mall_id">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="楼栋">
+            <el-select v-model="formInline.building_id"  placeholder="请选择所属楼栋" clearable @focus="getBuild">
+              <el-option v-for="build in building_name" :key="build.building_id" :label="build.building_name" :value="build.building_id"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="楼层">
+            <el-select v-model="formInline.floor_id"  placeholder="请选择所属楼层" clearable @focus="getFloor">
+              <el-option v-for="floor in floor_name" :key="floor.floor_id" :label="floor.floor_name" :value="floor.floor_id"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="状态">
+            <el-select v-model="formInline.enabled" clearable placeholder="请选择费用类型">
+              <el-option value="" label="全部"></el-option>
+              <el-option label="启用" value="1"></el-option>
+              <el-option label="停用" value="0"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="商铺编码">
+            <el-input v-model="formInline.store_code" clearable placeholder="请输入商铺编码"></el-input>
+
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商铺名称">
+            <el-input v-model="formInline.store_name" clearable placeholder="请输入商铺名称"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="合同ID">
+            <el-input v-model="formInline.contract_main_id" clearable placeholder="请输入合同ID"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="合同编号">
+            <el-input v-model="formInline.contract_code" clearable placeholder="请输入合同编号"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="商户编号">
+            <el-input v-model="formInline.customer_code" clearable placeholder="请输入商户编号"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item>
+            <el-button type="primary" @click="onSecher()">搜索</el-button>
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+    <div class="btn_bottom">
+      <el-button type="primary" @click="addShop">新增</el-button>
+    </div>
+    <div class="contract_table">
+      <el-table
+        ref="tableOne"
+        :height="tableHeight"
+        :data="tableData"
+        :show-overflow-tooltip="true"
+        border
+        tooltip-effect="dark"
+        style="width: 100%"
+        @selection-change="changFun"
+        @row-click="clickRow">
+        <el-table-column
+          fixed
+          type="selection"
+          width="55"/>
+        <el-table-column
+          prop="enabled"
+          label="状态"
+          min-width="80">
+          <template slot-scope="scope">
+              {{ scope.row.enabled == 1 ? '启用': '停用' }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="customer_code"
+          label="商户编号"
+          :show-overflow-tooltip="true"
+          min-width="150"/>
+        <el-table-column
+          prop="customer_name"
+          label="商户名称"
+          :show-overflow-tooltip="true"
+          min-width="150"/>
+        <el-table-column
+          prop="store_code"
+          label="商铺编码"
+          :show-overflow-tooltip="true"
+          min-width="150"/>
+        <el-table-column
+          prop="store_name"
+          label="商铺名称"
+          :show-overflow-tooltip="true"
+          min-width="150"/>
+        <el-table-column
+          prop="building_name"
+          label="楼栋"
+          :show-overflow-tooltip="true"
+          width="150">
+        </el-table-column>
+
+        <el-table-column
+          prop="floor_name"
+          label="楼层"
+          :show-overflow-tooltip="true"
+          min-width="120"/>
+        <el-table-column
+          prop="contract_main_id"
+          label="合同ID"
+          :show-overflow-tooltip="true"
+          min-width="150">
+        </el-table-column>
+        <el-table-column
+          prop="contract_code"
+          label="合同编号"
+          :show-overflow-tooltip="true"
+          min-width="150">
+        </el-table-column>
+        <el-table-column
+          prop="valid_from"
+          label="开始时间"
+          :show-overflow-tooltip="true"
+          min-width="150">
+        </el-table-column>
+        <el-table-column
+          prop="valid_to"
+          label="结束时间"
+          :show-overflow-tooltip="true"
+          min-width="150">
+        </el-table-column>
+        <el-table-column
+          prop="terminated_on"
+          label="终止日期"
+          :show-overflow-tooltip="true"
+          min-width="150">
+        </el-table-column>
+        <el-table-column
+          prop="operation_type_name"
+          label="品类"
+          :show-overflow-tooltip="true"
+          min-width="150">
+        </el-table-column>
+        <el-table-column
+          prop="brand_name"
+          label="品牌"
+          :show-overflow-tooltip="true"
+          min-width="150">
+        </el-table-column>
+        <el-table-column
+          prop="area_name"
+          label="经营区域"
+          :show-overflow-tooltip="true"
+          min-width="150">
+          <template slot-scope="scope">
+             <span v-for="(item, index) in nusinessArea">
+               {{scope.row.status == item.values_code ? item.values_name : ''}}
+             </span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="area"
+          label="商铺面积"
+          :show-overflow-tooltip="true"
+          min-width="150">
+        </el-table-column>
+        <el-table-column
+          fixed="right"
+          label="操作"
+          width="200">
+          <template slot-scope="scope">
+            <el-button type="text" size="small" @click.native.prevent="viewRow(scope.row)">查看</el-button>
+            <el-button type="text" size="small" @click.native.prevent="editRow(scope.row)">编辑</el-button>
+            <el-button style="color:red" v-if="scope.row.enabled == 1" @click.native.prevent="enableRow(scope.row,0)" type="text" size="small">停用</el-button>
+            <el-button v-if="scope.row.enabled == 0" @click.native.prevent="enableRow(scope.row,1)" type="text" size="small">启用</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        :page-sizes="[10, 20, 30, 40, 50]"
+        :page-size="pageSize"
+        :current-page.sync="currentPage"
+        :total="total"
+        background
+        layout="prev, pager, next, total, sizes"
+        @current-change="pagination"
+        @size-change="handleSizeChange"/>
+    </div>
+    <!--查看编辑弹窗-->
+    <el-dialog :title="name" :visible.sync="addShopDialog"  v-if="addShopDialog" width="80%" height="80%" top="3%" :close-on-click-modal="false">
+      <saleAddShop v-on:addShopData="addShopData" :addShopId="addShopId" :addShopType="addShopType"></saleAddShop>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+  import saleAddShop from '@/components/sale/shops/saleAddShop.vue' //商铺
+  import { common } from '@/common/common';
+  import building from '@/utils/building';
+  export default {
+    name: 'shopsManagement',
+    components: { saleAddShop },
+    data() {
+      return {
+        mall_name: [], // 门店信息
+        building_name: [], // 楼栋
+        preData: {},
+        floor_name: [], // 楼层
+        formInline: {}, // 楼层
+        total: 0, // 分页
+        currentPage: 1, // 页码
+        pageSize: 20,//当前页码
+        tableHeight: window.innerHeight - 342,
+        tableData: [], // 查询获取的数据
+        nusinessArea: [], // 经营方式
+        store_name: '',
+        checkData:[],
+        addShopDialog:false,
+        addShopId: '',
+        addShopType: '',
+      };
+    },
+    created() {
+      this.getData(); // 先获取门店数据
+      const searchHistory = common.get('shopManagementSearch');
+      if (searchHistory != null) {
+        this.formInline = searchHistory.search;
+        common.getPreData(searchHistory.search, 'StoreSynthesize/getStoreLists', this, 'shopManagementSearch');
+      }
+    },
+    methods: {
+      getData() {//预渲染参数
+        let that = this
+        this.http.post('table_util/getPreData', { act: 'contract' }).then(function(res) {
+          that.preData = res.data.data
+        })
+        common.lookup('L010', this).then((res) => {
+          this.nusinessArea = res
+        })
+      },
+      getBuild() { // 获取楼栋信息
+        if(!this.formInline.mall_id) {
+          this.$message({
+            message: '请选择门店',
+            type: 'warning'
+          })
+        }else {
+          building.build(this, this.formInline.mall_id);
+        }
+      },
+      getFloor() { // 获取楼层信息
+        if(!this.formInline.building_id) {
+          this.$message({
+            message: '请选择楼栋',
+            type: 'warning'
+          })
+        }else {
+          building.floor(this, this.formInline.building_id);
+        }
+      },
+      onSecher() {
+        const data = this.formInline
+        data.limit = this.pageSize;
+        data.page = this.currentPage;
+        common.getPreData(data, 'StoreSynthesize/getStoreLists', this, 'shopManagementSearch');
+        common.set('shopManagementSearch', { 'search': data });
+      },
+      pagination(val) { // 分页
+        this.currentPage = val;
+        const data = this.formInline
+        data.page = val;
+        data.limit = this.pageSize;
+        common.getPreData(data, 'cStoreSynthesize/getStoreLists', this, 'shopManagementSearch');
+        common.set('shopManagementSearch', { 'search': data });
+      },
+      handleSizeChange(val) {
+        this.pageSize = val;
+        const data = this.formInline
+        data.page = this.currentPage;
+        data.limit = val;
+        common.getPreData(data, 'StoreSynthesize/getStoreLists', this, 'shopManagementSearch');
+        common.set('shopManagementSearch', { 'search': data });
+      },
+      clickRow(row) { // 点击table的row
+        this.$refs.tableOne.toggleRowSelection(row);
+        this.checkData = row
+      },
+      changFun(row) {//获取当前行数据
+        common.radioBtn(row, this.$refs.multipleTable, this, 2)
+      },
+      addShop: function() { // 新增商户
+        this.addShopDialog = true;
+        this.addShopId = '';
+        this.name = '新增商铺';
+        this.addShopType = 1;
+      },
+      viewRow(row) {
+        this.addShopDialog = true;
+        this.addShopId = row.store_id;
+        this.addShopType = 2;
+        this.name = '查看商铺';
+      },
+      editRow(row) {
+        this.addShopDialog = true;
+        this.addShopId = row.store_id;
+        this.addShopType = 3;
+        this.name = '编辑商铺';
+      },
+      enableRow(row,type) {
+        let title = '';
+        let that = this;
+        if(type == 0) {
+          title = '是否停用'
+        }else{
+          title = '是否启用'
+        }
+        this.$confirm(title, '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning',
+          center: true
+        }).then(() => {
+          that.http
+            .post('StoreSynthesize/modifiyStateStore', { store_id: row.store_id , type:type})
+            .then((res) => {
+              that.onSecher();
+            })
+            .catch((err) => {
+              that.$message.error(err.response.data.msg)
+            })
+        }).catch(() => {
+          that.$message({
+            type: 'info',
+            message: '已取消'
+          })
+        })
+      },
+      addShopData(data) {
+        this.onSecher();
+        this.addShopDialog = data;
+      },
+    }
+  };
+</script>
+
+<style scoped lang="scss">
+  #businessWrap{padding: 15px;}
+  .el-form-item {margin-bottom: 5px;}
+</style>

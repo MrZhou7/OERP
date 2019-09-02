@@ -1,0 +1,374 @@
+<template>
+  <div>
+    <el-tabs type="border-card">
+      <el-tab-pane label="订单信息">
+        <el-form :model="ruleForm" label-width="100px" class="demo-ruleForm">
+          <el-row>
+            <el-col :span="6">
+              <el-form-item label="订单编号">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="配送状态">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="导购员">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="门店名称">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="6">
+              <el-form-item label="商铺编号">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="商铺名称">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="订单金额">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="缴款金额">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="6">
+              <el-form-item label="消费者">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="联系电话">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="交易日期">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="配送日期">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-form-item label="配送地址">
+            <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+          </el-form-item>
+          <el-form-item label="参与活动">
+            <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+          </el-form-item>
+          <el-form-item label="备注信息">
+            <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+          </el-form-item>
+        </el-form>
+        <el-table
+          ref="table"
+          :show-overflow-tooltip="true"
+          :data="tableData"
+          height="60%"
+          border
+          tooltip-effect="dark"
+          style="width: 100%">
+          <el-table-column
+            type="index"
+            label="序号"
+            width="55">
+          </el-table-column>
+          <el-table-column
+            :show-overflow-tooltip="true"
+            prop="dept_code"
+            min-width="180"
+            label="商铺编号">
+          </el-table-column>
+          <el-table-column
+            prop="role_name"
+            min-width="100"
+            label="商品类型">
+          </el-table-column>
+          <el-table-column
+            prop="subject_code"
+            min-width="100"
+            label="商品名称">
+          </el-table-column>
+          <el-table-column
+            prop="subject_code"
+            min-width="100"
+            label="原价">
+          </el-table-column>
+          <el-table-column
+            prop="subject_code"
+            min-width="100"
+            label="现价">
+          </el-table-column>
+          <el-table-column
+            prop="subject_code"
+            min-width="100"
+            label="数量">
+          </el-table-column>
+          <el-table-column
+            prop="subject_code"
+            min-width="100"
+            label="总额">
+          </el-table-column>
+          <el-table-column
+            prop="subject_code"
+            min-width="100"
+            label="备注">
+          </el-table-column>
+        </el-table>
+      </el-tab-pane>
+      <el-tab-pane label="支付信息">
+        <el-form :model="ruleForm" label-width="100px" class="demo-ruleForm">
+          <el-row>
+            <el-col :span="6">
+              <el-form-item label="订单编号">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="配送状态">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6"></el-col>
+            <el-col :span="6">
+              <el-form-item label="门店名称">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="6">
+              <el-form-item label="商铺编号">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="商铺名称">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="订单金额">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="缴款金额">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+        <el-table
+          ref="table"
+          :show-overflow-tooltip="true"
+          :data="tableData"
+          height="60%"
+          border
+          tooltip-effect="dark"
+          style="width: 100%">
+          <el-table-column
+            :show-overflow-tooltip="true"
+            prop="dept_code"
+            min-width="180"
+            label="支付日期">
+          </el-table-column>
+          <el-table-column
+            prop="role_name"
+            min-width="100"
+            label="支付方式">
+          </el-table-column>
+          <el-table-column
+            prop="subject_code"
+            min-width="100"
+            label="支付金额">
+          </el-table-column>
+          <el-table-column
+            prop="subject_code"
+            min-width="100"
+            label="手续费">
+          </el-table-column>
+          <el-table-column
+            prop="subject_code"
+            min-width="100"
+            label="支付净额">
+          </el-table-column>
+          <el-table-column
+            prop="subject_code"
+            min-width="100"
+            label="取消状态">
+          </el-table-column>
+          <el-table-column
+            prop="subject_code"
+            min-width="100"
+            label="操作员">
+          </el-table-column>
+        </el-table>
+      </el-tab-pane>
+      <el-tab-pane label="回访信息">
+        <el-form :model="ruleForm" label-width="100px" class="demo-ruleForm">
+          <el-row>
+            <el-col :span="6">
+              <el-form-item label="订单编号">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="配送状态">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="导购员">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="门店名称">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="6">
+              <el-form-item label="商铺编号">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="商铺名称">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="订单金额">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="缴款金额">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="6">
+              <el-form-item label="消费者">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="联系电话">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="交易日期">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="配送日期">
+                <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-form-item label="配送地址">
+            <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+          </el-form-item>
+        </el-form>
+        <div class="btn_bottom">
+          <el-button type="success">新增回访</el-button>
+        </div>
+        <el-table
+          ref="table"
+          :show-overflow-tooltip="true"
+          :data="tableData"
+          height="60%"
+          border
+          tooltip-effect="dark"
+          style="width: 100%">
+          <el-table-column
+            :show-overflow-tooltip="true"
+            prop="dept_code"
+            min-width="180"
+            label="回访编号">
+          </el-table-column>
+          <el-table-column
+            prop="role_name"
+            min-width="100"
+            label="回访日期">
+          </el-table-column>
+          <el-table-column
+            prop="subject_code"
+            min-width="100"
+            label="回访人">
+          </el-table-column>
+          <el-table-column
+            prop="subject_code"
+            min-width="100"
+            label="回访状态">
+          </el-table-column>
+          <el-table-column
+            prop="subject_code"
+            min-width="100"
+            label="问题记录">
+          </el-table-column>
+          <el-table-column
+            fixed="right"
+            label="查看"
+            min-width="180">
+            <template slot-scope="scope">
+              <el-button type = "text" size="small" @click.native.prevent="checkRol(scope.$index, tableData)">查 看</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-tab-pane>
+      <el-tab-pane label="订单评分">
+        <el-rate
+          v-model="ruleForm.value3"
+          :colors="['#99A9BF', '#F7BA2A', '#FF9900']"
+          show-text>
+        </el-rate>
+      </el-tab-pane>
+    </el-tabs>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'CheckOrder',
+  data() {
+    return {
+      ruleForm: {
+        role_name: '',
+        value3: null,
+      },
+      tableData: [],
+    };
+  }
+};
+</script>
+
+<style scoped>
+
+</style>

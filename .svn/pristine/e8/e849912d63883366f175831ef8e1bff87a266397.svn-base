@@ -1,0 +1,103 @@
+<template>
+    <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm">
+      <blockquote class="topTitle">基础信息</blockquote>
+      <el-form-item label="角色名称" prop="name">
+        <el-input v-model="ruleForm.name"></el-input>
+      </el-form-item>
+      <el-form-item label="角色描述" prop="desc">
+        <el-input type="textarea" v-model="ruleForm.desc" autosize></el-input>
+      </el-form-item>
+      <blockquote class="topTitle">权限配置</blockquote>
+      <el-input
+        placeholder="输入关键字进行过滤"
+        v-model="filterText">
+      </el-input>
+      <el-tree
+        class="filter-tree"
+        :data="roleData"
+        show-checkbox
+        :props="defaultProps"
+        :filter-node-method="filterNode"
+        @getCheckedKeys="handleNodeClick"
+        ref="tree2">
+      </el-tree>
+      <el-form-item style="text-align: center">
+        <el-button type="primary" @click="submitForm('ruleForm')">保存</el-button>
+      </el-form-item>
+    </el-form>
+
+</template>
+
+<script>
+  import { common } from '@/common/common'
+  export default {
+    name: 'addRole',
+  data() {
+      return{
+        ruleForm:{
+          name:"",
+          desc:""
+        },
+        filterText:'',
+        roleData:[],//权限信息
+        defaultProps: {
+          children: 'children',
+          label: 'text'
+        },
+        rules: {
+          name: [
+            { required: true, message: '请输入活动名称', trigger: 'blur' },
+            { min: 3, max: 5, message: '长度在 3 到 5 个字符', trigger: 'blur' }
+          ],
+          desc: [
+            { required: true, message: '请输入活动名称', trigger: 'blur' },
+            { min: 3, max: 5, message: '长度在 3 到 5 个字符', trigger: 'blur' }
+          ]
+        }
+      }
+  },
+    watch: {
+      filterText(val) {
+        this.$refs.tree2.filter(val);
+      }
+    },
+    methods: {
+      filterNode(value, data) {
+        if (!value) return true;
+        return data.label.indexOf(value) !== -1;
+      },
+      getRole() {//获取权限tree列表
+        this.axios({
+          method:'post',
+          url:process.env.BASE_API + 'Permission/PermissionListC'
+        }).then((res)=>{
+            this. roleData = res.data.data;
+        }).catch(function(err) {
+          this.$message.error(err.response.data.msg)
+          common.jump(err.response.data.code)
+        })
+      },
+      handleNodeClick(node,data) {//获取点击当前的tree信息
+        console.log(node)
+        console.log(data)
+      }
+    },
+    created() {
+      this.getRole()
+    }
+  }
+</script>
+
+<style scoped>
+  .topTitle{
+    margin-bottom: 10px;
+    padding: 10px 15px;
+    line-height: 22px;
+    border-left: 5px solid #009688;
+    border-radius: 0 2px 2px 0;
+    background-color: #f2f2f2;
+  }
+  .filter-tree{
+    overflow: auto;height: 460px;
+  }
+</style>

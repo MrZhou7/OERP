@@ -1,0 +1,285 @@
+<template>
+  <el-main :style="height">
+    <el-form ref="ruleForm" :model="formInline" :rules="rules" label-width="110px" class="demo-ruleForm">
+      <el-row :gutter="20">
+        <el-col :span="12">
+          <el-form-item label="编码" prop="code">
+            <el-input v-model="formInline.code" placeholder="请输入编码" :disabled="view" clearable></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="名称" prop="name">
+            <el-input v-model="formInline.name" placeholder="请输入名称" :disabled="view" clearable></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+
+      <el-row :gutter="20">
+        <el-col :span="12">
+          <el-form-item label="门店">
+            <el-select v-model="formInline.mall_id" placeholder="请选择门店名称" disabled>
+              <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name" :value="mall.mall_id"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="支付大类" prop="getPayTypeList">
+            <el-select v-model="formInline.getPayTypeList" placeholder="请选择支付大类" :disabled="view" clearable>
+              <el-option v-for="getPay in getPayTypeList" :key="getPay.pay_type_id" :label="getPay.pay_type_name"
+                         :value="getPay.pay_type_id"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+
+      <el-row :gutter="20">
+        <el-col :span="12">
+          <el-form-item label="币种" prop="currency">
+            <el-select v-model="formInline.currency" placeholder="请选择门店名称" :disabled="view" clearable>
+              <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name" :value="mall.mall_id"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="价值金额" prop="amount">
+            <el-input type="number" v-model="formInline.amount" placeholder="请输入价值金额" :disabled="view"
+                      clearable></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="12">
+          <el-form-item label="手续费购物中心承担比例" class="width_180" prop="shopping_proportion">
+            <el-input v-model="formInline.shopping_proportion" :disabled="view" clearable></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="手续费门店承担比例" class="width_160" prop="mall_proportion">
+            <el-input type="number" v-model="formInline.mall_proportion" placeholder="请输入价值金额" :disabled="view"
+                      clearable></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+
+      <el-row :gutter="20" class="lable_bottom">
+        <el-col :span="12">
+          <el-checkbox-group v-model="formInline.radio1">
+            <el-checkbox name="type" label="是否允许找零" :disabled="view" clearable @change="giveCheckbox"></el-checkbox>
+          </el-checkbox-group>
+        </el-col>
+        <el-col :span="12">
+          <el-checkbox-group v-model="formInline.radio2">
+            <el-checkbox name="type" label="是否允许退货" :disabled="view" clearable @change="refundCheckbox"></el-checkbox>
+          </el-checkbox-group>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="12">
+          <el-form-item label="找零支付方式">
+            <el-select v-model="formInline.mall_id" placeholder="请选择门店名称" :disabled="giveChange">
+              <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name" :value="mall.mall_id"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="退货支付方式">
+            <el-select v-model="formInline.mall_id" placeholder="请选择门店名称" :disabled="refundChange">
+              <el-option v-for="mall in getPayTypeList" :key="mall.mall_id" :label="mall.mall_name"
+                         :value="mall.mall_id"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+
+      <el-row :gutter="20">
+        <el-col :span="12">
+          <el-form-item label="手续费计算方式" class="width_130" prop="computing">
+            <el-select v-model="formInline.computing" placeholder="请选择手续费计算方式" :disabled="view" clearable>
+              <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name" :value="mall.mall_id"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="手续费率（%）" class="width_130" prop="service_charge">
+            <el-input type="number" v-model="formInline.service_charge" :disabled="view" clearable></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+
+      <el-row :gutter="20" class="lable_bottom">
+        <el-col :span="12">
+          <el-checkbox-group v-model="formInline.radio3">
+            <el-checkbox name="type" label="是否手续费" :disabled="view" clearable></el-checkbox>
+          </el-checkbox-group>
+        </el-col>
+        <el-col :span="12">
+          <el-checkbox-group v-model="formInline.radio4">
+            <el-checkbox name="type" label="是否允许超付" :disabled="view" clearable></el-checkbox>
+          </el-checkbox-group>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20" class="lable_bottom">
+        <el-col :span="12">
+          <el-checkbox-group v-model="formInline.radio5">
+            <el-checkbox name="type" label="是否参与抽成" :disabled="view" clearable></el-checkbox>
+          </el-checkbox-group>
+        </el-col>
+        <el-col :span="12">
+          <el-checkbox-group v-model="formInline.radio6">
+            <el-checkbox name="type" label="是否需要验证有效" :disabled="view" clearable></el-checkbox>
+          </el-checkbox-group>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20" class="lable_bottom">
+        <el-col :span="12">
+          <el-checkbox-group v-model="formInline.radio7">
+            <el-checkbox name="type" label="是否国内卡" :disabled="view" clearable></el-checkbox>
+          </el-checkbox-group>
+        </el-col>
+        <el-col :span="12">
+          <el-checkbox-group v-model="formInline.radio8">
+            <el-checkbox name="type" label="是否参与促销" :disabled="view" clearable></el-checkbox>
+          </el-checkbox-group>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="12">
+          <el-form-item label="手续费封顶金额" class="width_130" prop="capping_amount">
+            <el-input type="number" v-model="formInline.capping_amount" :disabled="view" clearable></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="备注" prop="remark">
+            <el-input v-model="formInline.remark" :disabled="view" clearable></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+    <div style="float: right">
+      <el-button type="primary" @click="preservation('ruleForm')">确 定</el-button>
+      <el-button @click="cancel('ruleForm')">取 消</el-button>
+    </div>
+  </el-main>
+</template>
+
+<script>
+  import { common } from '@/common/common'
+  import building from '@/utils/building'
+
+  export default {
+    name: 'payMode',
+    props: {
+      addList: {
+        type: Object,
+        default: function() {
+        }
+      }
+    },
+    data() {
+      return {
+        formInline: {},
+        mall_name: [], // 门店信息
+        getPayTypeList: [], // 获取支付大类
+        view: false,
+        giveChange: true,
+        refundChange: true,
+        height: {
+          height: window.innerHeight * 0.8 + 'px',
+        },
+        rules: {
+          code: [{ required: true, message: '请输入编码', trigger: 'blur' }],
+          name: [{ required: true, message: '请输入名称', trigger: 'blur' }],
+          getPayTypeList: [{ required: true, message: '请选择支付大类', trigger: 'change' }],
+          currency: [{ required: true, message: '请选择币种', trigger: 'change' }],
+          amount: [{ required: true, message: '请输入价值金额', trigger: 'blur' }],
+          shopping_proportion: [{ required: true, message: '请输入手续费购物中心承担比例', trigger: 'blur' }],
+          mall_proportion: [{ required: true, message: '请输入手续费门店承担比例', trigger: 'blur' }],
+          computing: [{ required: true, message: '请选择手续费计算方式', trigger: 'change' }],
+          service_charge: [{ required: true, message: '请输入手续费率（%）', trigger: 'blur' }],
+          capping_amount: [{ required: true, message: '请输入手续费封顶金额', trigger: 'blur' }]
+        }
+      }
+    },
+    props: ['payModeId', 'payModeType'],
+    watch: {
+      payModeId: function(newVal, oldVal) {
+        if (newVal != '') {
+          this.viewPayData(newVal)
+        }
+      },
+      payModeType: function(newVal, oldVal) {
+        if (newVal == 1) {
+          this.view = true
+        } else {
+          this.view = false
+        }
+      }
+    },
+    created() {
+      building.Mall(this) // 先获取项目名称信息
+      building.getPayType(this) // 先获取项目名称信息
+      if (this.payModeId != '') {
+        this.viewPayData(this.payModeId)
+      }
+      if (this.payModeType == 1) {
+        this.view = true
+      } else {
+        this.view = false
+      }
+    },
+    methods: {
+      viewPayData(data) {
+        this.axios
+          .post(process.env.BASE_API + 'table_util/getPreData', { payModeId: data })
+          .then(function(res) {
+            if (res.data.error_code == 0) {
+              this.formInline = res.data.data
+            }
+          })
+          .catch(function(err) {
+            this.$message.error(err.response.data.msg)
+          })
+      },
+      refundCheckbox(val) {
+        let checkbox = val
+        if (val == 1 || val == 0) {
+          checkbox = val == 1 ? true : false
+        }
+        this.refundChange = !checkbox
+      },
+      giveCheckbox(val) {
+        let checkbox = val
+        if (val == 1 || val == 0) {
+          checkbox = val == 1 ? true : false
+        }
+        this.giveChange = !checkbox
+      },
+      preservation(formName) { // 保存信息
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+
+          } else {
+            this.$message({ message: '请完善信息！！！', type: 'warning' })
+          }
+        })
+      },
+      cancel() {
+        this.$emit('payMode', false)
+      }
+
+    }
+  }
+</script>
+
+<style scoped lang="scss">
+  .lable_bottom {
+    margin-bottom: 20px !important;
+    padding-left: 20PX;
+  }
+
+  .el-checkbox {
+    font-size: 14px;
+    color: #606266;
+    font-weight: 700 !important;
+  }
+</style>

@@ -1,0 +1,857 @@
+<template>
+  <el-main :style="height">
+    <blockquote class="elem_quote" v-if="refundOpenIf">订单查询</blockquote>
+    <el-form v-if="refundOpenIf" ref="formInline" :model="formInline" label-width="80px" class="search">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="门店选择">
+            <el-select v-model="formInline.mall_id" placeholder="请选择">
+              <el-option
+                v-for="(item,index) in preData.mall"
+                :key="index"
+                :label="item.mall_name"
+                :value="parseInt(item.mall_id)">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="订单编号">
+            <el-input v-model="formInline.code"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="顾客电话">
+            <el-input v-model="formInline.mobile_no"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="顾客姓名">
+            <el-input v-model="formInline.full_name"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="导购姓名">
+            <el-input v-model="formInline.name"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="品牌">
+            <el-input v-model="formInline.brand" @focus="brandChoiceData"
+                      suffix-icon="el-icon-search"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6" align="center">
+          <el-button align="center" type="primary" @click="onSecher(formInline)">查询</el-button>
+        </el-col>
+      </el-row>
+    </el-form>
+    <blockquote v-if="refundOpenIf" class="elem_quote">订单列表</blockquote>
+    <div v-if="refundOpenIf" class="contract_table">
+      <el-table
+        :data="tableData"
+        align: center
+        border
+        ref="multipleTable"
+        highlight-current-row
+        @row-click="clickRow"
+        @selection-change="changFun">
+        <el-table-column
+          prop="id"
+          type="selection"
+          width="55">
+        </el-table-column>
+        <el-table-column
+          fixed
+          prop="code"
+          :show-overflow-tooltip="true"
+          label="订单编号"
+          resizable: true
+          algin:center
+          width="140">
+        </el-table-column>
+        <el-table-column
+          prop="store_code"
+          :show-overflow-tooltip="true"
+          label="商铺编号">
+        </el-table-column>
+        <el-table-column
+          prop="store_name"
+          label="商铺名称"
+          :show-overflow-tooltip="true">
+        </el-table-column>
+
+        <el-table-column
+          prop="total_amt"
+          :show-overflow-tooltip="true"
+          label="订单金额">
+        </el-table-column>
+        <el-table-column
+          prop="paid_amt"
+          label="已付金额"
+          :show-overflow-tooltip="true">
+        </el-table-column>
+
+        <el-table-column
+          prop="order_date"
+          label="订单日期"
+          :show-overflow-tooltip="true">
+        </el-table-column>
+        <el-table-column
+          prop="paid_status"
+          :show-overflow-tooltip="true"
+          label="付款状态">
+          <template slot-scope="scope">
+            <span v-if='scope.row.paid_status==0'>未付款</span>
+            <span v-else-if='scope.row.paid_status==1'>首付款完成</span>
+            <span v-else-if='scope.row.paid_status==2'>付款完成</span>
+            <span v-else-if='scope.row.paid_status==3'>部分收款完成</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="deliver_status"
+          :show-overflow-tooltip="true"
+          label="配送状态"
+          width="120">
+          <template slot-scope="scope">
+            <span v-if='scope.row.deliver_status==0'>未配送</span>
+            <span v-else-if='scope.row.deliver_status==1'>部分配送</span>
+            <span v-else-if='scope.row.deliver_status==2'>已配送</span>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        background
+        layout="prev, pager, next"
+        @current-change="pageinations"
+        :current-page.sync="currentPage"
+        :total="total">
+      </el-pagination>
+    </div>
+    <blockquote  v-if="refundOpenIf" class="elem_quote">礼券列表</blockquote>
+    <div  v-if="refundOpenIf" class="contract_table">
+      <el-table
+        :data="giftVoucherTable"
+        align: center
+        border
+        ref="giftVoucherTable"
+        highlight-current-row
+        @row-click="clickRow"
+        @selection-change="changFun"
+        align: center>
+        <el-table-column
+          prop="contract_main_id"
+          type="selection"
+          width="55">
+        </el-table-column>
+        <el-table-column
+          fixed
+          prop="orderCode"
+          :show-overflow-tooltip="true"
+          label="礼券编号"
+          resizable: true
+          algin:center>
+        </el-table-column>
+        <el-table-column
+          fixed
+          prop="money"
+          :show-overflow-tooltip="true"
+          label="金额"
+          resizable: true
+          algin:center>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        background
+        layout="prev, pager, next"
+        @current-change="pageinations"
+        :current-page.sync="currentPage"
+        :total="total">
+      </el-pagination>
+    </div>
+    <blockquote  v-if="refundOpenIf" class="elem_quote">储值卡列表</blockquote>
+    <div  v-if="refundOpenIf" class="contract_table">
+      <el-table
+        :data="storedCardTable"
+        align: center
+        ref="storedCardTable"
+        border
+        highlight-current-row
+        @row-click="clickRow"
+        @selection-change="changFun"
+        align: center>
+        <el-table-column
+          prop="contract_main_id"
+          type="selection"
+          width="55">
+        </el-table-column>
+        <el-table-column
+          fixed
+          prop="orderCode"
+          :show-overflow-tooltip="true"
+          label="储值卡号"
+          resizable: true
+          algin:center>
+        </el-table-column>
+        <el-table-column
+          fixed
+          prop="money"
+          :show-overflow-tooltip="true"
+          label="金额"
+          resizable: true
+          algin:center>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        background
+        layout="prev, pager, next"
+        @current-change="pageinations"
+        :current-page.sync="currentPage"
+        :total="total">
+      </el-pagination>
+    </div>
+    <blockquote class="elem_quote">订单信息</blockquote>
+    <el-form ref="refundData" :model="refundData" label-width="80px" class="search">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="商铺编号">
+            <el-input v-model="refundData.store_code" :disabled="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商铺名称">
+            <el-input v-model="refundData.store_name" :disabled="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="订单日期">
+            <el-input v-model="refundData.order_date" :disabled="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="订单金额">
+            <el-input v-model="refundData.total_amt" :disabled="true"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="已付金额">
+            <el-input v-model="refundData.paid_amt" :disabled="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+            <el-form-item label="配送状态">
+              <el-select v-model="refundData.deliver_status" placeholder="请选择配送状态" :disabled="true">
+                <el-option label="全部" value=""></el-option>
+                <el-option label="未配送" :value="'0'"></el-option>
+                <el-option label="部分配送" :value="'1'"></el-option>
+                <el-option label="已配送" :value="'2'"></el-option>
+              </el-select>
+            </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="配送日期">
+            <el-input v-model="refundData.deliver_date" :disabled="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="卡号">
+            <el-input v-model="refundData.corp_name" :disabled="true"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="扣减积分">
+            <el-input v-model="refundData.corp_name" :disabled="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="账号可用积分" class="width_110">
+            <el-input v-model="refundData.corp_name" :disabled="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="兑礼券价值" class="width_110">
+            <el-input v-model="refundData.corp_name" :disabled="true"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+    <blockquote class="elem_quote">选择商品</blockquote>
+    <div class="contract_table">
+      <el-row class="search_lable">
+        <el-col :span="refundOpen== 2 ? 14:24">
+          <el-table
+            :data="addShop"
+            align: center
+            ref="addShop"
+            border
+            height="200"
+            style="width: 100%;"
+            @selection-change="changeFun"
+            @row-click="changeRow">
+            <el-table-column
+              prop="contract_main_id"
+              type="selection"
+              fixed
+              v-if="refundOpenIf"
+              width="55">
+            </el-table-column>
+            <el-table-column
+              prop="sku"
+              :show-overflow-tooltip="true"
+              label="商品编号"
+              resizable: true
+              min-width="100"
+              algin:center>
+            </el-table-column>
+            <el-table-column
+              prop="product_name"
+              :show-overflow-tooltip="true"
+              label="商品名称"
+              resizable: true
+              min-width="120"
+              algin:center>
+            </el-table-column>
+            <el-table-column
+              prop="product_type"
+              :show-overflow-tooltip="true"
+              label="产品类型"
+              resizable: true
+              min-width="120"
+              algin:center>
+              <template slot-scope="scope">
+                <span v-if='scope.row.product_type==1'>正常商品</span>
+                <span v-else-if='scope.row.product_type==2'> 促销商品</span>
+              </template>
+            </el-table-column>
+            <el-table-column
+              prop="old_price"
+              :show-overflow-tooltip="true"
+              label="原价"
+              resizable: true
+              min-width="100"
+              algin:center>
+            </el-table-column>
+            <el-table-column
+              prop="new_price"
+              :show-overflow-tooltip="true"
+              label="现价"
+              resizable: true
+              min-width="100"
+              algin:center>
+            </el-table-column>
+            <el-table-column
+              prop="product_counts"
+              :show-overflow-tooltip="true"
+              label="数量"
+              min-width="60"
+              resizable: true
+              algin:center>
+            </el-table-column>
+            <el-table-column
+              prop="net_amt"
+              :show-overflow-tooltip="true"
+              label="总价"
+              min-width="100"
+              resizable: true
+              fixed="right"
+              algin:center>
+            </el-table-column>
+          </el-table>
+          <el-pagination
+            background
+            layout="prev, pager, next"
+            @current-change="pageinations"
+            :current-page.sync="currentPage"
+            :total="total">
+          </el-pagination>
+        </el-col>
+        <el-col :span="refundOpen== 2 ? 10:0">
+          <el-table
+            :data="refundIsPay"
+            align: center
+            border
+            style="width: 100%;"
+            height="200"
+            highlight-current-row>
+            <el-table-column
+              prop="pay_time"
+              :show-overflow-tooltip="true"
+              label="支付日期"
+              resizable: true
+              min-width="120"
+              algin:center>
+            </el-table-column>
+            <el-table-column
+              prop="pay_name"
+              :show-overflow-tooltip="true"
+              label="支付方式"
+              min-width="100"
+              resizable: true
+              algin:center>
+            </el-table-column>
+            <el-table-column
+              prop="pay_amt"
+              :show-overflow-tooltip="true"
+              label="支付金额"
+              resizable: true
+              min-width="100"
+              algin:center>
+            </el-table-column>
+            <el-table-column
+              prop="fee_amt"
+              :show-overflow-tooltip="true"
+              label="手续费"
+              resizable: true
+              min-width="100"
+              algin:center>
+            </el-table-column>
+            <el-table-column
+              prop="net_amt"
+              :show-overflow-tooltip="true"
+              label="支付净额"
+              resizable: true
+              min-width="100"
+              algin:center>
+            </el-table-column>
+          </el-table>
+        </el-col>
+      </el-row>
+
+    </div>
+    <blockquote class="elem_quote">退货信息</blockquote>
+    <el-form ref="refundDataInline" :rules="refundDataInlineRules" :model="refundDataInline"
+             label-width="80px" v-if="refundOrder"  class="subData">
+      <el-row>
+        <el-col :span="8">
+          <el-form-item label="收货状态" class="label_required" prop="delivery_status">
+            <el-select v-model="refundDataInline.delivery_status" :disabled="!refundOpenIf" placeholder="请选择收货状态">
+              <el-option value='' label="请选择"></el-option>
+              <el-option :value='"0"' label="未收货"></el-option>
+              <el-option :value='"1"' label="部分货"></el-option>
+              <el-option :value='"2"' label="已收货"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="退货类型" class="label_required" prop="return_type">
+            <el-select v-model="refundDataInline.return_type" :disabled="!refundOpenIf" placeholder="请选择退货类型">
+              <el-option value='' label="请选择"></el-option>
+              <el-option :value='"0"' label="部分退货"></el-option>
+              <el-option :value='"1"' label="作废"></el-option>
+              <el-option :value='"2"' label="全部退款"></el-option>
+
+            </el-select>
+          </el-form-item>
+        </el-col>
+
+        <el-col :span="8">
+          <el-form-item label="退货原因" class="label_required" prop="reson_type">
+            <el-select v-model="refundDataInline.reson_type" :disabled="!refundOpenIf" placeholder="请选择退货原因">
+              <el-option value='' label="请选择"></el-option>
+              <el-option :value='"0"' label="未知"></el-option>
+              <el-option :value='"1"' label="用户原因"></el-option>
+              <el-option :value='"2"' label="操作原因"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="申请日期" prop="return_time">
+            <el-date-picker
+              v-model="refundDataInline.return_time"
+              :disabled="!refundOpenIf"
+              value-format="yyyy-MM-dd  HH:mm:ss"
+              type="date"
+              style="width:100%"
+              placeholder="选择日期"></el-date-picker>
+          </el-form-item>
+        </el-col>
+        <el-col :span="18">
+          <el-form-item label="退货备注">
+            <el-input v-model="refundDataInline.note" :disabled="!refundOpenIf" placeholder="请输入退货备注"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row class="sub" v-if="refundOpenIf">
+        <el-col :span="24" algin="center">
+          <el-button type="primary" @click="submitForm('refundDataInline')">提交审核</el-button>
+          <el-button @click="keep('refundDataInline')">保存</el-button>
+          <el-button @click="empty('refundDataInline')">返回</el-button>
+        </el-col>
+      </el-row>
+    </el-form>
+    <blockquote class="elem_quote"  v-if="!refundOpenIf">退款信息</blockquote>
+    <el-form v-if="!refundOpenIf" ref="refundDataInfoInlineRules" :rules="refundDataInfoInlineRules" :model="refundDataInfoIn" label-width="80px" class="search">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="可退金额">
+            <el-input v-model="refundDataInfoIn.return_amt"  readonly></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="手续费总计" class="width_100">
+            <el-input v-model="refundDataInfoIn.fee_amt_total"  readonly></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+            <el-form-item label="支付大类" prop="pay_trans_type">
+              <el-select v-model="refundDataInfoIn.pay_trans_type" @change="getPayWay">
+                <el-option v-for="item in getPayTypeList" :key="item.pay_type_id" :label="item.pay_type_name"
+                           :value="item.pay_type_id"/>
+              </el-select>
+            </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="支付方式" prop="pay_id">
+            <el-select v-model="refundDataInfoIn.pay_id" >
+              <el-option v-for="item in getPayWayList" :key="item.pay_id" :label="item.pay_name" :value="item.pay_id"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="退款金额" prop="pay_amt">
+            <el-input v-model="refundDataInfoIn.pay_amt" @change="refundDataMoney"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="退款日期" prop="trans_date">
+            <el-date-picker
+              v-model="refundDataInfoIn.trans_date"
+              value-format="yyyy-MM-dd  HH:mm:ss"
+              type="date"
+              style="width:100%"
+              placeholder="选择日期"></el-date-picker>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row class="sub" >
+        <el-col :span="24" algin="center">
+          <el-button type="primary" @click="refundSubmitForm('refundDataInfoInlineRules')">确认退款</el-button>
+          <el-button @click="empty('refundDataInline')">返回</el-button>
+        </el-col>
+      </el-row>
+    </el-form>
+    <el-dialog title="品牌选择"
+               :append-to-body="true"
+               :visible.sync="brandChoice"
+               width="70%" height="70%"
+               :close-on-click-modal="false">
+      <brand v-on:brandData="brandData" :refundType="refundType"></brand>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+  import { common } from '@/common/common'
+  import brand from '@/components/contract/brand.vue' //品牌
+
+  export default {
+    name: 'addRefund',
+    components: {
+      brand
+    },
+
+    data() {
+      return {
+        formInline: {},
+        refundDataInline: {},
+        refundDataInfo: {},
+        refundDataInfoIn: {},
+        refundData: {}, // 选中商品信息
+        preData: {},
+        tableData: [],
+        giftVoucherTable: [],
+        storedCardTable: [],
+        getPayTypeList: [], // 获取的支付大类信息
+        getPayWayList: [], // 获取支付方式的信息
+        total: 0,//分页
+        currentPage: 1,// 当前页码
+        refundOrder: false,// 选择订单
+        refundType:'refundType', // 品类赋值
+        height: {
+          height: window.innerHeight * 0.7 + 'px'
+        },
+        checkData:{},
+        refundInfo:{},
+        addShop:[],
+        refundIsPay:[],
+        multipleSelection:[],
+        cities: ['部分退货', '全部退货'],
+        brandChoice: false,// 品牌
+        refundMoneyState: false,
+        refundOpenIf: true,//退款操作
+        refundDataInlineRules: {// 查询
+          'return_type': [{ required: true, message: '请选择退款类型', trigger: 'change' }],
+          'delivery_status': [{ required: true, message: '请选择收货状态', trigger: 'change' }],
+          'reson_type': [{ required: true, message: '请选择退款原因', trigger: 'change' }],
+          'return_time': [{ required: true, message: '请输入申请日期', trigger: 'change' }]
+        },
+        refundDataInfoInlineRules:{
+          'pay_trans_type': [{ required: true, message: '请选择支付大类', trigger: 'change' }],
+          'pay_id': [{ required: true, message: '请选择支付方式', trigger: 'change' }],
+          'pay_amt': [{ required: true, message: '请输入退款金额', trigger: 'blur' }],
+          'trans_date': [{ required: true, message: '请选择退款日期', trigger: 'change' }],
+    },
+      }
+    },
+    props: ['refundOpen','refundOpenId'],
+    watch: {
+      refundOpen:function(newVal,oldVal){
+        if(newVal == 1) {
+          this.refundOpenIf = true;
+          this.refundOrder = false;
+        }else {
+          this.refundOpenIf = false;
+          this.refundOrder = true;
+        }
+      },
+      refundOpenId:function(newVal,oldVal){
+        if(newVal != '') {
+          this.refundMain(newVal);
+        }
+      },
+    },
+    created: function() {
+      this.getData();
+      if(this.refundOpenId != '') {
+        this.refundMain(this.refundOpenId);
+        this.getPayType();
+      }
+      if(this.refundOpen == 1) {
+        this.refundOpenIf = true;
+        this.refundOrder = false;
+      }else {
+        this.refundOpenIf = false;
+        this.refundOrder = true;
+      }
+    },
+
+    methods: {
+      getData() {// 预渲染参数
+        let that = this
+        that.http.post('table_util/getPreData',  {act: 'contract'}).then(res => {
+          that.preData = res.data.data
+        }).catch((err) => {
+          that.$message.error(err.response.data.msg);
+        });
+      },
+      //退款数据
+      refundMain(val) {
+        let that = this;
+        that.http.post('OrderReturn/returnDetail',  { id: val }).then(res => {
+          that.refundData = res.data.data.main;
+          that.addShop = res.data.data.product;
+          that.refundIsPay = res.data.data.paying;
+          that.refundDataInline = res.data.data.main;
+          that.refundDataInfoIn = res.data.data.main;
+          let feeAmtTotal = 0;
+          res.data.data.paying.forEach(item => {
+            feeAmtTotal += parseFloat(item.fee_amt);
+          })
+          that.refundDataInfoIn.fee_amt_total = feeAmtTotal;
+        }).catch((err) => {
+          that.$emit('addRufundData', false);
+          that.$message.error(err.response.data.msg);
+        });
+      },
+      // 获取支付大类
+      getPayType() {
+        this.http.post('order_pay/getPayType').then(res => {
+          this.getPayTypeList = res.data.data
+        }).catch((err) => {
+          this.$message.error(err.response.data.msg)
+        });
+      },
+      getPayWay(index) { // 根据门店和支付大类获取支付方式
+        this.http.post('order_pay/getPayByStoreAndType',{ mall_id: 1, pay_type_id: index }).then(res => {
+          this.getPayWayList = res.data.data
+        }).catch((err) => {
+          this.$message.error(err.response.data.msg)
+        });
+      },
+      pageinations(val) {// 分页
+        data = this.formInline
+        data.page = val
+        common.getPreData(data, 'OrderMain/orderManage', this, 'refundSearch')
+        common.set('refundSearch', { 'search': data })
+      },
+      onSecher() {// 查询
+        let that = this;
+        const data = this.formInline;
+        that.http.post('OrderMain/orderManage', data).then(res => {
+          that.tableData = res.data.data;
+        }).catch((err) => {
+          that.$message.error(err.response.data.msg)
+        })
+      },
+      clickRow(row) {// 选择当前行
+        let that = this;
+        this.checkData = row;
+        this.$refs.multipleTable.toggleRowSelection(row);
+      },
+      changFun(row) {// 获取当前行数据
+        common.radioBtn(row, this.$refs.multipleTable, this,1);
+      },
+      changeFun(val) {
+        this.multipleSelection  = val;
+        if (val.length == 0) { // 去除多选
+          this.refundOrder = false;
+        } else {
+          this.refundOrder = true;
+        }
+      },
+      changeRow(row) {// 选择当前行
+        this.$refs.addShop.toggleRowSelection(row);
+      },
+      checkedList(row) {
+        let that = this;
+        that.http.post('OrderReturn/findOrder', { code: row.code }).then(res => {
+          that.refundData = res.data.data.main;
+          that.addShop = res.data.data.list;
+        }).catch((err) => {
+          that.$message.error(err.response.data.msg)
+        })
+      },
+      submitForm(formName) {//提交审核
+        this.subMethod(formName, 2)
+      },
+      keep(formName) {// 保存
+        this.subMethod(formName, 1)
+      },
+      empty() {// 取消
+        this.$emit('addRufundData', false);
+      },
+      subMethod(formName, status) {// 提交验证
+        let that = this;
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+              const detailList = [];
+              that.multipleSelection.forEach(item => {
+                const detail = {
+                  product_id: item.id,// 商品id
+                  return_counts: item.product_counts,// 商品数量
+                }
+                detailList.push(detail)
+              });
+              let returnType = 0;
+              if(that.multipleSelection.that == this.addShop.length) {
+                returnType = 1;
+              }else {
+                returnType = 2;
+              }
+              const main = {
+                order_id: that.refundData.order_id,//订单ID,
+                return_time: common.dateFormat(that.refundDataInline.return_time),//取消时间,
+                return_type: that.refundDataInline.return_type,// 退货类型
+                person_type: 2,//取消人的类型
+                person_id: 1,//申请人ID
+                reson_type: that.refundDataInline.reson_type, //取消原因
+                note: that.refundDataInline.note, // 备注
+                status: 0,// 审批状态 默认草稿
+                exec_status: 0,// 退款状态 默认草稿
+                remark: that.refundDataInline.note, //审批意见（新增与备注传一样值）
+                delivery_status: that.refundDataInline.delivery_status,
+              }
+              const log = {
+                exec_type: 0, // 取消类型
+                user_id: 1,// 操作人员ID
+              }
+            that.http.post('OrderReturn/addReturnData', {
+              detail:JSON.stringify(detailList),
+              main:JSON.stringify(main),
+              log:JSON.stringify(log),
+            }).then(res => {
+              that.$message.success('提交成功')
+              setTimeout(() => {
+                that.$emit('addRufundData', false);
+              },500)
+            }).catch((err) => {
+              that.$message.error(err.response.data.msg)
+            })
+          } else {
+            this.$message({
+              message: '请填写完整信息',
+              type: 'warning'
+            })
+          }
+        })
+      },
+      brandData(data) {//品牌赋值
+        this.brandChoice = false
+        this.formInline.brand = data.brand_name
+      },
+      brandChoiceData() {
+        this.brandChoice = true;
+      },
+      refundDataMoney (val) {
+        if(parseFloat(val) > parseFloat(this.refundDataInfoIn.return_amt)) {
+          this.$message({
+            message: '退款金额不能大于可退金额',
+            type: 'error'
+          })
+        }
+      },
+      refundSubmitForm(formName) {// 提交验证
+        let that = this;
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            if(that.refundDataInfoIn.pay_amt > that.refundDataInfoIn.return_amt) {
+              this.$message({
+                message: '退款金额不能大于可退金额',
+                type: 'error'
+              })
+            }else {
+              that.http.post('OrderReturn/returnMoeny', {
+                id: that.refundDataInfoIn.id,
+                pay_amt: that.refundDataInfoIn.pay_amt,
+                trans_date:common.dateFormat(that.refundDataInfoIn.trans_date),
+                pay_trans_type:that.refundDataInfoIn.pay_trans_type,
+                pay_id:that.refundDataInfoIn.pay_id,
+              }).then(res => {
+                that.$message.success('提交成功');
+                setTimeout(() => {
+                  that.$emit('addRufundData', false);
+                },500)
+              }).catch((err) => {
+                that.$message.error(err.response.data.msg)
+              })
+            }
+          } else {
+            this.$message({
+              message: '请填写完整信息',
+              type: 'error'
+            })
+          }
+        })
+      },
+    }
+  }
+</script>
+
+<style lang="scss" scoped>
+  .el-form-item {
+    margin-bottom: 0 !important;
+  }
+
+  .search > div {
+    margin-bottom: 5px;
+  }
+
+  .subData > div {
+    margin-bottom: 20px;
+  }
+
+  .el-dialog__body main {
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+</style>

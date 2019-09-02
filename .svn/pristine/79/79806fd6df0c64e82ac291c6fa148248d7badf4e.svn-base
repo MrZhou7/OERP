@@ -1,0 +1,281 @@
+<template>
+  <el-main>
+    <p class="category-text">支付大类
+      <span class="addCategory" @click="addReturnPay">添加大类</span>
+    </p>
+    <el-table
+      :height="tableHeight"
+      :data="tableData"
+      :show-overflow-tooltip="true"
+      border
+      tooltip-effect="dark"
+      style="width: 100%">
+      <el-table-column
+        prop="sort"
+        :show-overflow-tooltip="true"
+        label="编号"
+        min-width="150">
+      </el-table-column>
+      <el-table-column
+        prop="pay_type_name"
+        :show-overflow-tooltip="true"
+        label="名称" min-width="150">
+      </el-table-column>
+      <el-table-column
+        prop="description"
+        :show-overflow-tooltip="true"
+        label="描述" min-width="150">
+      </el-table-column>
+      <el-table-column
+        prop="enabled"
+        :show-overflow-tooltip="true"
+        label="是否启用"
+        min-width="150">
+        <template slot-scope="scope">
+          {{scope.row.enabled == 1 ? '是' : '否'}}
+        </template>
+      </el-table-column>
+
+      <el-table-column
+        fixed="right"
+        algin="center"
+        label="操作"
+        width="180">
+        <template slot-scope="scope">
+          <el-button
+            @click.native.prevent="viewRow(scope.row)"
+            type="text"
+            size="small">
+            查看
+          </el-button>
+          <el-button
+            @click.native.prevent="editRow(scope.row)"
+            type="text"
+            size="small">
+            编辑
+          </el-button>
+          <el-button
+            @click.native.prevent="deleteRow(scope.row)"
+            type="text"
+            size="small">
+            删除
+          </el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <el-pagination
+      :page-sizes="[10, 20, 30, 40, 50]"
+      :page-size="pageSize"
+      :current-page.sync="currentPage"
+      :total="total"
+      background
+      layout="prev, pager, next, total, sizes"
+      @current-change="pagination"
+      @size-change="handleSizeChange"/>
+    <el-dialog :title="name" :visible.sync="addReturn" append-to-body width="500px" :close-on-click-modal="false" @close="cancle()">
+      <el-form ref="rentDetailRules" :model="addReturnObj" :rules="rentDetailRules" label-width="80px">
+        <el-form-item label="编码" class="label_required" prop="codes">
+          <el-input v-model="addReturnObj.pay_type_code" :disabled="view" clearable></el-input>
+        </el-form-item>
+        <el-form-item label="名称" class="label_required" prop="name">
+          <el-input v-model="addReturnObj.pay_type_name" :disabled="view" clearable></el-input>
+        </el-form-item>
+        <el-form-item label="描述" class="label_required" prop="describe">
+          <el-input v-model="addReturnObj.description" :disabled="view" clearable></el-input>
+        </el-form-item>
+        <el-form-item label="排序" class="label_required" prop="sort">
+          <el-input v-model="addReturnObj.sort" :disabled="view" clearable></el-input>
+        </el-form-item >
+        <el-form-item label="是否启用">
+          <el-radio-group v-model="addReturnObj.enabled" size="mini" :disabled="view" >
+            <el-radio label="1">是</el-radio>
+            <el-radio label="0">否</el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
+      <span slot="footer">
+        <el-button @click="cancle()">取 消</el-button>
+        <el-button v-if="viewNo" type="primary" @click="addTure('rentDetailRules')">确 定</el-button>
+      </span>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+  import { common } from '@/common/common'
+
+  export default {
+    name: 'paymentCategory',
+    data() {
+      return {
+        tableData: [],
+        total: 0,//分页总数据
+        currentPage: 1,//当前页码
+        pageSize: 20,//当前页码
+        tableHeight: window.innerHeight - 163,//表格高度
+        name: '新增',
+        addReturn: false,
+        viewNo: true,
+        addReturnObj: {
+          enabled:1,
+        },
+        rentDetailRules: {
+          'pay_type_code': [{ required: true, message: '请输入编码', trigger: 'blur' }],
+          'pay_type_name': [{ required: true, message: '请输入名称', trigger: 'blur' }],
+          'description': [{ required: true, message: '请输入描述', trigger: 'blur' }],
+          'sort': [{ required: true, message: '请输入序号', trigger: 'blur' }]
+        },
+        view: false
+      }
+    },
+    created: function() {
+      const data = {
+        page: this.currentPage,
+        limit: this.pageSize
+      }
+      this.onSecher(data)
+    },
+    methods: {
+      onSecher(data) {
+        this.http
+          .post('Sale/getPayTypeLists', data)
+          .then((res) => {
+            this.total = res.data.count;
+            this.tableData = res.data.data;
+          })
+          .catch((err) => {
+            this.$message.error(err.response.data.msg);
+          })
+      },
+      paymentData(data) { //详情
+        let that = this
+        this.http
+          .post('Sale/getPayTpyeDetail', { pay_type_id: data })
+          .then(function(res) {
+            that.addReturnObj = res.data.data;
+          })
+          .catch(function(err) {
+            this.$message.error(err.response.data.msg);
+          })
+      },
+      pagination(val) {// 列表分页
+        this.currentPage = val;
+        let data = {
+          page: val,
+          limit: this.pageSize,
+        }
+        this.onSecher(data)
+      },
+      handleSizeChange(val) {// 列表分页
+        this.pageSize = val;
+        let data = {
+          limit: val,
+          page:  this.currentPage
+        }
+        this.onSecher(data)
+      },
+      addReturnPay() {
+        this.view = false
+        this.addReturn = true
+        this.name = '添加'
+      },
+      viewRow(row) {
+        this.viewDetail(row, '查看',true);
+
+      },
+      editRow(row) {
+        this.viewDetail(row, '编辑',false);
+      },
+      viewDetail(row, title, type) {
+        this.view = type;
+        this.addReturn = true;
+        this.name = title;
+        this.paymentData(row.pay_type_id);
+        this.viewNo = !type;
+      },
+      deleteRow(row) {
+        let that = this
+        this.$confirm('是否删除该支付方式', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning',
+          center: true
+        }).then(() => {
+          that.http
+            .post('Sale/delPayType', { pay_type_id: row.pay_type_id })
+            .then((res) => {
+              const data = {
+                page: that.currentPage,
+                limit: that.pageSize
+              }
+                that.onSecher(data);
+            })
+            .catch((err) => {
+              that.$message.error(err.response.data.msg)
+            })
+        }).catch(() => {
+          that.$message({
+            type: 'info',
+            message: '已取消'
+          })
+        })
+      },
+      cancle() {
+        this.addReturn = false;
+        this.addReturnObj = {};
+      },
+      addTure(formName) { //保存
+        let that = this;
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            let url = '',title='';
+            if(this.name == '添加') {
+              title = '添加成功';
+              url ='Sale/addPayType'
+            }else {
+              title = '修改成功';
+              url ='Sale/editPayType'
+            }
+            this.http
+              .post(url, this.addReturnObj)
+              .then(function(res) {
+                that.$message.success(title)
+                that.cancle();
+                const data = {
+                  page: that.currentPage,
+                  limit: that.pageSize
+                }
+                that.onSecher(data);
+              })
+              .catch(function(err) {
+                that.$message.error(err.response.data.msg)
+              })
+          } else {
+            this.$message({
+              message: '请输入完整信息！！！',
+              type: 'warning'
+            })
+          }
+        })
+      }
+    }
+  }
+</script>
+
+<style scoped>
+  .category-text {
+    background: #f7f7f7;
+    line-height: 40px;
+    font-size: 14px;
+    color: #606266;
+    padding: 0 15px;
+    box-sizing: border-box;
+    font-weight: bold;
+  }
+
+  .addCategory {
+    color: #38f;
+    float: right;
+    cursor: pointer;
+  }
+</style>

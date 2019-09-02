@@ -1,0 +1,237 @@
+<template>
+  <div class="editBusiness">
+    <div class="addBusinessStyle">编辑商户</div>
+    <div class="businessContent">
+      <el-tabs type="border-card">
+        <el-tab-pane label="商户信息">
+          <el-form :model="businessForm" :rules="rules" ref="ruleForm" label-width="120px" class="demo-ruleForm">
+            <el-row>
+              <el-col :span="8">
+                <el-form-item label="商户编号" prop="customer_code">
+                  <el-input v-model="businessForm.customer_code" placeholder="商户信息保存后自动生成" disabled></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="商户名称" placeholder="中英文、数字，限30字符" prop="customer_name">
+                  <el-input v-model="businessForm.customer_name"></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="商户简称" placeholder="中英文、数字，限30字符">
+                  <el-input v-model="businessForm.cust_short_name"></el-input>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="8">
+                <el-form-item label="身份证号" prop="card_no">
+                  <el-input v-model="businessForm.card_no" placeholder="请输入身份证号"></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="公司电话" prop="company_phone">
+                  <el-input v-model="businessForm.company_phone" placeholder="请输入公司电话"></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="法人代表">
+                  <el-input v-model="businessForm.legal" placeholder="中英文、数字，限30字符"></el-input>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="8">
+                <el-form-item label="注册资本">
+                  <el-input v-model="businessForm.registered_capital" placeholder="请输入注册资本"></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="手机" prop="contact_phone">
+                  <el-input v-model="businessForm.contact_phone" placeholder="请输入手机号码"></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="商户级别" prop="customer_rank">
+                  <el-select v-model="businessForm.customer_rank" placeholder="请选择">
+                    <el-option v-for="(item,index) in customerRank" :key="index" :label="item.values_name" :value="parseInt(item.values_code)"></el-option>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="8">
+                <el-form-item label="身份证颁发地" prop="card_address">
+                  <el-cascader
+                    :options="cityData"
+                    :props="cityProps"
+                    placeholder="请选择省/市"
+                    v-model="businessForm.card_address"
+                    change-on-select
+                    :clearable="true"
+                  ></el-cascader>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="商户地址" prop="address">
+                  <el-cascader
+                    :options="cityData"
+                    v-model="businessForm.busunessAddress"
+                    :props="cityProps"
+                    change-on-select
+                    :clearable="true"
+                    placeholder="请选择省/市/区"
+                  ></el-cascader>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-input v-model="businessForm.address" prop="detailAddress" placeholder="请输入详细地址，限50字符内"></el-input>
+              </el-col>
+            </el-row>
+            <el-form-item>
+              <el-button type="primary" @click="submitForm('ruleForm')">保存</el-button>
+            </el-form-item>
+          </el-form>
+        </el-tab-pane>
+        <el-tab-pane label="证照信息">证照信息</el-tab-pane>
+        <el-tab-pane label="联系人信息">联系人信息</el-tab-pane>
+        <el-tab-pane label="福建信息">福建信息</el-tab-pane>
+      </el-tabs>
+    </div>
+  </div>
+</template>
+
+<script>
+  import {common} from '@/common/common'
+
+  export default {
+    name: "editBusiness",
+    props:{
+      editData:{
+        type:Object
+      }
+    },
+    data(){
+      return{
+        cityData:[],//请求本地的城市文件
+        customerRank:[],//商戶級別信息
+        cityProps:{
+          children: 'children',
+          label: 'text',
+          value: 'id'
+        },
+        businessForm: {
+          customer_code: '',
+          customer_name: '',
+          cust_short_name: '',
+          card_no:'',
+          company_phone: "",
+          legal:"",
+          registered_capital: '',
+          contact_phone: '',
+          customer_rank:"",
+          card_address:[],
+          busunessAddress:[],
+          address:"" //详细地址，与address一起传
+        },
+        rules: {
+          customer_name: [
+            { required: true, message: '请输入商户名称', trigger: 'blur' },
+            { min: 1, max: 30, message: '长度在 30 字符以内', trigger: 'blur' }
+          ],
+          card_no: [
+            { required: true, message: '请输入身份证号', trigger: 'blur' },
+            {
+              pattern:/(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/, message: '你的身份证格式不正确',trigger: 'blur'
+            }
+          ],
+          company_phone: [
+            { required: true, message: '请输入电话号码', trigger: 'blur' },
+            { min: 7, max: 11, message: '请输入正确号码', trigger: 'blur' }
+          ],
+          contact_phone: [
+            { required: true, message: '请输入手机号码', trigger: 'blur' },
+            {validator:function(rule,value,callback){
+                if(/^1[34578]\d{9}$/.test(value) == false){
+                  callback(new Error("请输入正确的手机号"));
+                }else{
+                  callback();
+                }
+              }, trigger: 'blur'}
+          ],
+          customer_rank: [
+            { required: true, message: '请选择', trigger: 'blur' }
+          ],
+          card_address: [
+            { required: true, message: '请选择身份证颁发地址', trigger: 'blur' }
+          ],
+          busunessAddress:[
+            { required: true, message: '请选择商户地址', trigger: 'blur' }
+          ],
+          address:[
+            { required: true, message: '请填写详细地址', trigger: 'blur' }
+          ]
+        }
+      }
+    },
+    methods:{
+      submitForm(formName) {
+        const that = this;
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            this.axios({
+              method:'post',
+              data:{businessForm:JSON.stringify(this.businessForm)},
+              url:process.env.BASE_API + 'customer/editCustomer'
+            }).then((res)=>{
+              if (res.status == 200) {
+                this.$emit("through",false)
+                this.$message({
+                  showClose: true,
+                  message: '修改商户成功！',
+                  type: 'success'
+                })
+              }
+            }).catch(function(err) {
+              that.$message.error(err.response.data.msg)
+            })
+          } else {
+            this.$message({
+              message: '请完善信息！！',
+              type: 'warning'
+            });
+          }
+        });
+      },
+      //获取城市地点文件
+      getCityData(){
+        this.axios.post(process.env.BASE_CITY).then((res)=>{
+          this.cityData = res.data;
+        })
+        this.businessForm = this.editData
+        common.lookup('L007', this).then((res) => {
+          this.customerRank = res
+        })
+      }
+    },
+    created() {
+      this.getCityData()
+    }
+  }
+</script>
+
+<style scoped>
+  .editBusiness{
+    padding: 15px;
+  }
+  .addBusinessStyle{
+    position: relative;
+    height: 42px;
+    line-height: 42px;
+    padding: 0 15px;
+    border-bottom: 1px solid #f6f6f6;
+    color: #333;
+    border-radius: 2px 2px 0 0;
+    font-size: 14px;
+  }
+</style>
+

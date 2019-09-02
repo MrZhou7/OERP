@@ -1,0 +1,589 @@
+<template>
+  <el-main >
+    <el-form ref="form" :model="formInline" label-width="80px">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="门店选择">
+            <el-select v-model="formInline.mall_id" placeholder="请选择">
+              <el-option
+                v-for="(item,index) in act.mall"
+                :key="index"
+                :label="item.mall_name"
+                :value="parseInt(item.mall_id)">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="合同编号">
+            <el-input v-model="formInline.contract_code" placeholder="请输入合同编号"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="计算批次">
+            <el-input v-model="formInline.batch" placeholder="请输入计算批次"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商户编号">
+            <el-input v-model="formInline.customer_code" placeholder="请输入商户编号"></el-input>
+          </el-form-item>
+        </el-col>
+
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="商户名称">
+            <el-input v-model="formInline.contract_code" placeholder="请输入商户名称"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商铺编号">
+            <el-input v-model="formInline.unit_code" placeholder="请输入商铺编号"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商铺名称">
+            <el-input v-model="formInline.unit_code" placeholder="请输入商铺名称"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="账单编号">
+            <el-input v-model="formInline.unit_code" type="number" placeholder="请输入账单编号"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="12">
+          <el-form-item label="立账起始时间" class="width_110">
+            <el-date-picker
+              v-model="formInline.start_date"
+              type="daterange"
+              format="yyyy-MM-dd"
+              value-format="yyyy-MM-dd"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              align="right">
+            </el-date-picker>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="起始时间">
+            <el-date-picker
+              v-model="formInline.start_date"
+              type="daterange"
+              format="yyyy-MM-dd"
+              value-format="yyyy-MM-dd"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              align="right">
+            </el-date-picker>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="账单明细编号" class="width_110">
+            <el-input v-model="formInline.contract_code" placeholder="请输入账单明细编号"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="会计期">
+            <el-date-picker
+              v-model="formInline.contract_code"
+              type="month"
+              placeholder="选择日期"
+              value-format="yyyy-MM"
+              format="yyyy-MM">
+            </el-date-picker>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="合同类型">
+            <el-select v-model="formInline.status" placeholder="请选择">
+              <el-option label="请选择" value=""></el-option>
+              <el-option label="场地合同" :value="1"></el-option>
+              <el-option label="车位合同" :value="2"></el-option>
+              <el-option label="广告位合同" :value="3"></el-option>
+              <el-option label="库房合同" :value="4"></el-option>
+              <el-option label="联营合同" :value="5"></el-option>
+              <el-option label="填场合同" :value="6"></el-option>
+              <el-option label="意向合同" :value="7"></el-option>
+              <el-option label="预租合同" :value="8"></el-option>
+              <el-option label="展位合同" :value="9"></el-option>
+              <el-option label="装修合同" :value="10"></el-option>
+              <el-option label="租赁合同" :value="11"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="审批状态">
+            <el-select v-model="formInline.status" placeholder="请选择">
+              <el-option label="请选择" value=""></el-option>
+              <el-option label="草稿" :value="0"></el-option>
+              <el-option label="审批通过" :value="1"></el-option>
+              <el-option label="审批中" :value="2"></el-option>
+              <el-option label="作废" :value="3"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="账单状态">
+            <el-select v-model="formInline.status" placeholder="请选择">
+              <el-option label="请选择" value=""></el-option>
+              <el-option label="有效" :value="0"></el-option>
+              <el-option label="无效" :value="1"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="取消状态">
+            <el-select v-model="formInline.status" placeholder="请选择">
+              <el-option label="请选择" value=""></el-option>
+              <el-option label="取消中" :value="0"></el-option>
+              <el-option label="未取消" :value="1"></el-option>
+              <el-option label="已取消" :value="2"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="账单类型">
+            <el-select v-model="formInline.status" placeholder="请选择">
+              <el-option label="请选择" value=""></el-option>
+              <el-option label="合同首期账单" :value="0"></el-option>
+              <el-option label="合同周期账单" :value="1"></el-option>
+              <el-option label="临时费用账单" :value="2"></el-option>
+              <el-option label="滞纳金账单" :value="3"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="收款状态">
+            <el-select v-model="formInline.status" placeholder="请选择">
+              <el-option label="请选择" value=""></el-option>
+              <el-option label="部分收款" :value="0"></el-option>
+              <el-option label="全部收款" :value="1"></el-option>
+              <el-option label="未收款" :value="2"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label=费用类型>
+            <el-select v-model="formInline.status" placeholder="请选择">
+              <el-option label="请选择" value=""></el-option>
+              <el-option label="部分收款" :value="0"></el-option>
+              <el-option label="全部收款" :value="1"></el-option>
+              <el-option label="未收款" :value="2"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="收取方式">
+            <el-select v-model="formInline.status" placeholder="请选择">
+              <el-option label="请选择" value=""></el-option>
+              <el-option label="部分收款" :value="0"></el-option>
+              <el-option label="全部收款" :value="1"></el-option>
+              <el-option label="未收款" :value="2"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="是否同步">
+            <el-select v-model="formInline.status" placeholder="请选择">
+              <el-option label="请选择" value=""></el-option>
+              <el-option label="是" :value="1"></el-option>
+              <el-option label="否" :value="0"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6" align="center">
+          <el-button align="center" type="primary" @click="onSecher(formInline)">查询</el-button>
+        </el-col>
+      </el-row>
+    </el-form>
+    <div class="btn_bottom">
+      <el-button @click="inChecking" :disabled="statusClick.inCheckings">提交审核</el-button>
+      <el-button @click="checking" :disabled="statusClick.checkings">审核</el-button>
+      <el-button @click="cancel" :disabled="statusClick.cancel">取消账单</el-button>
+      <el-button @click="receivables" :disabled="statusClick.receivables">收款</el-button>
+      <el-button @click="refund" :disabled="statusClick.refund">账单退款</el-button>
+      <el-button @click="openAnAccount" :disabled="statusClick.openAnAccount">修改立账日期</el-button>
+    </div>
+    <div class="contract_table">
+      <el-table
+        :data="tableData"
+        style="width: 100%;"
+        border
+        ref="multipleTable"
+        highlight-current-row
+        tooltip-effect="dark"
+        @row-click="clickRow"
+        @selection-change="changFun"
+        align: center
+        :height="tableHeight">
+        <el-table-column
+          prop="id"
+          type="selection"
+          width="55">
+        </el-table-column>
+        <el-table-column
+          fixed
+          prop="mall_name"
+          :show-overflow-tooltip="true"
+          label="门店"
+          resizable: true width="150">
+        </el-table-column>
+        <el-table-column
+          prop="contract_code"
+          :show-overflow-tooltip="true"
+          label="合同编号"
+          resizable: true width="150">
+        </el-table-column>
+        <el-table-column
+          prop="store_code"
+          :show-overflow-tooltip="true"
+          label="场地编号">
+        </el-table-column>
+        <el-table-column
+          prop="customer_name"
+          :show-overflow-tooltip="true"
+          label="商户">
+        </el-table-column>
+        <el-table-column
+          prop="cut_status"
+          :show-overflow-tooltip="true"
+          label="中止审批状态" width="120">
+          <template slot-scope="scope" )>
+            <span v-if="scope.row.cut_status == 1"> 草稿</span>
+            <span v-else-if="scope.row.cut_status == 2"> 审批中</span>
+            <span v-else-if="scope.row.cut_status == 3"> 生效</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column
+          prop="cut_date"
+          :show-overflow-tooltip="true"
+          label="中止日期" width="200">
+        </el-table-column>
+        <!--<el-table-column-->
+        <!--prop="type"-->
+        <!--label="合同类型"-->
+        <!--width="120">-->
+        <!--<template slot-scope="scope" )>-->
+        <!---->
+        <!--{{scope.row.type == 3 ? '中止' : '终止'}}-->
+        <!--</template>-->
+        <!--</el-table-column>-->
+        <el-table-column
+          prop="contract_type"
+          :show-overflow-tooltip="true"
+          label="合同类型">
+          <template slot-scope="scope">
+             <span v-for="(item, index) in act.contract_type">
+               {{scope.row.contract_type == item.values_code ? item.values_name : ''}}
+             </span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="start_date"
+          :show-overflow-tooltip="true"
+          label="开始时间" width="120">
+        </el-table-column>
+        <el-table-column
+          prop="end_date"
+          :show-overflow-tooltip="true"
+          label="结束时间" width="120">
+        </el-table-column>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="contract_area"
+          label="签约面积(平米)" width="120">
+        </el-table-column>
+        <el-table-column
+          prop="store_code"
+          :show-overflow-tooltip="true"
+          label="商铺编码">
+        </el-table-column>
+        <el-table-column
+          prop="store_name"
+          :show-overflow-tooltip="true"
+          label="商铺名称">
+        </el-table-column>
+        <el-table-column
+          prop="brand_name"
+          :show-overflow-tooltip="true"
+          label="品牌名称">
+        </el-table-column>
+        <el-table-column
+          prop="avoid_lease"
+          :show-overflow-tooltip="true"
+          label="免租期(天)" width="120">
+        </el-table-column>
+
+        <el-table-column
+          fixed="right"
+          algin="center"
+          label="操作"
+          width="200">
+          <template slot-scope="scope">
+            <el-button
+              @click.native.prevent="viewRow(scope.$index, tableData)"
+              type="text"
+              size="small">
+              查看
+            </el-button>
+            <el-button
+              @click.native.prevent="editRow(scope.$index, tableData)"
+              type="text"
+              size="small" v-if="scope.row.cut_status == 1 ">
+              编辑
+            </el-button>
+            <el-button
+              @click.native.prevent="deleteRow(scope.$index, tableData)"
+              type="text"
+              size="small" v-if="scope.row.status == 1">
+              作废
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        background
+        layout="prev, pager, next"
+        @current-change="pageinations"
+        :current-page.sync="currentPage"
+        :total="total">
+      </el-pagination>
+    </div>
+   <!--立账日期-->
+    <el-dialog
+      title="立账日期"
+      :visible.sync="entry.accountsVisible"
+      width="70%" height="70%">
+      <el-form label-width="80px" :model="editClose" :rules="rentDetailRules" ref="rentDetailRules">
+        <el-row :gutter="20">
+          <el-col :span="16">
+            <el-form-item label="立账日期" class="label_required width_130" prop="accounts_date">
+              <el-date-picker
+                v-model="editClose.accounts_date"
+                type="date"
+                placeholder="选择日期">
+              </el-date-picker>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="delaySub('rentDetailRules')">提交审核</el-button>
+        <el-button @click="entry.accountsVisible = false">取 消</el-button>
+      </div>
+    </el-dialog>
+    <!--账单退款-->
+    <el-dialog title="账单退款" :visible.sync="building" width="100%" height="60%" top="0%"
+               :close-on-click-modal="false">
+      <building ></building>
+    </el-dialog>
+  </el-main>
+</template>
+<script>
+  var data = {}
+  import { common } from '@/common/common'
+  import building from '@/components/finance/refund.vue' //账单退款
+  export default {
+    data() {
+      return {
+        formInline: {},
+        tableData: [],
+        total: 0,//分页总数据
+        currentPage: 1,//当前页码
+        tableHeight: window.innerHeight - 520,//表格高度
+        checkData: {}, //选中数据
+        statusClick: {
+          checkings: true, //审核
+          inCheckings: true, // 提交审核
+          cancel: true, // 取消账单
+          receivables: true, // 收款
+          refund: true, // 账单退款
+          openAnAccount: true  // 修改立账日期
+        },
+        editClose: {
+          accounts_date: false //立账日期
+        },
+        entry: {
+          guaranteeAdd: false,
+          accountsVisible: false, //立账日期弹出框
+        },
+        title: '',
+        rentDetailRules: {
+          'accounts_date': [{ required: true, message: '立账日期不能为空', trigger: 'change' }],
+        },
+        building: false, // 账单退款
+      }
+    },
+    computed: {
+      act() {
+        return this.$store.getters.act
+      }
+    },
+    created: function() {
+      const searchHistory = common.get('supensionSearch')
+      if (searchHistory != null) {
+        this.formInline = searchHistory.search
+        common.getPreData(searchHistory.search, 'cutOff/getCutList', this, 'supensionSearch')
+      }
+
+      this.$store.dispatch('getMineBaseApi')
+    },
+    methods: {
+      onSecher() {
+        data = this.formInline
+        common.getPreData(data, 'CutOff/getCutList', this, 'supensionSearch')
+        common.set('supensionSearch', { 'search': data })
+      },
+      clickRow(row) {//选择当前行
+        this.$refs.multipleTable.toggleRowSelection(row)
+        this.checkData = row
+        switch (row.cut_status) {
+          case 1:  //草稿
+            this.statusClick.checkings = true //审核
+            this.statusClick.inCheckings = false //提交审核
+            break
+          case 2: //审批中
+            this.statusClick.checkings = false //审核
+            this.statusClick.inCheckings = true //提交审核
+            break
+          case 3: //生效
+            this.statusClick.checkings = true //审核
+            this.statusClick.inCheckings = true //提交审核
+            break
+          default:
+        }
+      },
+      changFun(row) {//获取当前行数据
+        if (row.length > 1) { //去除多选
+          this.$refs.multipleTable.clearSelection()
+          this.$refs.multipleTable.toggleRowSelection(row.pop())
+        }
+      },
+      viewRow(index, row) {
+        console.log(111)
+        this.entry.guaranteeAdd = true
+        this.title = '查看'
+      },
+      editRow(index, row) {
+        this.entry.guaranteeAdd = true
+        this.title = '编辑'
+      },
+      deleteRow(index, row) {//作废
+        common.del('此操作将作废合同是否继续?', 'contract_main/editStatus', {
+          contract_main_id: row[index].contract_main_id,
+          status: 0
+        }, 'CutOff/getCutList', this, 'supensionSearch')
+
+      },
+      pageinations(val) {//分页
+        data = this.formInline
+        data.page = val
+        data.limit = 10
+        common.getPreData(data, 'CutOff/getCutList', this, 'supensionSearch')
+        common.set('supensionSearch', { 'search': data })
+      },
+      checking() { //审核
+        common.del('是否提交审核?', 'CutOff/cutOffAudit', {
+          id: this.checkData.id,
+          status: 3
+        }, 'CutOff/getCutList', this, 'supensionSearch')
+      },
+      inChecking() { //提交审核
+        common.del('是否提交审核?', 'CutOff/cutOffAudit', {
+          id: this.checkData.id,
+          status: 2
+        }, 'CutOff/getCutList', this, 'supensionSearch')
+      },
+      cancel() { //取消账单
+        common.del('是否提交审核?', 'CutOff/cutOffAudit', {
+          id: this.checkData.id,
+          status: 3
+        }, 'CutOff/getCutList', this, 'supensionSearch')
+      },
+      receivables() { //收款
+        common.del('是否提交审核?', 'CutOff/cutOffAudit', {
+          id: this.checkData.id,
+          status: 2
+        }, 'CutOff/getCutList', this, 'supensionSearch')
+      },
+      refund() { //账单退款
+        common.del('是否提交审核?', 'CutOff/cutOffAudit', {
+          id: this.checkData.id,
+          status: 2
+        }, 'CutOff/getCutList', this, 'supensionSearch')
+      },
+      openAnAccount() { //修改立账日期
+        common.del('是否提交审核?', 'CutOff/cutOffAudit', {
+          id: this.checkData.id,
+          status: 2
+        }, 'CutOff/getCutList', this, 'supensionSearch')
+      },
+      guaranteeClick() { //编辑合同中止日期
+        let that = this
+        common.del('是否修改中止日期?', 'CutOff/editCut', {
+          id: that.checkData.id,
+          enabled: that.checkData.enabled,
+          cut_date: that.checkData.cut_date
+        }, 'CutOff/getCutList', this, 'supensionSearch')
+        that.entry.guaranteeAdd = false
+      },
+      delaySub(formName) { //立账日期保存
+        let that = this
+        let closeType = {}
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            that.axios
+              .post(process.env.BASE_API + 'contract_main/editCloseType', closeType)
+              .then(function(res) {
+                if (res.data.msg == 'success') {
+                  namethat.$message({
+                    message: '提交成功',
+                    type: 'success'
+                  })
+                  that.editItem.editCloseVisible = false
+                  common.getPreData(that.formInline, 'contract_main/getConMainList', that, 'search');
+                } else {
+                  that.$message.error(res.data.msg)
+                }
+              })
+              .catch(function(err) {
+                that.$message.error(err.response.data.msg)
+              })
+          } else {
+            this.$message({
+              message: '您有信息尚未填写完',
+              type: 'warning'
+            })
+            return false
+          }
+        })
+      },
+    }
+  }
+</script>
+<style lang="scss">
+  thead {
+
+  .el-table-column--selection {
+
+  .cell {
+    display: none;
+  }
+
+  }
+  }
+
+
+</style>

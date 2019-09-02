@@ -1,0 +1,252 @@
+<template>
+  <el-main>
+    <el-row>
+      <el-col :span="12">
+        <div class="contentWrap">
+          <blockquote class="elem_quote">数据项类型(系统固定数据不能修改)</blockquote>
+          <el-form ref="ruleForm" :model="ruleForm" label-width="80px" class="demo-ruleForm">
+            <el-row>
+              <el-col :span="10">
+                <el-form-item label="类型编码">
+                  <el-input v-model="ruleForm.dept_code"></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="10">
+                <el-form-item label="类型名称">
+                  <el-input v-model="ruleForm.staff_num"></el-input>
+                </el-form-item>
+              </el-col>
+              <div class="seacherType">
+                <el-button type="primary" @click="searchForm('ruleForm')">查 询</el-button>
+              </div>
+            </el-row>
+          </el-form>
+          <div class="contract_table">
+            <el-table
+              ref="table"
+              :height="height"
+              :data="tableData"
+              :show-overflow-tooltip="true"
+              :highlight-current-row="true"
+              border
+              tooltip-effect="dark"
+              style="width: 100%"
+              @selection-change="getRadio"
+              @row-click="clickRow">
+              <el-table-column
+                type="selection"
+                width="55"/>
+              <el-table-column
+                :show-overflow-tooltip="true"
+                prop="notice_code"
+                min-width="100"
+                label="类型编码"/>
+              <el-table-column
+                :show-overflow-tooltip="true"
+                prop="contract_code"
+                min-width="100"
+                label="类型名称"/>
+              <el-table-column
+                :show-overflow-tooltip="true"
+                prop="contract_main_id"
+                min-width="100"
+                label="类型描述"/>
+            </el-table>
+            <el-pagination
+              :page-sizes="[20, 30, 40, 50]"
+              :page-size="20"
+              :current-page.sync="currentPage"
+              :total="total"
+              background
+              layout="prev, pager, next, total, sizes"
+              @size-change="handleSizeChange"
+              @current-change="pagination"/>
+          </div>
+        </div>
+      </el-col>
+      <el-col :span="12">
+        <div class="contentWrap">
+          <blockquote class="elem_quote">数据项值</blockquote>
+          <el-form ref="formInline" :model="formInline" label-width="80px" class="demo-ruleForm">
+            <el-row>
+              <el-col :span="10">
+                <el-form-item label="值编码">
+                  <el-input v-model="formInline.dept_code"></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="10">
+                <el-form-item label="值名称">
+                  <el-input v-model="formInline.staff_num"></el-input>
+                </el-form-item>
+              </el-col>
+              <div class="seacherType">
+                <el-button type="primary" @click="searchData('formInline')">查 询</el-button>
+              </div>
+            </el-row>
+          </el-form>
+          <blockquote class="elem_quote">{{ description }} <span class="addData" @click="addData">新 增</span></blockquote>
+          <div class="contract_table">
+            <el-table
+              ref="tableOne"
+              :height="heightOne"
+              :data="tableDataOne"
+              :highlight-current-row="true"
+              border
+              tooltip-effect="dark"
+              style="width: 100%"
+              @selection-change="getRadio"
+              @row-click="clickRow">
+              <el-table-column
+                type="selection"
+                width="55"/>
+              <el-table-column
+                :show-overflow-tooltip="true"
+                prop="notice_code"
+                min-width="100"
+                label="值编码"/>
+              <el-table-column
+                :show-overflow-tooltip="true"
+                prop="contract_code"
+                min-width="100"
+                label="值名称"/>
+              <el-table-column
+                :show-overflow-tooltip="true"
+                prop="contract_main_id"
+                min-width="100"
+                label="值描述"/>
+              <el-table-column
+                :show-overflow-tooltip="true"
+                prop="contract_code"
+                min-width="100"
+                label="启用/停用"/>
+              <el-table-column
+                fixed="right"
+                label="操作"
+                min-width="100">
+                <template slot-scope="scope">
+                  <el-button type="text" size="mini" @click.native.prevent="checkRol(scope.$index, tableOne)">查 看</el-button>
+                  <el-button type="text" size="mini" @click.native.prevent="gatheringDialog(scope.$index, tableOne)">编 辑</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            <el-pagination
+              :page-sizes="[20, 30, 40, 50]"
+              :page-size="20"
+              :current-page.sync="currentPage"
+              :total="totalOne"
+              background
+              layout="prev, pager, next, total, sizes"
+              @size-change="handleSizeChange"
+              @current-change="pagination"/>
+          </div>
+        </div>
+      </el-col>
+    </el-row>
+    <!--新增、编辑、查看弹窗-->
+    <el-dialog
+      :visible.sync="innerVisible"
+      :close-on-click-modal="false"
+      :title="title"
+      top="5%"
+      width="30%"
+      append-to-body
+      @close="handleClose">
+      <el-form ref="addForm" :model="addForm" :rules="rules" label-width="100px" class="demo-ruleForm">
+        <blockquote class="elem_quote">类型信息</blockquote>
+        <el-form-item label="类型编码">
+          <el-input v-model="addForm.pay_id" disabled/>
+        </el-form-item>
+        <el-form-item label="类型名称">
+          <el-input v-model="addForm.pay_id" disabled/>
+        </el-form-item>
+        <blockquote class="elem_quote">值信息</blockquote>
+        <el-form-item label="值编码" prop="pay_id">
+          <el-input v-model="addForm.pay_id" type="number"/>
+        </el-form-item>
+        <el-form-item label="值名称" prop="pay_id">
+          <el-input v-model="addForm.pay_id" readonly/>
+        </el-form-item>
+        <el-form-item label="值描述" prop="pay_id">
+          <el-input v-model="addForm.pay_id" readonly/>
+        </el-form-item>
+        <el-form-item label="停用/启用" prop="pay_id">
+          <el-select v-model="addForm.pay_id">
+            <el-option label="停用" value="1"/>
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="saveFrom('addForm')">保 存</el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+import { common } from '@/common/common';
+import building from '@/utils/building';
+export default {
+  name: 'Index',
+  data() {
+    return {
+      ruleForm: {}, // 数据类型搜索
+      formInline: {}, // 数据项值表单
+      addForm: {}, // 新增、编辑、查看表单
+      rules: { pay_id: { required: true, message: '请选择项目名称', trigger: 'change' }},
+      title: '', // 新增、编辑、查看弹窗title
+      description: '数据项值信息',
+      innerVisible: false, // 弹窗
+      height: window.innerHeight - 293 + 'px',
+      heightOne: window.innerHeight - 343 + 'px',
+      tableData: [], // 数据项类型table
+      tableDataOne: [], // 数据项值table
+      total: 0,
+      totalOne: 0,
+      currentPage: 1, // 页码
+    };
+  },
+  methods: {
+    searchForm() { // 数据项类型查询
+
+    },
+    searchData() { // 数据项值查询
+
+    },
+    addData() { // 新增数据项值
+      this.title = '新增数据项值';
+      this.innerVisible = true;
+    },
+    saveFrom() { // 新增编辑保存
+
+    },
+    clickRow(row) { // 点击table的row获取当前行数据
+      this.$refs.table.toggleRowSelection(row);
+      this.agencyList = row;
+    },
+    getRadio(row) { // 去除多选
+      building.radioBtn(row, this.$refs.table);
+    },
+    handleClose() { // 弹框关闭回调
+
+    },
+    pagination(val) { // 分页功能
+      const data = this.formInline;
+      data.page = val;
+      common.getPreData(data, 'PayTrans/getList', this, 'agencyData');
+      common.set('agencyData', { 'search': data });
+    },
+    handleSizeChange(val) {
+      const data = this.formInline;
+      data.limit = val;
+      common.getPreData(data, 'PayTrans/getList', this, 'agencyData');
+      common.set('agencyData', { 'search': data });
+    },
+  }
+};
+</script>
+
+<style scoped>
+  .contentWrap{margin:10px;border: 1px solid #e2e2e2;height: calc(100vh - 12vh)}
+  .seacherType{ padding-left: 10px;float: right;}
+  .addData{color: #38f;float:right;cursor:pointer;}
+</style>

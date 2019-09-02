@@ -1,0 +1,26 @@
+<template>
+  <div class="otherWrap">
+    敬请期待
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'index',
+  created() {
+    this.$confirm('更多功能正在开发, 敬请期待', '提示', {
+      confirmButtonText: '确定',
+      type: 'success'
+    })
+  }
+}
+</script>
+
+<style scoped lang="scss">
+  .otherWrap{
+    width:80%;
+    margin:100px auto;
+    font-size:65px;
+    text-align: center;
+  }
+</style>

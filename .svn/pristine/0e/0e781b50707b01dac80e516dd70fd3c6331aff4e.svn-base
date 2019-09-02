@@ -1,0 +1,23 @@
+import Layout from '@/views/layout/Layout';
+
+const saleRouter = {
+  path: '/sale',
+  component: Layout,
+  meta: { title: '销售管理', icon: 'nested' },
+  children: [
+    {
+      path: 'paymentCategory',
+      name: 'paymentCategory',
+      component: () => import('@/views/sale/pay/paymentCategory'),
+      meta: { title: '支付类别管理', icon: 'form' }
+    },
+    {
+      path: 'paymentMethod',
+      name: 'paymentMethod',
+      component: () => import('@/views/sale/pay/paymentMethod'),
+      meta: { title: '支付方式管理', icon: 'form' }
+    }
+  ]
+};
+
+export default saleRouter;

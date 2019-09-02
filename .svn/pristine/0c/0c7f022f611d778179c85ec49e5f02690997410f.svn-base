@@ -1,0 +1,59 @@
+import Layout from '@/views/layout/Layout';
+
+const costRouter = {
+
+  path: '/cost',
+  component: Layout,
+  name: 'Cost',
+  meta: { title: '费用管理', icon: 'nested' },
+  children: [
+    {
+      path: '/cost/costTypeManagement',
+      name: 'costTypeManagement',
+      meta: { title: '费用类型管理' },
+      component: () => import('@/views/cost/costTypeManagement')
+    },
+    {
+      path: '/cost/billAdmin/bus',
+      name: 'bus',
+      meta: { title: '账单管理' },
+      component: () => import('@/views/cost/billAdmin/bus'),
+      children: [
+        {
+          path: '/cost/billAdmin/index',
+          name: 'bus',
+          meta: { title: '账单管理' },
+          component: () => import('@/views/cost/billAdmin/index')
+        },
+        {
+          path: '/cost/billAdmin/temporaryCostMange',
+          name: 'bus',
+          meta: { title: '临时费用管理' },
+          component: () => import('@/views/cost/billAdmin/temporaryCostMange')
+        }
+      ]
+    },
+    {
+      path: '/cost/nonrecurrentCost/bus',
+      name: 'bus',
+      meta: { title: '临时费用' },
+      component: () => import('@/views/cost/nonrecurrentCost/bus'),
+      children: [
+        {
+          path: '/cost/rent',
+          name: 'bus',
+          meta: { title: '租金类' },
+          component: () => import('@/views/cost/nonrecurrentCost/rent')
+        },
+        {
+          path: '/cost/charge',
+          name: 'bus',
+          meta: { title: '费用类' },
+          component: () => import('@/views/cost/nonrecurrentCost/charge')
+        }
+      ]
+    }
+  ]
+};
+
+export default costRouter;

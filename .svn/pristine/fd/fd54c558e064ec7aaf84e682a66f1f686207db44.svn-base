@@ -1,0 +1,151 @@
+<template>
+  <div>
+    <el-row>
+      <el-col :span="8">
+        <div class="category-tree-content">
+          <el-input
+            v-model="filterText"
+            placeholder="输入关键字进行品类搜索">
+          </el-input>
+          <el-tree
+            v-loading="loading"
+            ref="tree2"
+            :highlight-current="true"
+            :data="dataTree"
+            :props="defaultProps"
+            :filter-node-method="filterNode"
+            class="filter-tree"
+            @node-click="handleNodeClick">
+            <span class="slot-t-node" slot-scope="{ node, data }">
+              <i class="iconfont icon-renyuan" style="color: #009688;" />
+              <span>{{ node.label }}</span>
+            </span>
+          </el-tree>
+        </div>
+      </el-col>
+      <el-col :span="16">
+        <div v-if= "contentIsShow" class="category-tree-content grid-content bg-purple-light">
+          <p class="category-text">品类信息 <span class="addCategory" @click="addCategory">添加子类</span></p>
+          <EditCategory v-show="isShow" :parent_id="parent_id" :rule-form="newLists"/>
+        </div>
+      </el-col>
+    </el-row>
+    <el-dialog
+      v-if="dialogVisible"
+      :close-on-click-modal="false"
+      :visible.sync="dialogVisible"
+      title="添加子类"
+      width="40%">
+      <addCategory :parent_id="subparentid" :operation_type_id = "newLists.operation_type_id" :type_level="newLists.type_level" @listenDialog="showDialog"/>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import { common } from '@/common/common';
+import EditCategory from '@/components/basic/editCategory.vue';
+import AddCategory from '@/components/basic/addCategory.vue';
+export default {
+  components: {
+    EditCategory, AddCategory
+  },
+  data() {
+    return {
+      filterText: '',
+      contentIsShow: false, // 品类内容是否显示
+      isShow: false, // 品类信息是否显示
+      dataTree: [], // 树状图显示数据
+      defaultProps: {
+        children: 'children',
+        label: 'text'
+      },
+      loading: false,
+      newLists: {}, // 父组件给子组建的传值
+      dialogVisible: false, // 添加子组件是否显示
+      currentIndex: 0,
+      parent_id: '', // 上级类别显示
+      subparentid: [] // 添加子类上级类别显示
+    };
+  },
+  watch: {
+    filterText(val) {
+      this.$refs.tree2.filter(val);
+    }
+  },
+  created() {
+    this.loading = true;
+    const list = common.get('List');
+    if (list != null) {
+      this.dataTree = list;
+      this.loading = false;
+    } else {
+      this.getCategoryTree(); // 获取树状图数据
+    }
+  },
+  methods: {
+    filterNode(value, data) {
+      if (!value) return true;
+      return data.text.indexOf(value) !== -1;
+    },
+    handleNodeClick(node, data) { // 点击传参给品类信息子组件，并显示品类信息
+      this.isShow = true;
+      this.contentIsShow = true;
+      this.newLists = data.data.data;
+
+      let parentId = { parent_id: this.newLists.parent_id };
+      this.axios({
+        method: 'post',
+        url: process.env.BASE_API + 'Operation_Type/getName',
+        data: parentId
+      }).then((res) => {
+        if (res.status == 200) {
+          this.parent_id = res.data.data;
+        }
+      }).catch(function(err) {
+        this.$message.error(err.response.data.msg);
+      });
+    },
+    getCategoryTree() { // 获取树状图数据
+      common.getTree('Operation_Type/cateList', this, 'List');
+    },
+    addCategory() { // 点击添加子类
+      if (this.newLists.parent_id < 0) {
+        return false;
+      }
+      this.dialogVisible = true;
+
+      let id = { parent_id: this.newLists.parent_id };
+      this.axios({
+        method: 'post',
+        url: process.env.BASE_API + 'Operation_Type/equality',
+        data: id
+      }).then((res) => {
+        if (res.status == 200) {
+          this.subparentid = res.data.data;
+        }
+      }).catch(function(err) {
+        this.$message.error(err.response.data.msg)
+      });
+    },
+    showDialog: function(data) { // 接受子组件传值
+      this.dialogVisible = data;
+    }
+  }
+};
+</script>
+<style rel="stylesheet/scss" lang="scss" scoped>
+  @import "../../font/iconfont.css";
+  #app {
+    font-family: 'Avenir', Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-align: center;
+    color: #666;
+  }
+  .category-tree-content{margin:10px;border: 1px solid #e2e2e2;height: calc(100vh - 10vh);
+    .category-text{background: #f7f7f7;line-height: 40px;font-size: 14px;color: #606266;padding: 0 15px;box-sizing: border-box;font-weight: bold;}
+  }
+  .filter-tree{overflow: auto;height:calc(100vh - 15vh);}
+  .addCategory{color: #38f;float:right;cursor:pointer;}
+</style>
+

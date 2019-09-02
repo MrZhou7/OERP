@@ -1,0 +1,143 @@
+<template>
+  <div class="addBusinessWrap">
+    <div class="businessContent">
+      <el-tabs type="border-card">
+        <el-tab-pane label="商户信息">
+          <el-form label-width="120px" class="demo-ruleForm">
+            <el-row>
+              <el-col :span="8">
+                <el-form-item label="商户编号">
+                  <el-input v-model="checkData.customer_code" placeholder="商户信息保存后自动生成" disabled></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="商户名称" placeholder="中英文、数字，限30字符">
+                  <el-input v-model="checkData.customer_name" disabled></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="商户简称" placeholder="中英文、数字，限30字符">
+                  <el-input v-model="checkData.cust_short_name" disabled></el-input>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="8">
+                <el-form-item label="身份证号">
+                  <el-input v-model="checkData.card_no" placeholder="请输入身份证号" disabled></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="公司电话">
+                  <el-input v-model="checkData.company_phone" placeholder="请输入公司电话" disabled></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="法人代表">
+                  <el-input v-model="checkData.legal" placeholder="中英文、数字，限30字符" disabled></el-input>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="8">
+                <el-form-item label="注册资本">
+                  <el-input v-model="checkData.registered_capital" placeholder="请输入注册资本" disabled></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="手机">
+                  <el-input v-model="checkData.contact_phone" placeholder="请输入手机号码" disabled></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="商户级别">
+                  <el-select v-model="checkData.customer_rank" placeholder="请选择" disabled>
+                    <el-option v-for="(item,index) in customerRank" :key="index" :label="item.values_name" :value="parseInt(item.values_code)"></el-option>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="8">
+                <el-form-item label="身份证颁发地">
+                  <el-cascader
+                    disabled
+                    :options="cityData"
+                    :props="cityProps"
+                    placeholder="请选择省/市"
+                    v-model="checkData.card_address"
+                    change-on-select
+                    :clearable="true"
+                  ></el-cascader>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="商户地址">
+                  <el-cascader
+                    disabled
+                    :options="cityData"
+                    v-model="checkData.busunessAddress"
+                    :props="cityProps"
+                    change-on-select
+                    :clearable="true"
+                    placeholder="请选择省/市/区"
+                  ></el-cascader>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-input v-model="checkData.address" placeholder="请输入详细地址，限50字符内" disabled></el-input>
+              </el-col>
+            </el-row>
+          </el-form>
+        </el-tab-pane>
+        <el-tab-pane label="证照信息">证照信息</el-tab-pane>
+        <el-tab-pane label="联系人信息">联系人信息</el-tab-pane>
+        <el-tab-pane label="福建信息">福建信息</el-tab-pane>
+      </el-tabs>
+    </div>
+  </div>
+</template>
+
+<script>
+  import {common} from '@/common/common'
+  export default {
+    name: "checkBusiness",
+    props:{
+      checkData:{
+        type:Object
+      }
+    },
+    data(){
+      return{
+        customerRank:[],//商戶級別信息
+        cityProps:{
+          children: 'children',
+          label: 'text',
+          value: 'id'
+        },
+        cityData:[]//请求本地的城市文件
+      }
+    },
+    methods:{
+      //获取城市地点文件
+      getCityData(){
+        this.axios.post(process.env.BASE_CITY).then((res)=>{
+          this.cityData = res.data;
+        })
+        common.lookup('L007', this).then((res) => {
+          this.customerRank = res
+        })
+      }
+    },
+    created() {
+      this.getCityData()
+    }
+  }
+</script>
+
+<style scoped>
+  .addBusinessWrap{
+    padding: 15px;
+  }
+</style>
+

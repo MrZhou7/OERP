@@ -1,0 +1,239 @@
+<template>
+  <div class="userWrap">
+    <el-row>
+      <el-col :span="6">
+        <div class="userWrapTitle">组织架构</div>
+        <div class="category-tree-content">
+          <el-input
+            v-model="filterText"
+            placeholder="输入关键字进行品类搜索">
+          </el-input>
+          <el-tree
+            ref="tree2"
+            v-loading="loading"
+            :highlight-current="true"
+            :data="dataTree"
+            :props="defaultProps"
+            :default-expand-all="true"
+            :filter-node-method="filterNode"
+            class="filter-tree"
+            @node-click="handleNodeClick"
+          />
+        </div>
+      </el-col>
+      <el-col :span="18">
+        <div class="userWrapTitle">用户信息</div>
+        <el-form :model="ruleForm" ref="ruleForm" label-width="100px" class="demo-ruleForm">
+          <el-row>
+            <el-col :span="8">
+              <el-form-item label="部门">
+                <el-input v-model="ruleForm.dept_code" placeholder="请输入部门"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item label="工号">
+                <el-input v-model="ruleForm.staff_num" placeholder="请输入工号"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item label="姓名">
+                <el-input v-model="ruleForm.staff_name" placeholder="请输入姓名"></el-input>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="8">
+              <el-form-item label="状态">
+                <el-input v-model="ruleForm.staff_name" placeholder="请选择状态"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item>
+                <el-button type="primary" @click="searchForm('ruleForm')">查询</el-button>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item>
+                <el-button type="success" @click="addUser">新增用户</el-button>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+        <el-table
+          :data="tableData"
+          :height="height"
+          border
+          style="width: 100%;margin: 10px;padding: 10px;">
+          <el-table-column
+            type="selection"
+            width="55">
+          </el-table-column>
+          <el-table-column
+            prop="status"
+            label="状态">
+          </el-table-column>
+          <el-table-column
+            prop="staff_num"
+            label="工号">
+          </el-table-column>
+          <el-table-column
+            prop="staff_name"
+            label="用户名">
+          </el-table-column>
+          <el-table-column
+            prop="dept_code"
+            label="部门">
+          </el-table-column>
+          <el-table-column
+            prop="create_time"
+            label="创建时间">
+          </el-table-column>
+          <el-table-column
+            prop="last_login_time"
+            label="最后登录时间">
+          </el-table-column>
+        </el-table>
+      </el-col>
+    </el-row>
+    <el-dialog
+      :title="title"
+      :visible.sync="dialogVisible"
+      :close-on-click-modal="false"
+      width="60%">
+      <el-form :model="addForm" ref="addForm" label-width="100px" class="demo-ruleForm">
+        <el-form-item label="工号">
+          <el-col :span="8">
+            <el-input v-model="addForm.staff_num" placeholder="请输入工号"></el-input>
+          </el-col>
+        </el-form-item>
+        <el-form-item label="姓名">
+          <el-col :span="8">
+            <el-input v-model="addForm.staff_name" placeholder="请输入姓名"></el-input>
+          </el-col>
+        </el-form-item>
+        <el-form-item label="	密码">
+          <el-col :span="8">
+            <el-input v-model="addForm.passwd" placeholder="请输入密码"></el-input>
+          </el-col>
+        </el-form-item>
+        <!--<el-form-item label="确认密码">
+          <el-col :span="8">
+            <el-input v-model="addForm.passwdToo" placeholder="请输入密码"></el-input>
+          </el-col>
+        </el-form-item>-->
+        <el-form-item label="状态">
+          <el-col :span="8">
+            <el-input v-model="addForm.status" placeholder="请选择状态"></el-input>
+          </el-col>
+        </el-form-item>
+        <el-form-item>
+          <el-col :span="8">
+            <el-button type="primary" @click="saveForm('ruleForm')">保存</el-button>
+          </el-col>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+var data = {};
+import { common } from '@/common/common';
+export default {
+  name: 'User',
+  data() {
+    return {
+      title: '',
+      dialogVisible: false,
+      height: window.innerHeight - 275 + 'px',
+      filterText: '', // 查询过滤的初始值
+      dataTree: [], // 树状图显示数据
+      defaultProps: {
+        children: 'children',
+        label: 'text'
+      },
+      loading: false,
+      tableData: [], // 表格数据
+      ruleForm: {
+        dept_code: '', // 部门代码
+        staff_num: '', // 员工工号
+        staff_name: '', // 员工姓名
+        status: '' // 状态
+      },
+      addForm: {
+        staff_num: '',
+        staff_name: '',
+        passwd: '',
+        status: ''
+      }
+    };
+  },
+  watch: {
+    filterText(val) {
+      this.$refs.tree2.filter(val);
+    }
+  },
+  created() {
+    this.loading = true;
+    this.getUserTree();
+  },
+  methods: {
+    filterNode(value, data) { // 组织架构的搜索查询
+      if (!value) return true;
+      return data.text.indexOf(value) !== -1;
+    },
+    getUserTree() { // 获取tree信息个表格的查询及点击组织架构获取信息
+      common.getTree('dept/getDeptTree', this);
+    },
+    handleNodeClick(node, data) { // 点击传参给用户信息，并显示用户信息
+      let code = { dept_code: data.data.data.dept_code };
+      common.getPreData(code, 'dept/getAdminTree', this);
+    },
+    addUser() { // 新增用户
+      this.dialogVisible = true;
+    },
+    searchForm() { // 查询数据
+      for(var i in this.ruleForm) {
+        if(this.ruleForm[i]) {
+          common.getPreData(this.ruleForm, 'dept/getAdminTree', this);
+          return;
+        }
+      }
+      this.$message({
+        message: '请输入查询信息',
+        type: 'warning'
+      });
+    },
+    saveForm() { // 保存
+      this.dialogVisible = false;
+    }
+  }
+};
+</script>
+
+<style scoped lang="scss">
+  .userWrap{
+    padding: 15px;
+    .userWrapTitle{
+      position: relative;
+      height: 42px;
+      line-height: 42px;
+      padding: 0 15px;
+      border-bottom: 1px solid #f6f6f6;
+      color: #333;
+      border-radius: 2px 2px 0 0;
+      font-size: 14px;
+      background-color: #DFEAF2;
+    }
+  }
+  .el-input--suffix .el-input__inner {
+    padding-right:15px;
+  }
+  .filter-tree{
+    overflow: auto;height: 750px;
+  }
+  .category-tree-content{
+    margin:10px;
+    border: 1px solid #e2e2e2;
+  }
+</style>

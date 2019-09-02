@@ -1,0 +1,352 @@
+<template>
+  <el-main :style="height">
+    <p class="category-text">商铺信息
+      <span class="addCategory" @click="cancel('ruleForm')">取消</span>
+      <span class="addCategory" @click="preservation('ruleForm')">确定</span>
+    </p>
+    <el-form ref="ruleForm" :model="formInline" :rules="rules" label-width="110px" class="demo-ruleForm">
+      <el-row :gutter="20">
+        <el-col :span="12">
+          <el-form-item label="商铺" class="label_required" prop="store_id">
+            <el-input v-model="store_name" suffix-icon="el-icon-search" clearable ref="getPayWayChang" @focus="fieldClick"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="产品名称" class="label_required" prop="name">
+            <el-input v-model="formInline.name" placeholder="请输入" :disabled="view" clearable></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="12">
+          <el-form-item label="产品编码" class="label_required" prop="code">
+            <el-input v-model="formInline.code" placeholder="请输入" :disabled="view" clearable></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="商品类别">
+              <el-select v-model="formInline.category" placeholder="请选择" :disabled="view" clearable>
+                <el-option label="标准商品" :value="1"></el-option>
+              </el-select>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="12">
+          <el-form-item label="条形码" class="label_required"  prop="bar_code">
+            <el-select v-model="formInline.bar_code" placeholder="请输入" :disabled="view" clearable>
+              <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name" :value="mall.mall_id"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="默认销售商品">
+            <el-select v-model="formInline.synctag" placeholder="请选择" clearable>
+              <el-option label="是" :value="1"></el-option>
+              <el-option label="否" :value="0"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="12">
+          <el-form-item label="价格" class="label_required" prop="money">
+            <el-input v-model="formInline.money" type="number" placeholder="请选择" :disabled="view" clearable></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="价格类型">
+            <el-select v-model="formInline.synctag" placeholder="请选择" :disabled="view" clearable>
+              <el-option label="非固定价格" :value="0"></el-option>
+              <el-option label="固定价格" :value="1"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="12">
+          <el-form-item label="有效类型" >
+            <el-select v-model="formInline.synctag" placeholder="请选择"  :disabled="view" clearable>
+              <el-option label="长期有效" :value="1"></el-option>
+              <el-option label="促销商品" :value="2"></el-option>
+            </el-select>
+          </el-form-item>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="扣点" class="label_required">
+            <el-input type="number" v-model="formInline.mall_proportion" placeholder="请输入价值金额" disabled
+                      clearable></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="12">
+          <el-form-item label="商品码有效开始日期" class="width_180">
+            <el-input v-model="formInline.shopping_proportion" disabled></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="商品码有效结束日期" class="width_180">
+            <el-input v-model="formInline.mall_proportion" disabled="view"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="12">
+          <el-form-item label="商品状态" prop="enabled">
+            <el-select v-model="formInline.enabled" placeholder="请选择"  :disabled="view" clearable>
+              <el-option label="有效" :value="1"></el-option>
+              <el-option label="无效" :value="0"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="商品类型" prop="commodityType">
+            <el-select v-model="formInline.commodityType" placeholder="请选择"  :disabled="view" clearable>
+              <el-option label="未知" :value="0"></el-option>
+              <el-option label="正常商品" :value="1" selected></el-option>
+              <el-option label="促销商品" :value="2"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20" class="lable_bottom">
+        <el-col :span="12">
+          <el-form-item label="品牌" >
+            <el-input v-model="formInline.brand_name" :disabled="view" @focus="brandChoiceData" clearable
+                      suffix-icon="el-icon-search"/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="货号">
+            <el-input type="number" v-model="formInline.item_number" :disabled="view" clearable></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20" class="lable_bottom">
+        <el-col :span="12">
+          <el-form-item label="产地">
+            <el-input type="number" v-model="formInline.service_charge" :disabled="view" clearable></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="规格">
+            <el-input type="number" v-model="formInline.service_charge" :disabled="view" clearable></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20" class="lable_bottom">
+        <el-col :span="12">
+          <el-form-item label="计价单位" >
+            <el-input type="number" v-model="formInline.service_charge" :disabled="view" clearable></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="标签等级">
+            <el-select v-model="formInline.synctag" placeholder="请选择"  :disabled="view" clearable>
+              <el-option label="优" :value="0"></el-option>
+              <el-option label="未知" :value="1" selected></el-option>
+              <el-option label="合格" :value="2"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="12">
+          <el-form-item label="主材">
+            <el-input type="number" v-model="formInline.capping_amount" :disabled="view" clearable></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="辅材" >
+            <el-input v-model="formInline.remark" :disabled="view" clearable></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+    <el-dialog title="商铺选择" :visible.sync="fieldChoice" v-if="fieldChoice" width="70%" height="70%"
+               :close-on-click-modal="false" :append-to-body="true">
+      <Shops v-on:fieldData="fieldData" :mall="formInline.mall_id"></Shops>
+    </el-dialog>
+    <el-dialog title="品牌选择" :visible.sync="brandChoice" width="70%" height="70%" :close-on-click-modal="false">
+      <brand v-on:brandData="brandData" :operationTypeId="operation_type_id"></brand>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+  import { common } from '@/common/common'
+  import building from '@/utils/building'
+
+  export default {
+    name: 'commodity',
+    props: {
+      addList: {
+        type: Object,
+        default: function() {
+        }
+      }
+    },
+    data() {
+      return {
+        formInline: {},
+        mall_name: [], // 门店信息
+        view: false,
+        fieldChoice: false,
+        brandChoice: false,
+        store_name:'',
+        height: {
+          height: window.innerHeight * 0.8 + 'px',
+        },
+        rules: {
+        store_id: [{ required: true, message: '请选择商品', trigger: 'change' }],
+          name: [{ required: true, message: '请输入产品名称', trigger: 'blur' }],
+          code: [{ required: true, message: '请输入产品编码', trigger: 'blur' }],
+          bar_code: [{ required: true, message: '请输入条形码', trigger: 'blur' }],
+          money: [{ required: true, message: '请输入金额', trigger: 'blur' }],
+          enabled: [{ required: true, message: '请选择商品状态', trigger: 'change' }],
+          commodityType: [{ required: true, message: '请选择商品类型', trigger: 'change' }],
+          brand_name: [{ required: true, message: '请选择品牌', trigger: 'change' }],
+        }
+      }
+    },
+    props: ['commdityId', 'commdityType', 'mall'],
+    watch: {
+      commdityId: function(newVal, oldVal) {
+        if (newVal != '') {
+          this.viewPayData(newVal)
+        }
+      },
+      commdityType: function(newVal, oldVal) {
+        if (newVal == 1) {
+          this.view = true
+        } else {
+          this.view = false
+        }
+      },
+      mall: function(newVal, oldVal) {
+        this.formInline.mall = newVal;
+      },
+    },
+    created() {
+      this.formInline.mall = this.mall;
+      if (this.commdityId != '') {
+        this.viewPayData(this.commdityId)
+      }
+      if (this.commdityType == 1) {
+        this.view = true
+      } else {
+        this.view = false
+      }
+    },
+    methods: {
+      viewPayData(data) {
+        // this.axios({
+        //   method: 'post',
+        //   url: process.env.BASE_API + 'Operation_Type/getName',
+        //   data: data
+        // }).then((res) => {
+        //   if (res.status == 200) {
+        //     this.formInline = res.data.data;
+        //   }
+        // }).catch(function(err) {
+        //   this.$message.error(err.response.data.msg);
+        // });
+      },
+      brandChoiceData() {
+          this.brandChoice = true;
+      },
+      brandData(data) {//品牌赋值
+        this.brandChoice = false;
+        this.formInline.brand_name = data.brand_name;
+        this.formInline.brand_id = data.brand_id;
+      },
+      fieldClick() {
+        //场地点击
+        if (!this.formInline.mall_id) {
+          this.$message({
+            message: '请选择门店',
+            type: 'warning'
+          })
+        } else {
+          if (!this.formInline.store_id) {
+            this.fieldChoice = true
+          } else {
+            this.formInline.store_id = ''
+            this.store_name = ''
+            this.$nextTick(() => {
+              this.$refs.getPayWayChang.blur()
+            })
+          }
+        }
+      },
+      fieldData(data) {//场地赋值
+        if (data.length == undefined) {
+          this.store_name = data.store_name
+          this.formInline.store_id = data.store_id
+        } else {
+          let store_id = '', store_name = ''
+          data.forEach((index, i) => {
+            if (i != data.length - 1) {
+              store_id += index.store_id + ','
+              store_name += index.store_name + ','
+            } else {
+              store_id += index.store_id
+              store_name += index.store_name
+            }
+            this.store_name = store_name
+            this.formInline.store_id = store_id
+          })
+        }
+        this.fieldChoice = false
+      },
+      preservation(formName) { // 保存信息
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+
+          } else {
+            this.$message({ message: '请完善信息！！！', type: 'warning' })
+          }
+        })
+      },
+      cancel() {
+        this.$emit('payMode', false)
+      }
+
+    }
+  }
+</script>
+
+<style scoped lang="scss">
+  .lable_bottom {
+    margin-bottom: 20px !important;
+    padding-left: 20PX;
+  }
+
+  .el-checkbox {
+    font-size: 14px;
+    color: #606266;
+    font-weight: 700 !important;
+  }
+  .el-form-item {
+    margin-bottom: 22px;
+  }
+  .category-text {
+    background: #f7f7f7;
+    line-height: 40px;
+    font-size: 14px;
+    color: #606266;
+    padding: 0 15px;
+    box-sizing: border-box;
+    font-weight: bold;
+  }
+
+  .addCategory {
+    color: #38f;
+    float: right;
+    cursor: pointer;
+    padding: 0 25px;
+  }
+</style>

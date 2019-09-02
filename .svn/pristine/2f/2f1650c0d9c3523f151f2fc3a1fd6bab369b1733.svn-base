@@ -1,0 +1,261 @@
+<template>
+  <el-main>
+    <el-form ref="form" :model="formInline" label-width="80px">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="公司类型">
+            <el-select v-model="formInline.mall_id" placeholder="请选择公司类型"  >
+              <el-option
+                v-for="(item,index) in preData.mall"
+                :key="index"
+                :label="item.mall_name"
+                :value="parseInt(item.mall_id)">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="公司名称">
+            <el-input v-model="formInline.unit_code" placeholder="请输入公司名称"></el-input>
+        </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+    <div class="btn_bottom">
+      <el-button type="success" @click="addRow()">新增合同</el-button>
+      <el-button disabled>合同延期</el-button>
+      <el-button disabled>合同中止</el-button>
+      <el-button disabled>批量通过</el-button>
+      <el-button disabled>批量拒绝</el-button>
+    </div>
+    <div class="contract_table">
+      <el-table
+        :data="tableData"
+        style="width: 100%;text-align: center"
+        border
+        show-overflow-tooltip: true
+        align: center
+        min-height="450">
+        <el-table-column
+          prop="contract_main_id"
+          type="selection"
+          width="55">
+        </el-table-column>
+        <el-table-column
+          fixed
+          prop="mall_name"
+          label="项目名称"
+          resizable: true
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="contract_code"
+          label="合同编号"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="customer_code"
+          label="商户编号"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="customer_name"
+          label="商户名称"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="start_date"
+          label="开始时间"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="end_date"
+          label="结束时间"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="enabled"
+          label="是否有效"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="store_code"
+          label="场地编号"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="store_name"
+          label="场地名称"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="status"
+          label="审批状态"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="data_source"
+          label="合同来源"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="contract_code"
+          label="合同ID"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="store_name"
+          label="品牌名称"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="contract_area"
+          label="签约面积(平米)"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="avoid_lease"
+          label="免租期(天)"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="decorate_days"
+          label="装修期(天)"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="user_name"
+          label="招商人员"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          fixed="right"
+          algin="center"
+          label="操作"
+          width="300">
+          <template slot-scope="scope">
+            <el-button
+              @click.native.prevent="viewRow(scope.$index, tableData)"
+              type="text"
+              size="small">
+              查看
+            </el-button>
+            <el-button
+              @click.native.prevent="editRow(scope.$index, tableData)"
+              type="text"
+              size="small">
+              编辑
+            </el-button>
+            <el-button
+              @click.native.prevent="deleteRow(scope.$index, tableData)"
+              type="text"
+              size="small">
+              作废
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+
+  </el-main>
+
+
+</template>
+
+<script>
+  export default {
+    data() {
+      return {
+        formInline:{},
+        tableData:[],
+        type:'',
+        fieldChoice: false,
+        preData:{}
+      };
+    },
+    components: {
+    },
+    created: function() {
+      const that = this;
+      this.axios
+        .post(process.env.BASE_API + "contract_main/getcontractlist", {
+          mall_id: 1
+        })
+        .then(function(res) {
+          if (res.data.code == 0) {
+            that.tableData = res.data.data;
+          }
+        })
+        .catch(function(err) {
+          that.$message.error(err.responseJSON.msg);
+        });
+      this.getPreData()
+    },
+    methods: {
+      getPreData() {//预渲染参数
+        let that = this;
+        this.axios
+          .post(process.env.BASE_API + "table_util/getPreData", {act: 'contract'})
+          .then(function (res) {
+            if (res.status == 200) {
+              that.preData = res.data.data
+            }
+          })
+          .catch(function (err) {
+            this.$message.error(err.response.data.msg);
+          });
+      },
+      onSecher() {
+        const that = this;
+        console.log(this.formInline)
+        this.axios
+          .post(process.env.BASE_API + "contract_main/getcontractlist", {
+            mall_id: this.formInline.mall_id
+          })
+          .then(function(res) {
+            if (res.data.code == 0) {
+              that.tableData = res.data.data;
+            }
+          })
+          .catch(function(err) {
+          });
+      },
+      addRow() {
+        this.$router.push({
+          path: '/contract/create',
+          query: {
+            status: 'add'
+          }
+        })
+      },
+      viewRow(index, row) {
+        this.$router.push({
+          path: '/contract/create',
+          meta: { title: '查看租赁合同' },
+          query: {
+            status: 'view',
+            type: row[index]["contract_main_id"]
+          }
+        })
+      },
+      editRow(index, row) {
+        this.$router.push({
+          path: '/contract/create',
+          meta: { title: '编辑租赁合同' },
+          query: {
+            status: 'edit',
+            type: row[index]["contract_main_id"]
+          }
+        })
+      },
+      deleteRow(index, row) {
+        del('合同',process.env.BASE_API + "contract_main/getcontractlist",{contract_main_id: row[index].contract_main_id}, this)
+      },
+
+    }
+  };
+</script>
+
+<style rel="stylesheet/scss" lang="scss">
+
+</style>

@@ -1,0 +1,31 @@
+import Layout from '@/views/layout/Layout';
+
+const costRouter = {
+
+  path: '/cost',
+  component: Layout,
+  name: 'Cost',
+  meta: { title: '费用管理', icon: 'nested' },
+  children: [
+    {
+      path: '/cost/costTypeManagement',
+      name: 'costTypeManagement',
+      meta: { title: '费用类型管理' },
+      component: () => import('@/views/cost/costTypeManagement')
+    },
+    {
+      path: '/cost/billAdmin/index',
+      name: 'BillAdmin',
+      meta: { title: '账单管理' },
+      component: () => import('@/views/cost/billAdmin/index')
+    },
+    {
+      path: '/cost/billAdmin/temporaryCostMange',
+      name: 'TemporaryCostMange',
+      meta: { title: '临时费用管理' },
+      component: () => import('@/views/cost/billAdmin/temporaryCostMange')
+    }
+  ]
+};
+
+export default costRouter;

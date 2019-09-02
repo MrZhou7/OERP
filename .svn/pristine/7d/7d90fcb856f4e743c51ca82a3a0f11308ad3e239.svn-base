@@ -1,0 +1,351 @@
+<template>
+  <el-main>
+    <el-form ref="formInline" :model="formInline" label-width="100px" class="demo-ruleForm">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="门店">
+            <el-select v-model="formInline.mall_id" placeholder="请选择门店名称" clearable>
+              <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name" :value="mall.mall_id"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="返款单号">
+            <el-input v-model="formInline.start_money" clearable/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商铺编号">
+            <el-input v-model="formInline.start_money" clearable/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商户编号">
+            <el-input v-model="formInline.order_code" clearable/>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="是否有效">
+            <el-select v-model="formInline.cancel_status" clearable placeholder="请选择">
+              <el-option label="请选择" value=""/>
+              <el-option label="有效" value="1"/>
+              <el-option label="无效" value="2"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="立账起止日期">
+            <el-date-picker
+              v-model="start_date"
+              :picker-options="pickerOptions"
+              type="daterange"
+              value-format="yyyy-MM-dd"
+              align="right"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              @change="startDate($event, 1)"/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item>
+            <el-button type="primary" @click="submitForm('formInline')">查 询</el-button>
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+    <div class="btn_bottom">
+      <el-button @click="editTime">修改立账日期</el-button>
+      <el-button @click="refundDelete">删除</el-button>
+    </div>
+    <div class="contract_table">
+      <el-table
+        ref="table"
+        :height="height"
+        :data="tableData"
+        :show-overflow-tooltip="true"
+        highlight-current-row
+        border
+        tooltip-effect="dark"
+        style="width: 100%"
+        @selection-change="getRadio"
+        @row-click="clickRow">
+        <el-table-column
+          type="selection"
+          width="55"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="mall_name"
+          min-width="120"
+          label="返款单退款号"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="pay_code"
+          min-width="100"
+          label="返款单号"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="order_code"
+          min-width="100"
+          label="批次号"/>
+        <el-table-column
+          prop="store_name"
+          min-width="100"
+          label="门店"/>
+        <el-table-column
+          prop="pay_amt"
+          min-width="100"
+          label="商户编号"/>
+        <el-table-column
+          prop="pay_name"
+          min-width="100"
+          label="商户名称"/>
+        <el-table-column
+          prop="created_by"
+          min-width="100"
+          label="返款方式"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="pay_time"
+          min-width="120"
+          label="返款金额"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="created_time"
+          min-width="120"
+          label="立账日期"/>
+        <el-table-column
+          prop="cancel_status"
+          min-width="100"
+          label="是否有效">
+          <template slot-scope="scope">
+            <span v-if="scope.row.cancel_status == 0">无效</span>
+            <span v-else-if="scope.row.cancel_status == 1">有效</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="deliver_status"
+          min-width="100"
+          label="是否同步">
+          <template slot-scope="scope">
+            <span v-if="scope.row.deliver_status == 0">否</span>
+            <span v-else-if="scope.row.deliver_status == 1">是</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="sync_date"
+          min-width="120"
+          label="同步时间"/>
+        <el-table-column
+          fixed="right"
+          algin="center"
+          label="操作"
+          width="170">
+          <template slot-scope="scope">
+            <el-button v-if="scope.row.deliver_status == 1 ? false: true"
+              @click.native.prevent="editTime(scope.row)"
+              type="text"
+              size="small">
+              修改立账日期
+            </el-button>
+            <el-button
+              @click.native.prevent="refundDelete(scope.row)"
+              type="text"
+              size="small">
+              删除
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        :page-sizes="[20, 30, 40, 50]"
+        :page-size="20"
+        :current-page.sync="currentPage"
+        :total="total"
+        background
+        layout="prev, pager, next, total, sizes"
+        @current-change="pagination"
+        @size-change="handleSizeChange"/>
+    </div>
+    <!--立账日期弹框-->
+    <el-dialog
+      :visible.sync="dialogVisibleTime"
+      :close-on-click-modal="false"
+      title="修改立账日期"
+      top="5%"
+      width="50%"
+      height="50%">
+      <el-form ref="form" :rules="rules" :model="form" label-width="100px">
+        <el-form-item label="原立账日期">
+          <el-date-picker
+            :readonly="true"
+            v-model="form.value1"
+            value-format="yyyy-MM-dd"
+            type="date">
+          </el-date-picker>
+        </el-form-item>
+        <el-form-item label="新立账日期" prop="value2">
+          <el-date-picker
+            v-model="form.value2"
+            align="right"
+            value-format="yyyy-MM-dd"
+            type="date"
+            placeholder="选择日期">
+          </el-date-picker>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="saveForm('form')">保 存</el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+  import { common } from '@/common/common';
+  import building from '@/utils/building';
+  export default {
+    name: 'collectionRefund',
+    data() {
+      return {
+        formInline: { mall_id: '' }, // 搜索条件信息
+        ruleForm: {}, // 代收款表单 加内容，方便验证
+        rules: { mall_id: { required: true, message: '请选择项目名称', trigger: 'change' }},
+        height: window.innerHeight - 300 + 'px',
+        form: { value1: '', value2: '' }, // 立账日期
+        rules: { value2: [{ type: 'string', required: true, message: '请选择日期', trigger: 'change' }] }, // 立账日期
+        loading: false,
+        total: 0,
+        currentPage: 1, // 页码
+        mall_name: [], // 门店信息
+        dialogVisibleTime: false,// 修改立账日期
+        pickerOptions: {
+          shortcuts: [{
+            text: '最近一周',
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime());
+              end.setTime(end.getTime() - 3600 * 1000 * 24 * 7);
+              picker.$emit('pick', [end, start]);
+            }
+          }, {
+            text: '最近一个月',
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime());
+              end.setTime(end.getTime() - 3600 * 1000 * 24 * 30);
+              picker.$emit('pick', [end, start]);
+            }
+          }, {
+            text: '最近一年',
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime());
+              end.setTime(start.getTime() - 3600 * 1000 * 24 * 365);
+              picker.$emit('pick', [end, start]);
+            }
+          }]
+        },
+        tableData: [], // 订单table
+        tableDataOne: [], // 代收款明细table
+        agencyList: '', // 单行点击的数据
+
+        dialogVisible: false, // 代收款弹窗
+        dialogVisibleDetail: false, // 代收款交易明细弹窗
+        start_date: '', // 起始日期
+        account_date: '' // 生成代收款里的时间
+      };
+    },
+    created() {
+      building.Mall(this); // 先获取门店数据
+      const searchHistory = common.get('gatheringData');
+      if (searchHistory != null) {
+        this.formInline = searchHistory.search;
+        common.getPreData(searchHistory.search, 'OrderPayingDetail/orderPayList', this, 'gatheringData');
+      }
+    },
+    methods: {
+      submitForm() { // 查询
+        const data = this.formInline;
+        common.getPreData(data, 'OrderPayingDetail/orderPayList', this, 'gatheringData');
+        common.set('gatheringData', { 'search': data });
+      },
+      clickRow(row) { // 点击table的row获取当前行数据
+        this.$refs.table.toggleRowSelection(row);
+        this.agencyList = row;
+      },
+      getRadio(row) { // 去除多选
+        building.radioBtn(row, this.$refs.table);
+      },
+      refundDelete() { //删除
+        let that = this;
+        common.del('是否删除?', 'CutOff/editCut', {
+        }, 'CutOff/getCutList', this, 'supensionSearch');
+      },
+      editTime(row) { // 修改立账日期
+        this.dialogVisibleTime = true;
+        this.form.value1 = row.time;
+      },
+      saveForm(formName) { // 保存修改立账日期
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            var d1 = new Date(this.form.value1);
+            var d2 = new Date(this.form.value2);
+            if (d1 >= d2) {
+              this.$message({ message: '新立账日期不能小于或者等于原立账日期！', type: 'warning' });
+              return false;
+            } else {
+              this.axios.post(process.env.BASE_API + 'OrderPayingDetail/editPaying', { id: this.orderList.id, account_date: this.form.value2 })
+                .then((res) => {
+                  this.dialogVisibleTime = false;
+                  this.$message({ message: '修改立账日期成功！', type: 'success' });
+                  const data = this.formInline;
+                  common.getPreData(data, 'OrderPayingDetail/orderPayList', this, 'gatheringData');
+                }).catch((err) => {
+                this.$message.error(err.response.data.msg);
+              });
+            }
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        });
+      },
+      pagination(val) { // 分页功能
+        const data = this.formInline;
+        data.page = val;
+        common.getPreData(data, 'OrderPayingDetail/orderPayList', this, 'gatheringData');
+        common.set('gatheringData', { 'search': data });
+      },
+      handleSizeChange(val) {
+        const data = this.formInline;
+        data.limit = val;
+        common.getPreData(data, 'OrderPayingDetail/orderPayList', this, 'gatheringData');
+        common.set('gatheringData', { 'search': data });
+      },
+      startDate(e, index) { // 搜索日期赋值
+        switch (index) {
+          case 1:
+            e ? this.formInline.start = e[0] : this.formInline.start = '';
+            e ? this.formInline.end = e[1] : this.formInline.end = '';
+            break;
+          case 2:
+            e ? this.ruleForm.start_account_date = e[0] : this.ruleForm.start_account_date = '';
+            e ? this.ruleForm.end_account_date = e[1] : this.ruleForm.end_account_date = '';
+            break;
+        }
+      }
+    }
+  };
+</script>
+
+<style scoped>
+  .btn_bottom{padding-left: 15px;}
+  .el-row > div > .el-form-item { margin-bottom: 5px !important; }
+</style>

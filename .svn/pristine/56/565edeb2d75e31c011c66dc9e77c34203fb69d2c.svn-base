@@ -1,0 +1,415 @@
+<template>
+  <el-main>
+    <el-form ref="formInline" :model="formInline" label-width="120px" class="demo-ruleForm">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="门店">
+            <el-select v-model="formInline.mall_id" placeholder="请选择门店名称" clearable>
+              <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name" :value="mall.mall_id"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="合同ID">
+            <el-input v-model="formInline.contract_main_id" clearable/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="合同编号">
+            <el-input v-model="formInline.contract_code" clearable/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="押金处理编号">
+            <el-input v-model="formInline.deposit_process_code" clearable/>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row v-show="formShow">
+        <el-col :span="6">
+          <el-form-item label="商铺编号">
+            <el-input v-model="formInline.customer_code" clearable/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商铺名称">
+            <el-input v-model="formInline.store_id" clearable/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商户编号">
+            <el-input v-model="formInline.store_code" clearable/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商户名称">
+            <el-input v-model="formInline.customer_name" clearable/>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row v-show="formShow">
+        <el-col :span="12">
+          <el-form-item label="立账日期">
+            <el-date-picker
+              v-model="account_date"
+              :picker-options="pickerOptions"
+              type="daterange"
+              value-format="yyyy-MM-dd"
+              align="right"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              @change="startDate($event)"/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="审批状态">
+            <el-select v-model="formInline.status" clearable placeholder="请选择">
+              <el-option label="无效" value="0"/>
+              <el-option label="草稿" value="1"/>
+              <el-option label="审批中" value="2"/>
+              <el-option label="已审批" value="3"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="取消状态">
+            <el-select v-model="formInline.is_delete" clearable placeholder="请选择">
+              <el-option value="" label="全部"/>
+              <el-option label="未取消" value="0"/>
+              <el-option label="已取消" value="1"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="是否同步">
+            <el-select v-model="formInline.sync_tag" placeholder="请选择" clearable>
+              <el-option value="" label="全部"/>
+              <el-option label="否" value="0"/>
+              <el-option label="是" value="1"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item>
+            <el-button type="primary" @click="submitForm('formInline')">查 询</el-button>
+            <span class="searchRight" @click="moreSearch">{{ formShow ? '收起' : '展开' }}<i :class="searchRight"/></span>
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+    <div class="btn_bottom">
+      <el-button :disabled="submitDeposit" @click="submitList">提交审核</el-button>
+      <el-button :disabled="auditDeposit" @click="auditList">审核</el-button>
+      <el-button :disabled="cancleDeposit" @click="cancleList">作废</el-button>
+      <el-button @click="amendTime">修改立账日期</el-button>
+    </div>
+    <div class="contract_table">
+      <el-table
+        ref="table"
+        :height="height"
+        :data="tableData"
+        :show-overflow-tooltip="true"
+        highlight-current-row
+        border
+        tooltip-effect="dark"
+        style="width: 100%"
+        @selection-change="getRadio"
+        @row-click="clickRow">
+        <el-table-column
+          type="selection"
+          fixed
+          width="55"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="deposit_process_code"
+          min-width="100"
+          label="编号"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="invoice_pay_code"
+          min-width="100"
+          label="收费单号"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="status"
+          min-width="100"
+          label="审核状态">
+          <template slot-scope="scope">
+            <span v-if="scope.row.status == 0">无效</span>
+            <span v-else-if="scope.row.status == 1">草稿</span>
+            <span v-else-if="scope.row.status == 2">审批中</span>
+            <span v-else-if="scope.row.status == 3">已审批</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="corp_name"
+          min-width="100"
+          label="商管公司"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="mall_name"
+          min-width="100"
+          label="门店"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="customer_name"
+          min-width="100"
+          label="商户名称"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="contract_code"
+          min-width="100"
+          label="合同编号"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="processing_time"
+          min-width="100"
+          label="处理日期"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="process_type"
+          min-width="120"
+          label="处理方式">
+          <template slot-scope="scope">
+            <span v-if="scope.row.process_type == 1">返还</span>
+            <span v-else-if="scope.row.process_type == 2">扣款</span>
+            <span v-else-if="scope.row.process_type == 3">转付款</span>
+            <span v-else-if="scope.row.process_type == 4">补齐</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="processing_amount"
+          min-width="120"
+          label="已处理金额"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="is_delete"
+          min-width="100"
+          label="是否取消">
+          <template slot-scope="scope">
+            <span v-if="scope.row.is_delete == 0">未取消</span>
+            <span v-else-if="scope.row.is_delete == 1">已取消</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="account_date"
+          min-width="120"
+          label="立账日期"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="sync_tag"
+          min-width="100"
+          label="是否同步">
+          <template slot-scope="scope">
+            <span v-if="scope.row.sync_tag == 0">否</span>
+            <span v-else-if="scope.row.sync_tag == 1">是</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="sync_date"
+          min-width="120"
+          label="同步时间"/>
+      </el-table>
+      <el-pagination
+        :page-sizes="[20, 30, 40, 50]"
+        :page-size="20"
+        :current-page.sync="currentPage"
+        :total="total"
+        background
+        layout="prev, pager, next, total, sizes"
+        @current-change="pagination"
+        @size-change="handleSizeChange"/>
+    </div>
+    <!--立账日期弹框-->
+    <el-dialog
+      v-if="dialogVisibleTime"
+      :visible.sync="dialogVisibleTime"
+      :close-on-click-modal="false"
+      title="修改立账日期"
+      top="5%"
+      width="50%">
+      <AmendTime :time-one="timeOne" @changeTime="changeTime"/>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+import { common } from '@/common/common';
+import building from '@/utils/building';
+import AmendTime from '@/components/order/amendTime';
+export default {
+  name: 'Deposit',
+  components: { AmendTime },
+  data() {
+    return {
+      formInline: { mall_id: '' }, // 搜索条件信息
+      height: window.innerHeight - 300 + 'px',
+      loading: false,
+      total: 0,
+      currentPage: 1, // 页码
+      store_name: '', // 商铺名
+      mall_name: [], // 门店信息
+      pickerOptions: building.publicTime(),
+      timeOne: {}, // 传给立账日期的对象
+      tableData: [], // 订单table
+      fieldChoice: false, // 多选商铺的弹窗
+      dialogVisibleTime: false, // 立账日期的弹窗
+      tableList: {}, // 单行订单详情信息
+      searchRight: 'el-icon-arrow-down',
+      formShow: false, // 更多搜索
+      account_date: '', // 立账日期
+      submitDeposit: true, // 提交审核
+      auditDeposit: true, // 审核
+      cancleDeposit: true, // 作废
+    };
+  },
+  created() {
+    building.Mall(this); // 先获取门店数据
+    const searchHistory = common.get('depositData');
+    if (searchHistory != null) {
+      this.formInline = searchHistory.search;
+      common.getPreData(searchHistory.search, 'DepositProcess/getList', this, 'depositData');
+    }
+  },
+  methods: {
+    submitForm() { // 查询
+      const data = this.formInline;
+      data.limit = 20;
+      common.getPreData(data, 'DepositProcess/getList', this, 'depositData');
+      common.set('depositData', { 'search': data });
+    },
+    clickRow(row) { // 点击table的row获取当前行数据
+      this.$refs.table.toggleRowSelection(row);
+      this.tableList = row;
+      this.checkedList(row);
+    },
+    getRadio(row) { // 去除多选
+      building.radioBtn(row, this.$refs.table, this);
+    },
+    checkedList(row) {
+      switch (parseInt(row.status)) {
+        case 0: // 作废
+          this.submitDeposit = true;
+          this.auditDeposit = true;
+          this.cancleDeposit = true;
+          break;
+        case 1: // 草稿
+          this.submitDeposit = false;
+          this.auditDeposit = true;
+          this.cancleDeposit = false;
+          break;
+        case 2: // 审核中
+          this.submitDeposit = true;
+          this.auditDeposit = false;
+          this.cancleDeposit = false;
+          break;
+        case 3: // 已审核
+          this.submitDeposit = true;
+          this.auditDeposit = true;
+          this.cancleDeposit = true;
+          break;
+      }
+    },
+    submitList() { // 提交审核
+      common.del('您将提交审核, 是否继续?', 'DepositProcess/editStatus', { deposit_process_id: this.tableList.deposit_process_id, status: 2 },
+        'DepositProcess/getList', this, 'costList');
+      this.cancel();
+    },
+    auditList() { // 审核
+      common.del('您将通过审核, 是否继续?', 'DepositProcess/editStatus', { deposit_process_id: this.tableList.deposit_process_id, status: 3 },
+        'DepositProcess/getList', this, 'costList');
+      this.cancel();
+    },
+    cancleList() { // 作废
+      common.del('您将进行作废, 是否继续?', 'DepositProcess/editStatus', { deposit_process_id: this.tableList.deposit_process_id, status: 0 },
+        'DepositProcess/getList', this, 'costList');
+      this.cancel();
+    },
+    cancel() {
+      this.submitDeposit = true;
+      this.auditDeposit = true;
+      this.cancleDeposit = true;
+    },
+    amendTime() { // 修改立账日期
+      if (Object.keys(this.tableList).length == 0) {
+        this.$message.warning('请选择一行进行操作！');
+      } else if (this.tableList.sync_tag == 1) {
+        this.$message.warning('已经同步数据，无法操作！');
+      } else {
+        this.dialogVisibleTime = true;
+        this.timeOne = { account_date: this.tableList.account_date, url: 'DepositProcess/editAccountDate', id: this.tableList.id };
+      }
+    },
+    changeTime(data) { // 关闭立账日期弹窗，刷新数据
+      this.dialogVisibleTime = data;
+      this.submitForm();
+    },
+    shopName() { // 弹框商铺名称
+      if (!this.formInline.mall_id) {
+        this.$message({ message: '请选择门店', type: 'warning' });
+      } else {
+        this.fieldChoice = true;
+      }
+    },
+    fieldData(data) { // 场地赋值
+      if (data.length == undefined) {
+        this.store_name = data.store_name;
+        this.formInline.store_id = data.store_id;
+      } else {
+        let store_id = '', store_name = '';
+        data.forEach((index, i) => {
+          if (i != data.length - 1) {
+            store_id += index.store_id + ',';
+            store_name += index.store_name + ',';
+          } else {
+            store_id += index.store_id;
+            store_name += index.store_name;
+          }
+          this.store_name = store_name;
+          this.formInline.store_id = store_id;
+        });
+      }
+      this.fieldChoice = false;
+    },
+    pagination(val) { // 分页功能
+      const data = this.formInline;
+      data.page = val;
+      common.getPreData(data, 'DepositProcess/getList', this, 'depositData');
+      common.set('depositData', { 'search': data });
+    },
+    handleSizeChange(val) {
+      const data = this.formInline;
+      data.limit = val;
+      common.getPreData(data, 'DepositProcess/getList', this, 'depositData');
+      common.set('depositData', { 'search': data });
+    },
+    moreSearch() { // 更多搜索
+      if (this.searchRight == 'el-icon-arrow-down') {
+        this.formShow = true;
+        this.searchRight = 'el-icon-arrow-up';
+        this.height = window.innerHeight - 430;
+      } else {
+        this.formShow = false;
+        this.searchRight = 'el-icon-arrow-down';
+        this.height = window.innerHeight - 345;
+      }
+    },
+    startDate(e) { // 搜索日期赋值
+      e ? this.formInline.start = e[0] : this.formInline.start = '';
+      e ? this.formInline.end = e[1] : this.formInline.end = '';
+    }
+  }
+};
+</script>
+
+<style scoped>
+  .btn_bottom{padding-left: 15px;}
+  .el-row > div > .el-form-item { margin-bottom: 5px !important; }
+</style>

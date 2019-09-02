@@ -1,0 +1,726 @@
+<template>
+  <el-main>
+    <el-form ref="form" :model="formInline" label-width="80px">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="门店选择">
+            <el-select v-model="formInline.mall_id" clearable placeholder="请选择">
+              <el-option
+                v-for="(item,index) in preData.mall"
+                :key="index"
+                :label="item.mall_name"
+                :value="parseInt(item.mall_id)">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商户名称">
+            <el-input v-model="formInline.customer_name" clearable placeholder="请输入商户名称"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商户编号">
+            <el-input v-model="formInline.customer_code" clearable placeholder="请输入商户编号"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="合同编号">
+            <el-input v-model="formInline.contract_code" placeholder="请输入合同ID"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="场地编号">
+            <el-input v-model="formInline.unit_code" clearable  placeholder="请输入场地编号"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="审批状态">
+            <el-select v-model="formInline.status" clearable placeholder="请选择审批状态">
+              <el-option label="全部" value=""></el-option>
+              <el-option label="无效" value="0"></el-option>
+              <el-option label="草稿" value="1"></el-option>
+              <el-option label="审批中" value="2"></el-option>
+              <el-option label="生效" value="3"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="品牌名称">
+            <el-input v-model="formInline.brand_name" clearable placeholder="请选择品牌名称"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="结束日期">
+            <el-date-picker
+              v-model="formInline.end_date"
+              value-format="yyyy-MM-dd"
+              type="date"
+              clearable
+              style="width:100%"
+              placeholder="选择日期">
+            </el-date-picker>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="12">
+          <el-form-item label="录入日期">
+            <el-date-picker
+              v-model="create_time"
+              value-format="yyyy-MM-dd HH:mm:ss"
+              :picker-options="pickerOptions"
+              type="daterange"
+              SelectionMode="None"
+              clearable
+              @change="createTime"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+            ></el-date-picker>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6" align="center">
+          <el-button align="center" type="primary" @click="onSecher(formInline)">查询</el-button>
+        </el-col>
+      </el-row>
+    </el-form>
+    <div class="btn_bottom">
+      <el-button type="primary" @click="addRow()">新增</el-button>
+      <el-button @click="change" :disabled="statusClick.changes">变更</el-button>
+      <el-button @click="delay" :disabled="statusClick.delays">延期</el-button>
+      <el-button @click="suspension" :disabled="statusClick.suspensions">中止</el-button>
+      <!--<el-button disabled>批量通过</el-button>-->
+      <!--<el-button disabled>批量拒绝</el-button>-->
+      <el-button @click="inChecking" :disabled="statusClick.inCheckings">提交审核</el-button>
+      <el-button @click="revokeInChecking" :disabled="statusClick.revokeInCheckings">撤销审核中</el-button>
+      <el-button @click="checking" :disabled="statusClick.checkings">审核</el-button>
+      <!--<el-button @click="revokeChecking" :disabled="statusClick.revokeCheckings">撤销审核</el-button>-->
+    </div>
+    <div class="contract_table">
+      <el-table
+        :data="tableData"
+        style="width: 100%;"
+        :show-overflow-tooltip="true"
+        border
+        ref="multipleTable"
+        highlight-current-row
+        tooltip-effect="dark"
+        @row-click="clickRow"
+        @selection-change="changFun"
+        align: center
+        :height="tableHeight">
+        <el-table-column
+          prop="contract_main_id"
+          type="selection"
+          width="55">
+        </el-table-column>
+        <el-table-column
+          fixed
+          prop="mall_name"
+          :show-overflow-tooltip="true"
+          label="门店名称"
+          resizable: true
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="contract_code"
+          label="合同编号"
+          :show-overflow-tooltip="true"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="data_source"
+          :show-overflow-tooltip="true"
+          label="合同来源">
+          <template slot-scope="scope">
+             <span v-for="(item, index) in contractSource">
+               {{scope.row.data_source == item.values_code ? item.values_name : ''}}
+             </span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="customer_code"
+          :show-overflow-tooltip="true"
+          label="商户编号">
+        </el-table-column>
+        <el-table-column
+          prop="customer_name"
+          :show-overflow-tooltip="true"
+          label="商户名称">
+        </el-table-column>
+        <el-table-column
+          prop="enabled"
+          label="合同状态"
+          :show-overflow-tooltip="true"
+          width="80">
+          <template slot-scope="scope">
+            {{ scope.row.enabled == 0? '无效' : '有效' }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="status"
+          label="审批状态">
+          <template slot-scope="scope">
+             <span v-for="(item, index) in contractStatus">
+               {{scope.row.status == item.values_code ? item.values_name : ''}}
+             </span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="contract_area"
+          label="签约面积(平米)"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="start_date"
+          label="开始时间"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="end_date"
+          label="结束时间"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="store_code"
+          :show-overflow-tooltip="true"
+          label="场地编号"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="store_code"
+          :show-overflow-tooltip="true"
+          label="商铺编码"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="store_name"
+          :show-overflow-tooltip="true"
+          label="商铺名称"
+          width="120">
+        </el-table-column>
+
+        <el-table-column
+          prop="brand_name"
+          :show-overflow-tooltip="true"
+          label="品牌名称"
+          width="120">
+        </el-table-column>
+
+        <el-table-column
+          prop="avoid_lease"
+          label="免租期(天)"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="decorate_days"
+          label="装修期(天)"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="user_name"
+          label="招商人员"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          fixed="right"
+          algin="center"
+          label="操作"
+          width="300">
+          <template slot-scope="scope">
+            <el-button
+              @click.native.prevent="viewRow(scope.$index, tableData)"
+              type="text"
+              size="small">
+              查看
+            </el-button>
+            <el-button
+              @click.native.prevent="editRow(scope.$index, tableData)"
+              type="text"
+              size="small" v-if="scope.row.status == 1 ">
+              编辑
+            </el-button>
+            <el-button
+              @click.native.prevent="deleteRow(scope.$index, tableData)"
+              type="text"
+              size="small" v-if="scope.row.status == 1">
+              作废
+            </el-button>
+            <el-button
+              @click.native.prevent="discount(scope.row)"
+              type="text"
+              size="small" v-if="scope.row.status == 3 && scope.row.enabled == 1">
+              租金优惠
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        :page-sizes="[20, 30, 40, 50]"
+        :page-size="20"
+        :current-page.sync="currentPage"
+        :total="total"
+        background
+        layout="prev, pager, next, total, sizes"
+        @current-change="pagination"
+        @size-change="handleSizeChange"/>
+    </div>
+    <el-dialog
+      :title="name"
+      :visible.sync="editItem.editCloseVisible"
+      width="70%" height="70%">
+      <el-form label-width="80px" :model="editClose" :rules="rentDetailRules" ref="rentDetailRules">
+        <el-row :gutter="20" v-if="editItem.editdelay">
+          <el-col :span="24">
+            <el-form-item :label="name+'起始时间'" class="label_required width_160" prop="start_date">
+              <el-date-picker
+                v-model="editClose.start_date"
+                type="daterange"
+                format="yyyy-MM-dd"
+                :picker-options="pickerOptions"
+                range-separator="至"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期"
+                align="right">
+              </el-date-picker>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20" v-if="editItem.editsuspension">
+          <el-col :span="12">
+            <el-form-item label="合同中止日期" class="label_required width_130" prop="cut_date">
+              <el-date-picker
+                v-model="editClose.cut_date"
+                type="date"
+                placeholder="选择日期">
+              </el-date-picker>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="合同中止原因" class="label_required width_130" prop="reason">
+              <el-input v-model="editClose.reason"></el-input>
+              </el-date-picker>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20" v-if="editItem.editchange">
+          <el-col :span="8">
+            <el-form-item label="店铺名称" class="label_required" prop="store_name">
+              <el-input v-model="editClose.store_name"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="品类选择" class="label_required" prop="operation_type_name">
+              <el-input v-model="editClose.operation_type_name" suffix-icon="el-icon-search"
+                        @focus="entry.categoryChoice = true"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="	主营品牌名称" class="label_required width_110" prop="brand_name">
+              <el-input v-model="editClose.brand_name" suffix-icon="el-icon-search"
+                        @focus="entry.brandChoice = true"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div slot="footer">
+        <el-button type="primary" @click="delaySub('rentDetailRules')">提交审核</el-button>
+        <el-button @click="editItem.editCloseVisible = false">取 消</el-button>
+      </div>
+    </el-dialog>
+
+    <el-dialog title="品类选择" :visible.sync="entry.categoryChoice" width="70%" height="70%" :close-on-click-modal="false">
+      <category v-on:categoryData="categoryData" :operationTypeId="editClose.operation_type_id"></category>
+      <span slot="footer">
+        <el-button @click="entry.categoryChoice = false">取 消</el-button>
+        <el-button type="primary" @click="categoryDataList">确 定</el-button>
+      </span>
+    </el-dialog>
+
+    <el-dialog title="品牌选择" :visible.sync="entry.brandChoice" width="70%" height="70%" :close-on-click-modal="false">
+      <brand v-on:brandData="brandData" :operationTypeId="editClose.operation_type_id"></brand>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+var data = {}
+import { common } from '@/common/common'
+import building from '@/utils/building';
+import category from '@/components/contract/category.vue' // 品类
+import brand from '@/components/contract/brand.vue' // 品牌
+export default {
+  data() {
+    return {
+      formInline: {},
+      tableData: [],
+      type: '',
+      fieldChoice: false,
+      preData: {},
+      contractStatus: [],
+      contractSource: [],
+      total: 0, // 分页总数据
+      currentPage: 1, // 当前页码
+      tableHeight: window.innerHeight - 360, // 表格高度
+      checkData: {}, // 选中数据
+      editClose: { // 合同中止、延期、变更
+        cut_date: '',
+        reason: '',
+        start_date: [],
+        store_name: '',
+        operation_type_id: '',
+        operation_type_name: '',
+        sideline_brand_id: '',
+        sideline_brand_name: '',
+        brand_id: '',
+        brand_name: ''
+      },
+      create_time: [], // 录入日期
+      operation: 0,
+      pickerOptions: building.publicTime,
+      name: '',
+      code: 0, //判断点击中止还是审批
+      statusClick: {
+        checkings: true, //审核
+        // revokeCheckings: true, // 撤销审核
+        inCheckings: true, // 提交审核
+        revokeInCheckings: true,//撤销审核中
+        changes: true, // 变更
+        delays: true, // 延期
+        suspensions: true//中止
+      },
+      editItem: {
+        editCloseVisible: false, //延期变更弹出框
+        editdelay: false,  //延期显示
+        editsuspension: false,//中止显示
+        editchange: false //变更显示
+      },
+      rentDetailRules: {
+        'cut_date': [{ required: true, message: '合同中止日期不能为空', trigger: 'change' }],
+        'reason': [{ required: true, message: '合同中止原因不能为空', trigger: 'change' }],
+        'start_date': [{ required: true, message: '合同开始日期不能为空', trigger: 'change' }],
+        'store_name': [{ required: true, message: '店铺名称为空', trigger: 'change' }],
+        'operation_type_name': [{ required: true, message: '请选择品类', trigger: 'change' }],
+        'brand_name': [{ required: true, message: '请选择主营品牌', trigger: 'change' }]
+      },
+      entry: {
+        categoryChoice: false,
+        brandChoice: false
+      }
+    }
+  },
+  components: {
+    category,
+    brand
+  },
+  created: function() {
+    this.getData();//预加载数据
+    const searchHistory = common.get('search');
+    if (searchHistory != null) {
+      this.formInline = searchHistory.search;
+      common.getPreData(searchHistory.search, 'contract_main/getConMainList', this, 'search');
+    }
+  },
+  methods: {
+    getData() {//预渲染参数
+      let that = this
+      this.axios
+        .post(process.env.BASE_API + 'table_util/getPreData', { act: 'contract' })
+        .then(function(res) {
+          if (res.status == 200) {
+            that.preData = res.data.data;
+          }
+        })
+        .catch(function(err) {
+          this.$message.error(err.response.data.msg);
+        })
+      common.lookup('L012', this).then((res) => {
+        this.contractStatus = res;
+      })
+      common.lookup('L011', this).then((res) => {
+        this.contractSource = res;
+      })
+    },
+    onSecher() {
+      data = this.formInline
+      data.limit = 20;
+      common.getPreData(data, 'contract_main/getConMainList', this, 'search');
+      common.set('search', { 'search': data });
+    },
+    clickRow(row) {//选择当前行
+      this.$refs.multipleTable.toggleRowSelection(row);
+      this.checkData = row;
+      this.checkedList(row);
+    },
+    changFun(row) {//获取当前行数据
+      if (row.length > 1) { //去除多选
+        this.$refs.multipleTable.clearSelection();
+        this.$refs.multipleTable.toggleRowSelection(row.pop());
+      }else {
+        if(row.length != 0) {
+          this.checkedList(row[0]);
+        }else {
+          this.checkType();
+        }
+      }
+    },
+    checkedList(row) {
+      let that = this
+      if(row.enabled != 0) {
+        switch (parseInt(row.status)) {
+          case 0:  //无效
+            that.statusClick.checkings = true;//审核
+            // that.statusClick.revokeCheckings = true // 撤销审核
+            that.statusClick.inCheckings = true;// 提交审核
+            that.statusClick.revokeInCheckings = true;//撤销审核中
+            that.statusClick.delays = true;// 延期
+            that.statusClick.suspensions = true; // 中止
+            that.statusClick.changes = true;// 变更
+            break
+          case 1:  //草稿
+            that.statusClick.checkings = true; //审核
+            // that.statusClick.revokeCheckings = true ;// 撤销审核
+            that.statusClick.inCheckings = false; // 提交审核
+            that.statusClick.revokeInCheckings = true;//撤销审核中
+            that.statusClick.delays = true; // 延期
+            that.statusClick.suspensions = true; // 中止
+            that.statusClick.changes = true;// 变更
+            break
+          case 2: //审批中
+            that.statusClick.checkings = false; //审核
+            that.statusClick.revokeInCheckings = false;// 撤销审核
+            that.statusClick.inCheckings = true; // 提交审核
+            // that.statusClick.revokeCheckings = false;//撤销审核中
+            that.statusClick.delays = true; // 延期
+            that.statusClick.suspensions = true; // 中止
+            that.statusClick.changes = true;// 变更
+            break
+          case 3: //生效
+            that.statusClick.checkings = true; //审核
+            // that.statusClick.revokeCheckings = false; // 撤销审核
+            that.statusClick.inCheckings = true; // 提交审核
+            that.statusClick.revokeInCheckings = true;//撤销审核中
+            that.statusClick.delays = false; // 延期
+            that.statusClick.suspensions = false; // 中止
+            that.statusClick.changes = false;// 变更
+            break
+          default:
+        }
+      }else {
+        this.checkType();
+      }
+    },
+    addRow() {
+      this.$router.push({
+        path: '/contract/create',
+        query: {
+          status: 'add'
+        }
+      })
+    },
+    viewRow(index, row) {
+      this.$router.push({
+        path: '/contract/create',
+        meta: { title: '查看租赁合同' },
+        query: {
+          status: 'view',
+          type: row[index]['contract_main_id']
+        }
+      })
+    },
+    editRow(index, row) {
+      this.$router.push({
+        path: '/contract/create',
+        meta: { title: '编辑租赁合同' },
+        query: {
+          status: 'edit',
+          type: row[index]['contract_main_id']
+        }
+      })
+    },
+    deleteRow(index, row) {//作废
+      common.del('此操作将作废合同是否继续?', 'contract_main/editStatus', {
+        contract_main_id: row[index].contract_main_id,
+        status: 0
+      }, 'contract_main/getConMainList', this, 'search');
+    },
+    //租金优惠
+    discount(row) {},
+    pagination(val) {//分页
+      data = this.formInline;
+      data.page = val;
+      common.getPreData(data, 'contract_main/getConMainList', this, 'search');
+      common.set('search', { 'search': data });
+    },
+    handleSizeChange(val) {//分页
+      data = this.formInline;
+      data.limit = val;
+      common.getPreData(data, 'contract_main/getConMainList', this, 'search');
+      common.set('search', { 'search': data });
+    },
+    checking() { //审核
+      common.del('是否审核?', 'contract_main/editStatus', {
+        contract_main_id: this.checkData.contract_main_id,
+        status: 3
+      }, 'contract_main/getConMainList', this, 'search');
+    },
+    inChecking() { //提交审核
+      common.del('是否提交审核?', 'contract_main/editStatus', {
+        contract_main_id: this.checkData.contract_main_id,
+        status: 2
+      }, 'contract_main/getConMainList', this, 'search');
+    },
+    revokeInChecking() { //撤销审核中
+      common.del('是否撤销审核中信息?', 'contract_main/editStatus', {
+        contract_main_id: this.checkData.contract_main_id,
+        status: 1
+      }, 'contract_main/getConMainList', this, 'search');
+    },
+    checkType() {
+      this.checkData = {};
+      this.statusClick.checkings = true; //审核
+      // that.statusClick.revokeCheckings = false; // 撤销审核
+      this.statusClick.inCheckings = true; // 提交审核
+      this.statusClick.revokeInCheckings = true;//撤销审核中
+      this.statusClick.delays = true; // 延期
+      this.statusClick.suspensions = true; // 中止
+      this.statusClick.changes = true;// 变更
+    },
+    // revokeChecking() {
+    //   common.del('是否撤销审核信息?', 'contract_main/editStatus', {
+    //     contract_main_id: this.checkData[0].contract_main_id,
+    //     status: 2
+    //   }, 'contract_main/getConMainList', this)
+    // },
+    change() { //变更
+      this.contractBrandId(this.checkData.contract_main_id);
+      this.name = '合同变更';
+      this.editItem.editchange = true;
+      this.editItem.editdelay = false;
+      this.editItem.editsuspension = false;
+      this.code = 1;
+    },
+    delay() { //延期
+      this.name = '合同延期';
+      this.editItem.editCloseVisible = true;
+      this.editItem.editdelay = true;
+      this.editItem.editsuspension = false;
+      this.editItem.editchange = false;
+      this.code = 2;
+    },
+    suspension() { //中止
+      this.name = '合同中止';
+      this.editItem.editCloseVisible = true;
+      this.editItem.editsuspension = true;
+      this.editItem.editdelay = false;
+      this.editItem.editchange = false;
+      this.code = 3;
+    },
+    delaySub(formName) { //中止、延期、变更提交
+      let that = this;
+      let closeType = {};
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          closeType.closeType = this.code;
+          closeType.contract_main_id = this.checkData.contract_main_id;
+          if (this.code == 3) {//中止
+            closeType.cut_date = common.dateFormat(this.editClose.cut_date);
+          } else if (this.code == 2) {//延期
+            closeType.start_date = common.dateFormat(this.editClose.start_date[0]);
+            closeType.end_date = common.dateFormat(this.editClose.start_date[1]);
+          } else if (this.code == 1) {//变更
+            closeType.store_name = this.editClose.store_name;
+            closeType.operation_type_id = this.editClose.operation_type_id;
+            closeType.operation_type_name = this.editClose.operation_type_name;
+            closeType.brand_id = this.editClose.brand_id;
+            closeType.brand_name = this.editClose.brand_name;
+            closeType.sideline_brand_id = this.editClose.sideline_brand_id;
+            closeType.sideline_brand_name = this.editClose.sideline_brand_name;
+          }
+          that.axios
+            .post(process.env.BASE_API + 'contract_main/editCloseType', closeType)
+            .then(function(res) {
+              if (res.data.msg == 'success') {
+                that.$message({
+                  message: '提交成功',
+                  type: 'success'
+                })
+                that.editItem.editCloseVisible = false;
+                common.getPreData(that.formInline, 'contract_main/getConMainList', that, 'search');
+              } else {
+                that.$message.error(res.data.msg);
+              }
+            })
+            .catch(function(err) {
+              that.$message.error(err.response.data.msg);
+            })
+        } else {
+          this.$message({
+            message: '您有信息尚未填写完',
+            type: 'warning'
+          })
+          return false;
+        }
+      })
+    },
+    contractBrandId(data) {//变更赋值
+      let that = this;
+      this.axios
+        .post(process.env.BASE_API + 'store/getStoreByMain', { contract_main_id: data })
+        .then(function(res) {
+          if (res.status == 200) {
+            that.editClose.brand_name = res.data.data.brand_name;
+            that.editClose.brand_id = res.data.data.brand_id;
+            that.editClose.sideline_brand_id = res.data.data.brand_id;
+            that.editClose.sideline_brand_name = res.data.data.brand_name;
+            that.editClose.operation_type_id = res.data.data.operation_type_id;
+            that.editClose.operation_type_name = res.data.data.operation_type_name;
+            that.editClose.store_name = res.data.data.store_name;
+            that.editItem.editCloseVisible = true;
+          }
+        })
+        .catch(function(err) {
+          that.$message.error(err.response.data.msg);
+        })
+    },
+    brandData(data) {//品牌赋值
+      this.entry.brandChoice = false;
+      this.editClose.brand_name = data.brand_name;
+      this.editClose.brand_id = data.brand_id;
+      this.editClose.sideline_brand_id = data.brand_id;
+      this.editClose.sideline_brand_name = data.brand_name;
+    },
+    categoryData(data) {//品类赋值
+      this.editClose.operation_type_id = data.id;
+      this.editClose.operation_type_name = data.text;
+    },
+    categoryDataList() {
+      this.entry.categoryChoice = false;
+      this.editClose.brand_name = '';
+    },
+    createTime(val) {
+      if (val == null) {
+        this.formInline.create_time = '';
+      } else {
+        this.formInline.create_time = val[0] + '~' + val[1];
+      }
+    }
+  }
+}
+</script>
+
+<style rel="stylesheet/scss" lang="scss">
+  thead {
+    .el-table-column--selection {
+      .cell {
+        display: none;
+      }
+    }
+  }
+  .el-form-item {
+    margin-bottom: 5px;
+  }
+</style>
+

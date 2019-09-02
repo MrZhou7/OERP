@@ -1,0 +1,523 @@
+<template>
+  <el-main>
+    <el-form ref="form" :model="formInline" class="search" label-width="80px">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="公司类型">
+            <el-select v-model="formInline.corp_type" clearable placeholder="请选择">
+              <el-option value="" label="全部"></el-option>
+              <el-option
+                v-for="(item,index) in corpType"
+                :key="index"
+                :label="item.values_name"
+                :value="item.values_code">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="公司名称">
+            <el-input v-model="formInline.corp_name" clearable placeholder="请输入公司名称"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="公司状态">
+            <el-select v-model="formInline.enabled" clearable placeholder="请选择公司状态">
+              <el-option  value='' label="全部"></el-option>
+              <el-option value='1' label="有效"></el-option>
+              <el-option value='0' label="无效"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6" align="center">
+          <el-button align="center" type="primary" @click="onSecher(formInline)">查询</el-button>
+        </el-col>
+      </el-row>
+    </el-form>
+    <div class="btn_bottom">
+      <el-button type="primary" @click="addRow()">新增</el-button>
+    </div>
+    <div class="contract_table">
+      <el-table
+        :data="tableData"
+        style="width: 100%;text-align: center"
+        border
+        align: center
+        :height="tableHeight">
+        <el-table-column
+          fixed
+          prop="corp_name"
+          :show-overflow-tooltip="true"
+          label="公司名称"
+          resizable: true
+          algin:center
+          width="240">
+        </el-table-column>
+        <el-table-column
+          prop="corp_short_name"
+          :show-overflow-tooltip="true"
+          label="公司简称"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="corp_type"
+          label="公司类型"
+          :show-overflow-tooltip="true"
+          width="120">
+          <template slot-scope="scope">
+             <span v-for="(item, index) in corpType">
+               {{scope.row.corp_type == item.values_code ? item.values_name : ''}}
+             </span>
+          </template>
+        </el-table-column>
+
+        <el-table-column
+          prop="legal_person"
+          :show-overflow-tooltip="true"
+          label="法人代表"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="trade_type"
+          label="所属行业"
+          :show-overflow-tooltip="true"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="enabled"
+          label="是否有效"
+          width="120">
+          <template slot-scope="scope">
+            {{ scope.row.enabled == 0? '无效' : '有效' }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="country[0]"
+          label="省份"
+          :show-overflow-tooltip="true"
+          width="120">
+          <template slot-scope="scope">
+             <span v-for="(item, index) in cityData">
+               {{scope.row.country[0] == item.id ? item.text : ''}}
+             </span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="country[1]"
+          label="地区市"
+          :show-overflow-tooltip="true"
+          width="120">
+          <template slot-scope="scope">
+             <span v-for="(item, index) in cityData" v-if="scope.row.country[0] == item.id">
+               <span v-for="(title, index) in item.children">
+                {{scope.row.country[1] == title.id ? title.text : ''}}
+               </span>
+             </span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="country[2]"
+          label="县区市"
+          :show-overflow-tooltip="true"
+          width="120">
+          <template slot-scope="scope">
+             <span v-for="(item, index) in cityData" v-if="scope.row.country[0] == item.id">
+               <span v-for="(title, index) in item.children">
+                 <span v-for="(text, index) in title.children">
+                  {{scope.row.country[2] == text.id ? text.text : ''}}
+                 </span>
+               </span>
+             </span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="telephone"
+          :show-overflow-tooltip="true"
+          label="联系电话"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="finance_type"
+          :show-overflow-tooltip="true"
+          label="记账方式"
+          width="120">
+          <template slot-scope="scope">
+             <span v-for="(item, index) in financeType">
+               {{scope.row.finance_type == item.values_code ? item.values_name : ''}}
+             </span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="bank_name"
+          :show-overflow-tooltip="true"
+          label="开户银行"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="bank_acct_no"
+          :show-overflow-tooltip="true"
+          label="银行帐户"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="acct_name"
+          label="帐户名称"
+          :show-overflow-tooltip="true"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="tax_no"
+          label="税号"
+          :show-overflow-tooltip="true"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          fixed="right"
+          algin="center"
+          label="操作"
+          width="200">
+          <template slot-scope="scope">
+            <el-button
+              @click.native.prevent="viewRow(scope.$index, tableData)"
+              type="text"
+              size="small">
+              查看
+            </el-button>
+            <el-button
+              @click.native.prevent="editRow(scope.$index, tableData)"
+              type="text"
+              size="small"  v-if="scope.row.enabled == 1">
+              编辑
+            </el-button>
+            <el-button v-if="scope.row.enabled == 0 ? false : true"
+              @click.native.prevent="deleteRow(scope.$index, tableData)"
+              type="text"
+              size="small">
+              作废
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        :page-sizes="[20, 30, 40, 50]"
+        :page-size="20"
+        :current-page.sync="currentPage"
+        :total="total"
+        background
+        layout="prev, pager, next, total, sizes"
+        @current-change="pagination"
+        @size-change="handleSizeChange"/>
+    </div>
+      <!--新增、修改、查看商管公司弹出层2-->
+    <el-dialog
+      :title="name"
+      :visible.sync="dialogVisible" v-if="dialogVisible"
+      width="70%" height="70%">
+      <el-form label-width="80px" :model="business" :rules="rules" ref="business">
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="公司名称" class="label_required" prop="corp_name">
+              <el-input v-model="business.corp_name" clearable :disabled='businessView'>
+              </el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="公司简称" class="label_required" prop="corp_short_name">
+              <el-input v-model="business.corp_short_name" clearable :disabled='businessView'>
+              </el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="公司类型" class="label_required" prop="corp_type">
+              <el-select v-model="business.corp_type" clearable placeholder="请选择公司类型" :disabled='businessView'>
+                <el-option
+                  v-for="(item,index) in corpType"
+                  :key="index"
+                  :label="item.values_name"
+                  :value="item.values_code">
+                </el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="法人代表" class="label_required" prop="legal_person">
+              <el-input v-model="business.legal_person" clearable :disabled='businessView'>
+              </el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="省/市/区" class="label_required" prop="country">
+              <el-cascader
+                :options="cityData"
+                placeholder="请选择省/市"
+                clearable
+                :props="cityProps"
+                v-model="business.country"
+                change-on-select :disabled='businessView'></el-cascader>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="具体地址" class="label_required" prop="address">
+              <el-input v-model="business.address" clearable :disabled='businessView'>
+              </el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="所属行业" class="label_required" prop="trade_type">
+              <el-input v-model="business.trade_type" clearable :disabled='businessView'>
+              </el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="联系电话" class="label_required" prop="telephone">
+              <el-input v-model="business.telephone" clearable  type="Number" :disabled='businessView'>
+              </el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="记账方式" class="label_required" prop="finance_type">
+              <el-select v-model="business.finance_type" clearable placeholder="请选择记账方式" :disabled='businessView'>
+                <el-option
+                  v-for="(item,index) in financeType"
+                  :key="index"
+                  :label="item.values_name"
+                  :value="item.values_code">
+                </el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="开户银行" class="label_required" prop="bank_name">
+              <el-input v-model="business.bank_name" clearable :disabled='businessView'>
+              </el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="银行帐户" class="label_required" prop="bank_acct_no">
+              <el-input v-model="business.bank_acct_no" clearable type="Number" :disabled='businessView'>
+              </el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="帐户名称" class="label_required" prop="acct_name">
+              <el-input v-model="business.acct_name" clearable :disabled='businessView'>
+              </el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="税号" class="label_required" prop="tax_no">
+              <el-input v-model="business.tax_no" clearable :disabled='businessView'>
+              </el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="域名称">
+              <el-input v-model="business.domain_unit" clearable :disabled='businessView'>
+              </el-input>
+            </el-form-item>
+          </el-col>
+
+          <el-col :span="8">
+            <el-form-item label="是否业主公司" class="label_required width_110" prop="is_self">
+              <el-select v-model="business.is_self" clearable placeholder="请选择是否业主公司" :disabled='businessView'>
+                <el-option value='1' label="是"></el-option>
+                <el-option value='0' label="否"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="是否有效" class="label_required" prop="enabled">
+              <el-select v-model="business.enabled" clearable placeholder="请选择是否有效" :disabled='businessView'>
+                <el-option value='1' label="是"></el-option>
+                <el-option value='0' label="否"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div v-if="businessViewBtn" slot="footer">
+        <el-button type="primary" @click="submenus('business')">提交审核</el-button>
+        <el-button @click="dialogVisible = false">取 消</el-button>
+      </div>
+    </el-dialog>
+
+  </el-main>
+</template>
+
+<script>
+  var data = {};
+  import {common} from '@/common/common'
+  export default {
+    data() {
+      return {
+        formInline: {},
+        tableData: [],
+        dialogVisible: false,
+        business: {
+          corp_id: '',//公司ID
+          corp_name: '',//公司名称
+          corp_short_name: '',//公司简称
+          corp_type: '',//公司类型
+          legal_person: '',//法人代表
+          trade_type: '',//所属行业
+          address: '',//具体地址
+          telephone: '',//联系电话
+          finance_type: '',//记账方式
+          bank_name: '',//开户银行
+          bank_acct_no: '',//银行帐户
+          acct_name: '',//帐户名称
+          tax_no: '',//税号
+          domain_unit: '',//域单元
+          enabled: '',//是否有效
+          created_by: 1,//创建人
+          last_updated_by: 1,//最后修改人
+          is_self: '',//是否业主公司
+          country: [], //省市区
+        },
+        businessView: false, //查看进入隐藏
+        businessViewBtn: true,
+        cityData: [],//请求本地的城市文件
+        rules: {
+          'corp_name': [{ required: true, message: '公司名称为空', trigger: 'change' }],
+          'corp_short_name': [{ required: true, message: '公司简称为空', trigger: 'change' }],
+          'corp_type': [{ required: true, message: '公司类型为空', trigger: 'change' }],
+          'legal_person': [{ required: true, message: '法人代表为空', trigger: 'change' }],
+          'trade_type': [{ required: true, message: '公司名称为空', trigger: 'change' }],
+          'address': [{ required: true, message: '具体地址为空', trigger: 'change' }],
+          'telephone': [{ required: true, message: '联系电话为空', trigger: 'change' }],
+          'country': [{ required: true, message: '省/市/区为空', trigger: 'change' }],
+          'finance_type': [{ required: true, message: '记账方式为空', trigger: 'change' }],
+          'bank_name': [{ required: true, message: '开户银行为空', trigger: 'change' }],
+          'bank_acct_no': [{ required: true, message: '银行帐户为空', trigger: 'change' }],
+          'acct_name': [{ required: true, message: '帐户名称为空', trigger: 'change' }],
+          'tax_no': [{ required: true, message: '税号为空', trigger: 'change' }],
+          'is_self': [{ required: true, message: '是否业主为空', trigger: 'change' }],
+          'enabled': [{ required: true, message: '是否有效为空', trigger: 'change' }]
+        },
+        cityProps: {
+          children: 'children',
+          label: 'text',
+          value: 'id'
+        },
+        name: '',
+        total: 0,//分页
+        currentPage:1,//当前页码
+        tableHeight: window.innerHeight - 250,
+        corpType:[],//公司类型数据
+        financeType:[],//记账方式数据
+      }
+    },
+
+    components: {},
+    created: function() {
+      // this.axios.post(process.env.BASE_CITY).then((res) => {
+      //   this.cityData = res.data;
+      // });
+      const searchHistory = common.get('businessSearch');
+      if (searchHistory != null) {
+        this.formInline = searchHistory.search;
+        common.getPreData(searchHistory.search, "corp_info/getCorpInfoList", this, 'businessSearch')
+      };
+      common.lookup('L014', this).then((res) => {
+        this.corpType = res
+      });
+      common.lookup('L015', this).then((res) => {
+        this.financeType = res
+      });
+    },
+    methods: {
+      pagination(val) { // 分页功能
+        const data = this.formInline;
+        data.page = val;
+        common.getPreData(data, 'corp_info/getCorpInfoList', this, 'businessSearch');
+        common.set('businessSearch', { 'search': data });
+      },
+      handleSizeChange(val) {
+        const data = this.formInline;
+        data.limit = val;
+        common.getPreData(data, 'corp_info/getCorpInfoList', this, 'businessSearch');
+        common.set('businessSearch', { 'search': data });
+      },
+      onSecher() {//查询
+        const data = this.formInline;
+        data.limit = 20;
+        common.getPreData(data, "corp_info/getCorpInfoList", this, 'businessSearch');
+        common.set('businessSearch',{'search': data});
+      },
+      addRow() {//新增显示弹出框
+        this.dialogVisible = true
+        this.name = '新增商管公司';
+        this.businessView = false;
+        this.businessViewBtn = true;
+        this.business = {};
+      },
+      viewRow(index, row) {//根据id获取信息
+        this.name = '查看商管公司';
+        this.businessList(row[index]['corp_id']);
+        this.businessView = true;
+        this.businessViewBtn = false;
+      },
+      editRow(index, row) {//根据id获取信息
+        this.name = '修改商管公司';
+        this.businessList(row[index]['corp_id']);
+        this.businessView = false;
+        this.businessViewBtn = true;
+      },
+      deleteRow(index, row) {//作废
+        common.del('此操作将作废商管公司是否继续', 'corp_info/delCorpInfo', { corp_id: row[index].corp_id }, "corp_info/getCorpInfoList", this, 'search')
+      },
+      businessList(data) {//获取详细信息
+        const that = this;
+        that.http.post('corp_info/getCorpInfoDetail', { corp_id: data }).then(res => {
+          that.business = res.data.data;
+          that.dialogVisible = true;
+        }).catch((err) => {
+          that.$message.error(err.response.data.msg);
+        });
+      },
+      submenus(formName) {//新增和修改商管公司
+        let that = this;
+        let url = '';
+        let title = '';
+        this.business.created_by = 1;//创建人
+        this.business.last_updated_by = 1;//最后更新创建人
+        if (this.name == '新增商管公司') {
+          url = 'corp_info/addCorpInfo';
+          title = '新增成功';
+        } else {
+          url = 'corp_info/editCorpInfo';
+          title = '修改成功';
+        }
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            that.http.post(url, this.business).then(res => {
+              const data = that.formInline;
+              common.getPreData(data, "corp_info/getCorpInfoList", that, 'businessSearch')
+              that.$message({
+                message: title,
+                type: 'success'
+              })
+              that.dialogVisible = false;
+            }).catch((err) => {
+              that.$message.error(err.response.data.msg);
+            });
+          }
+        })
+      }
+    }
+  }
+</script>
+
+<style rel="stylesheet/scss" lang="scss">
+
+</style>

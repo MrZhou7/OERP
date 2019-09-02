@@ -1,0 +1,1536 @@
+<template>
+  <div class="content">
+    <el-form ref="create" :model="create" :rules="rules" label-width="80px">
+      <blockquote class="elem_quote">合同主条款
+        <el-button type="primary" size="mini" style="float:right" @click="returnGo">返回上一页</el-button>
+      </blockquote>
+      <el-row>
+        <el-col :span="8">
+          <el-form-item label="门店名称" class="label_required" prop="mall.mall_id">
+            <el-select placeholder="请选择" @change="mallList($event)"  v-model="create.mall.mall_id"
+            :disabled="entry.viewNo" clearable>
+              <el-option
+                v-for="(item,index) in preData.mall"
+                :key="index"
+                :label="item.mall_name"
+                :value="item.mall_id">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="8">
+          <el-form-item label="合同录入时间" class="width_100">
+            <el-input v-model="mall_add.contract_create_date" :disabled="true"
+                      :value="mall_add.contract_create_date"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="16">
+          <el-form-item label="起始时间" class="label_required" prop="mall.start_date">
+            <el-date-picker
+              v-model="mall_add.date"
+              @change="startDate($event)"
+              type="daterange"
+              format="yyyy-MM-dd"
+              clearable
+              :picker-options="pickerOptions"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              align="right" :disabled="entry.viewNo">
+            </el-date-picker>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="8">
+          <el-form-item label="甲方">
+            <el-input v-model="mall_add.first_party" :disabled="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="法人代表">
+            <el-input v-model="mall_add.legal_person" :disabled="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="注册地址">
+            <el-input v-model="mall_add.j_address" :disabled="true"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="8">
+          <el-form-item label="物业管理公司" class="width_100">
+            <el-input v-model="mall_add.first_party" :disabled="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="法人代表">
+            <el-input v-model="mall_add.legal_person" :disabled="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="注册地址">
+            <el-input v-model="mall_add.j_address" :disabled="true"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="8">
+          <el-form-item label="乙方" class="label_required" prop="mall.second_party">
+            <el-input v-model="mall_add.second_party" clearable suffix-icon="el-icon-search"
+                      @focus="entry.dialogTableVisible = true" :disabled="entry.viewNo"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="法人代表">
+            <el-input v-model="mall_add.legal" :disabled="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="注册地址">
+            <el-input v-model="mall_add.y_address" :disabled="true"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="8">
+          <el-form-item label="商户编号">
+            <el-input v-model="mall_add.customer_code" :disabled="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="合同编号">
+            <el-input v-model="create.mall.contract_code" :disabled="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8" class="label_required">
+          <el-form-item label="合同类型" prop="mall.contract_type">
+            <el-select v-model="create.mall.contract_type" clearable placeholder="请选择" :disabled="entry.viewNo">
+              <el-option
+                v-for="item in preData.contract_type"
+                :key="item.values_code"
+                :label="item.values_name"
+                :value="item.values_code">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="8">
+          <el-form-item label="场地编号" class="label_required">
+            <el-input v-model="mall_add.unit_code" clearable suffix-icon="el-icon-search" @focus="fieldClick"
+                      :disabled="entry.dateNull"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="签约面积">
+            <el-input v-model="create.mall.contract_area" :disabled="true">
+              <template slot="append">平米</template>
+            </el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="测量面积">
+            <el-input v-model="mall_add.area" :disabled="true">
+              <template slot="append">平米</template>
+            </el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="8">
+          <el-form-item label="合同来源">
+            <el-input v-model="mall_add.data_source" :disabled="true" >
+            </el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="原合同编号" class="width_100">
+            <el-input v-model="mall_add.from_contract_main_id" :disabled="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="运营方式" class="label_required" prop="mall.operation_model">
+            <el-select v-model="create.mall.operation_model" clearable placeholder="请选择" :disabled="entry.viewNo">
+              <el-option
+                v-for="(item,key) in preData.operation_model"
+                :key="key"
+                :label="item.values_name"
+                :value="item.values_code">
+              </el-option>
+            </el-select>
+          </el-form-item>
+
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="8">
+          <el-form-item label="品类" suffix-icon="el-icon-search" class="label_required" prop="store.operation_type_name">
+            <el-input v-model="create.store.operation_type_name" @focus="entry.categoryChoice = true"
+                      :disabled="entry.viewNo" clearable
+                      suffix-icon="el-icon-search"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="乙方承租前是否以装修" class="label_required width_180" prop="mall.is_decorated">
+            <el-select v-model="create.mall.is_decorated" placeholder="请选择是否以装修" @change="isDecorated($event)"
+                       :disabled='entry.costmeNo' clearable>
+              <el-option value='1' label="是"></el-option>
+              <el-option value='0' label="否"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="免租方式" class="label_required" prop="mall.avoid_type">
+            <el-select v-model="create.mall.avoid_type" @change="avoidType($event)" placeholder="请选择"
+                       :disabled='entry.avoidTypeNo' clearable>
+              <el-option
+                v-for="(item,key) in preData.avoid_type"
+                :key="key"
+                :label="item.values_name"
+                :value="item.values_code">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="8">
+          <el-form-item label="免租天数" class="label_required" prop="mall.avoid_lease">
+            <el-input v-model="create.mall.avoid_lease" @blur="avoidLease($event)" :disabled='entry.avoidLease'
+                      type="number" clearable>
+              <template slot="append">天</template>
+            </el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="装修天数">
+            <el-input v-model="create.mall.decorate_days"  :disabled="true">
+              <template slot="append">天</template>
+            </el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="计租日期">
+            <el-input v-model="create.mall.rent_date" :disabled="true"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="8">
+          <el-form-item label="首期账单截止日" class="width_110">
+            <el-input v-model="create.mall.first_bill_day" :disabled="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="招商人员" class="label_required" prop="mall.manager">
+            <el-input v-model="mall_add.managers" clearable @focus="entry.attractChoice = true" :disabled="entry.viewNo"
+                      suffix-icon="el-icon-search"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="是否参与出租率计算" class="label_required width_160" prop="mall.is_rent">
+            <el-select v-model="create.mall.is_rent" clearable placeholder="是否参与出租率计算" :disabled="entry.viewNo">
+              <el-option value='1' label="是"></el-option>
+              <el-option value='0' label="否"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="8">
+          <el-form-item label="返款次数" class="label_required" prop="mall.return_times">
+            <el-select v-model="create.mall.return_times" clearable placeholder="请选择" :disabled="entry.viewNo">
+              <el-option
+                v-for="(item,index) in preData.return_times"
+                :key="index"
+                :label="item.values_name"
+                :value="item.values_code">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="备注">
+            <el-input v-model="create.mall.note" clearable :disabled="entry.viewNo"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <blockquote class="elem_quote">租金主条款</blockquote>
+      <el-row :gutter="20">
+        <el-col :span="8">
+          <el-form-item label="租金总额">
+            <el-input v-model="create.rent.fixed_money" :disabled="true">
+              <template slot="append">元</template>
+            </el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="是否预收" class="label_required" prop="rent.advance">
+            <el-select v-model="create.rent.advance" clearable placeholder="是否预收" :disabled="entry.viewNo">
+              <el-option value='1' label="是"></el-option>
+              <el-option value='0' label="否"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="8">
+          <el-form-item label="免租期管理费单价" class="label_required width_160" prop="rent.from_management_fee">
+            <el-input v-model="create.rent.from_management_fee" clearable type="number" prop="region" :disabled="entry.viewNo">
+              <template slot="append">元/平米</template>
+            </el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="铺内电费单价" class="label_required width_110" prop="rent.shop_electricity_price">
+            <el-input v-model="create.rent.shop_electricity_price" clearable type="number" prop="region" :disabled="entry.viewNo">
+              <template slot="append">元</template>
+            </el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="公共区域电费单价" class="label_required width_160" prop="rent.public_electricity_price">
+            <el-input v-model="create.rent.public_electricity_price" clearable type="number" prop="region"
+                      :disabled="entry.viewNo">
+              <template slot="append">元</template>
+            </el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <blockquote class="elem_quote">租金明细条款
+        <el-button type="primary" v-if="entry.view_add" icon="el-icon-plus"
+                   @click="rentDetailAddData('rentDetailRules')" size="mini"
+                   style="float:right"></el-button>
+      </blockquote>
+      <div class="rent">
+        <el-row :gutter="20" v-for="(item,index) in create.rentDetail" :key="index">
+          <div v-for="(title,key) in preData.fee" :key="index" v-if="title.charge_type_id == item.charge_type">
+            <el-col :span="8">
+              <el-form-item :label="title.charge_description+'单价'" class="label_required width_130">
+                <el-input v-model="item.price" @change="rentMoney($event, index)" type="number"
+                          :disabled="entry.viewNo" clearable>
+                  <template slot="append">元/平米</template>
+                </el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="7">
+              <el-form-item :label="title.charge_description" class="width_110">
+                <el-input v-model="item.fixed_money" :disabled="true">
+                  <template slot="append">元</template>
+                </el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="7">
+              <el-form-item label="租金周期" class="label_required" prop="rentDetail.total_rent_cycle">
+                <el-select v-model="item.total_rent_cycle" placeholder="请选择" :disabled="entry.viewNo"
+                           @change="rentDetailTotal($event, index)" clearable>
+                  <el-option
+                    v-for="(title,key) in preData.rent_calculate_mode"
+                    :key="key"
+                    :label="title.values_name"
+                    :value="parseInt(title.values_code)">
+                  </el-option>
+                </el-select>
+                </el-input>
+              </el-form-item>
+            </el-col>
+            <div class="rentDetailIcon" v-if="entry.view_add">
+              <span class="el-icon-error" v-if="index>1?true:false" @click="incoDel(index,'rentDetail')"></span>
+            </div>
+          </div>
+        </el-row>
+      </div>
+      <blockquote class="elem_quote">押金明细主条款
+        <el-button type="primary" v-if="entry.view_add" icon="el-icon-plus" @click="guaranteeAddData" size="mini"
+                   style="float:right"></el-button>
+      </blockquote>
+      <div class="guarantee" v-for="(item,index) in create.guarantee" :key="index">
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="押金类型">
+              <div v-for="(title, key) in preData.guarantee" :key="key">
+                <el-input v-if="item.deposit_guarantee_type == title.charge_type_id" :value="title.charge_description"
+                          :disabled="true">
+                </el-input>
+              </div>
+            </el-form-item>
+          </el-col>
+          <el-col :span="7">
+            <el-form-item label="收取周期">
+              <el-select v-model="item.total_cycle" clearable placeholder="请选择" :disabled="entry.viewNo">
+                <el-option
+                  v-for="(title,key) in preData.total_rent_cycle"
+                  :key="key"
+                  :label="title.values_name"
+                  :value="title.values_code">
+                </el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="7">
+            <el-form-item label="金额" class="label_required">
+              <el-input v-model="item.money" clearable type="Number" @change="guaranteeMoney($event, index)" :disabled="entry.viewNo">
+                <template slot="append">元</template>
+              </el-input>
+            </el-form-item>
+          </el-col>
+          <div class="rentDetailIcon" v-if="entry.view_add">
+            <span class="el-icon-error" v-if="index>1?true:false" @click="incoDel(index,'guarantee')"></span>
+          </div>
+        </el-row>
+      </div>
+      <blockquote class="elem_quote">商铺基本信息</blockquote>
+      <el-row :gutter="20">
+        <el-col :span="8">
+          <el-form-item label="商铺编号">
+            <el-input v-model="create.store.store_code" :disabled="true">
+            </el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="商铺名称" class="label_required" prop="store.store_name">
+            <el-input v-model="create.store.store_name" clearable prop="region" :disabled="entry.viewNo"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="商铺类型" class="label_required" prop="store.merchant_type_id">
+            <el-select v-model="create.store.merchant_type_id" clearable :disabled="entry.viewNo" placeholder="请选择"
+                       @change="merchantTypeName($event)">
+              <el-option
+                v-for="(item,key) in preData.merchant_type"
+                :key="key"
+                :label="item.values_name"
+                :value="parseInt(item.values_code)">
+              </el-option>
+            </el-select>
+            </el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="8">
+          <el-form-item label="品类" class="label_required">
+            <el-input v-model="create.store.operation_type_name" clearable :disabled="true">
+            </el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="主营品牌" class="label_required" prop="store.brand_name">
+            <el-input v-model="create.store.brand_name" clearable :disabled="entry.viewNo" @focus="brandChoiceData"
+                      suffix-icon="el-icon-search">
+            </el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="资本类型" class="label_required" prop="store.capital_type">
+            <el-select v-model="create.store.capital_type" clearable :disabled="entry.viewNo" placeholder="请选择">
+              <el-option
+                v-for="item in preData.capital_type"
+                :key="item.values_code"
+                :label="item.values_name"
+                :value="item.values_code">
+              </el-option>
+            </el-select>
+            </el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="8">
+          <el-form-item label="商铺电话" class="label_required" prop="store.contact_number">
+            <el-input v-model="create.store.contact_number" clearable prop="region" :disabled="entry.viewNo">
+            </el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20" class="sub" v-if="entry.view_add">
+        <el-col :span="24">
+          <el-button type="primary" @click="submitForm('create')">提交审核</el-button>
+          <el-button @click="keep('create')">保存</el-button>
+          <el-button @click="empty('create')">返回</el-button>
+        </el-col>
+      </el-row>
+    </el-form>
+    <el-dialog title="商户选择" :visible.sync="entry.dialogTableVisible" width="70%" height="70%"
+               :close-on-click-modal="false">
+      <Custome v-on:choiceData="choiceData"></Custome>
+    </el-dialog>
+    <el-dialog title="场地选择" :visible.sync="entry.fieldChoice" width="70%" height="70%" :close-on-click-modal="false">
+      <Filed v-on:fieldData="fieldData" :mall="create.mall.mall_id" :startData="create.mall.start_date" :endData="create.mall.end_date"></Filed>
+    </el-dialog>
+    <el-dialog title="招商人员选择" :visible.sync="entry.attractChoice" width="70%" height="70%"
+               :close-on-click-modal="false">
+      <attract v-on:attractData="attractData"></attract>
+    </el-dialog>
+    <el-dialog title="品类选择" :visible.sync="entry.categoryChoice" width="70%" height="70%" :close-on-click-modal="false">
+      <category v-on:categoryData="categoryData" :operationTypeId="mall_add.operation_type_id"></category>
+      <span slot="footer">
+        <el-button @click="entry.categoryChoice = false">取 消</el-button>
+        <el-button type="primary" @click="categoryDataList">确 定</el-button>
+      </span>
+    </el-dialog>
+    <el-dialog title="品牌选择" :visible.sync="entry.brandChoice" width="70%" height="70%" :close-on-click-modal="false">
+      <brand v-on:brandData="brandData" :operationTypeId="mall_add.operation_type_id"></brand>
+    </el-dialog>
+    <!--租金明细添加-->
+    <el-dialog title="租金明细添加" :visible.sync="entry.rentDetailAdd" width="70%" height="60%"
+               :close-on-click-modal="false">
+      <el-form :model="rentDetailAddDataArray" class="rentDetail" ref="rentDetailRules" :rules="rentDetailRules">
+        <el-row>
+          <el-col :span="8">
+            <el-form-item label="费用类型" class="label_required label_rent" prop="charge_type">
+              <el-select v-model="rentDetailAddDataArray.charge_type" clearable placeholder="请选择">
+                <el-option
+                  v-for="(title,key) in preData.fee" :disabled="title.charge_type_id===3||title.charge_type_id===5"
+                  :key="key"
+                  :label="title.charge_description"
+                  :value="parseInt(title.charge_type_id)">
+                </el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="16">
+            <el-form-item label="起始时间" class="label_required label_rent">
+              <el-date-picker
+                v-model="rentDetailAddDataArray.rent_date"
+                type="daterange"
+                clearable
+                :picker-options="pickerOptions"
+                range-separator="至"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期"
+                align="right">
+              </el-date-picker>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="10">
+          <el-col :span="8">
+            <el-form-item label="计算方式" class="label_required label_rent" prop="rent_calculate_mode">
+              <el-select v-model="rentDetailAddDataArray.rent_calculate_mode" clearable placeholder="请选择">
+                <el-option
+                  v-for="(title,key) in preData.rent_calculate_mode"
+                  :key="key"
+                  :label="title.values_name"
+                  :value="parseInt(title.values_code)">
+                </el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="收取周期" class="label_required label_rent">
+              <el-select v-model="rentDetailAddDataArray.total_rent_cycle" clearable placeholder="请选择">
+                <el-option
+                  v-for="(title,key) in preData.total_rent_cycle"
+                  :key="key"
+                  :label="title.values_name"
+                  :value="parseInt(title.values_code)">
+                </el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="签约面积" class="label_rent">
+              <el-input v-model="rentDetailAddDataArray.area" :disabled="true">
+                <template slot="append">平米</template>
+              </el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="10">
+          <el-col :span="8">
+            <el-form-item label="费用单价" class="label_required label_rent" type="number" prop="price">
+              <el-input v-model="rentDetailAddDataArray.price" clearable @change="rentDetailMoney($event)">
+                <template slot="append">元/平米</template>
+              </el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="费用金额" class=" label_rent">
+              <el-input v-model="rentDetailAddDataArray.fixed_money" :disabled="true">
+              </el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="缴费日期" class="label_rent">
+              <el-input v-model="rentDetailAddDataArray.payment_date" clearable type="number">
+              </el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div slot="footer">
+        <el-button @click="entry.rentDetailAdd = false">取 消</el-button>
+        <el-button type="primary" @click="rentDetailClick('rentDetailRules')">确 定</el-button>
+      </div>
+    </el-dialog>
+    <el-dialog title="押金细添加" :visible.sync="entry.guaranteeAdd" width="70%" height="60%"
+               :close-on-click-modal="false">
+      <el-form :model="guaranteeData" class="rentDetail" ref="guaranteeDataRules" :rules="guaranteeDataRules">
+        <el-row>
+          <el-col :span="8">
+            <el-form-item label="押金类型" class="label_required label_rent" prop="deposit_guarantee_type">
+              <el-select v-model="guaranteeData.deposit_guarantee_type" clearable placeholder="请选择">
+                <el-option
+                  v-for="(title,key) in preData.guarantee"
+                  :disabled="title.charge_type_id===46||key===title.charge_type_id===47"
+                  :key="key"
+                  :label="title.charge_description"
+                  :value="parseInt(title.charge_type_id)">
+                </el-option>
+              </el-select>
+            </el-form-item>
+
+          </el-col>
+          <el-col :span="16">
+            <el-form-item label="起始时间" class="label_required label_rent">
+              <el-date-picker
+                v-model="guaranteeData.rent_date"
+                type="daterange"
+                clearable
+                :picker-options="pickerOptions"
+                range-separator="至"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期"
+                align="right">
+              </el-date-picker>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="8">
+            <el-form-item label="收取周期" class="label_required label_rent">
+              <el-select v-model="guaranteeData.is_return" clearable placeholder="请选择">
+                <el-option
+                  v-for="(title,key) in preData.total_rent_cycle"
+                  :key="key"
+                  :label="title.values_name"
+                  :value="parseInt(title.values_code)">
+                </el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="金额" class="label_required label_rent" type="number" prop="money">
+              <el-input v-model="guaranteeData.money" clearable>
+              </el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div slot="footer">
+        <el-button @click="entry.guaranteeAdd = false">取 消</el-button>
+        <el-button type="primary" @click="guaranteeClick('guaranteeDataRules')">确 定</el-button>
+      </div>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+  import Custome from '@/components/contract/custome.vue' //乙方
+  import Filed from '@/components/contract/field.vue' //场地
+  import attract from '@/components/contract/attract.vue' //招商人员
+  import category from '@/components/contract/category.vue' //品类
+  import brand from '@/components/contract/brand.vue' //品牌
+  import {common} from '@/common/common'
+  let checkPrice = (rule,value,callback)=>{
+    if(value){
+      let rgx = /^\d+(\.\d{1,2})?$/;
+      if(value.match(rgx)==null){
+        return callback(new Error('请检查输入格式，不能为空，且最多三位小数'))
+      }else{
+        callback();
+      }
+    }
+  };
+
+  export default {
+    data() {
+      return {
+        create: {
+          mall: {
+            mall_id: '', //门店Id
+            contract_type: '',   //合同类型
+            contract_area: 0,   //签约面积
+            start_date: '',      //开始时间
+            end_date: '',        //结束时间
+            avoid_lease: '',     //免租期天数
+            first_party: '',     //甲方
+            second_party: '',    //乙方
+            property_manage: '', //物业管理公司
+            created_by: 1,     //创建人
+            last_updated_by: 1,     //更新人
+            data_source: 1,     //合同来源
+            rent_date: '',       //计租日期
+            avoid_type: '',      //免租方式
+            is_decorated: '',     //乙方承租前是否装修
+            decorate_days: '',     //装修天数
+            first_bill_day: '',    //首期账单截止日
+            return_times: '',      //返款次数
+            manager: '',           //招商人员
+            treasurer: 1,         //财务人员（合同管理员）
+            status: 1,            //状态
+            is_rent: '',            //是否参与出租率计算
+            operation_model: '',     //运营方式
+            note: '',                  //备注
+            // contract_code: '',         //合同ID
+          },
+          rent: {
+            rent_calculate_mode: 1,       //租金方式*
+            advance: '',                   //是否预收
+            fixed_money: '',                //租金总额
+            total_rent_cycle: 3,          //计租周期
+            created_by: 1,                //创建人ID
+            last_updated_by: 1,           //更新人ID
+            from_management_fee: '',       //免租期管理费
+            shop_electricity_price: '',    //铺内电费单价
+            public_electricity_price: '',  //公共区域电费
+          },
+          rentDetail: [
+            {
+              start_date: '',          //开始时间
+              end_date: '',            //结束时间
+              fixed_money: '',         //总金额
+              rent_calculate_mode: 1,    //租金计算
+              total_rent_cycle: 3,      //收取周期
+              charge_type: 3,           //费用类型
+              area: '',                  //面积
+              price: '',                 //金额
+              payment_date: 0,          //缴费日期
+            },
+            {
+              start_date: '',          //开始时间
+              end_date: '',            //结束时间
+              fixed_money: '',         //商铺类型
+              rent_calculate_mode: 1,    //租金计算
+              total_rent_cycle: 3,      //收取周期
+              charge_type: 5,           //费用类型
+              area: '',                  //面积
+              price: '',                 //金额
+              payment_date: 0,          //缴费日期
+            }
+          ],
+          guarantee: [{
+            deposit_guarantee_type: 47, //押金类型
+            money: "",              //金额
+            is_return: 1,    //是否返还
+            total_cycle: '1'    //收取周期
+          }, {
+            deposit_guarantee_type: 46, //押金类型
+            money: "",              //金额
+            is_return: 1,       //是否返还
+            total_cycle: '1'    //收取周期
+          }],
+          store: {
+            store_code: '',      //商铺编号
+            store_name: '',     //商铺名称
+            brand_name: '',
+            merchant_type_id: '',     //商铺类型
+            merchant_type_name: '',    //商铺name
+            property_unit_ids: '',      //场地ID
+            operation_type_id: '',           //经营业态Id(品类id)
+            operation_type_name: '',         //品类
+            brand_id: '',            //品牌信息Id
+            capital_type: '',            //资本类型
+            area: 0,            //签约面积
+            valid_from: 1,            //
+            valid_to: 1,            //更新人
+            created_by: 1,            //创建人
+            last_updated_by: 1,            //更新人
+            contact_number: '',    //商铺电话
+          },
+        },
+        pickerOptions: {
+          shortcuts: [{
+            text: '最近一周',
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() );
+              end.setTime(end.getTime() + 3600 * 1000 * 24 * 7);
+              picker.$emit('pick', [start, end]);
+            }
+          }, {
+            text: '最近一个月',
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime());
+              end.setTime(end.getTime() + 3600 * 1000 * 24 * 30);
+              picker.$emit('pick', [start, end]);
+            }
+          }, {
+            text: '最近一年',
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime());
+              end.setTime(start.getTime()  + 3600 * 1000 * 24 * 365);
+              picker.$emit('pick', [start, end]);
+            }
+          }]
+        },
+        mall_add: {
+          legal_person: '',
+          j_address: '',
+          legal: '',
+          y_address: '',
+          operation_type_id: '',
+          merchant_type_name: '',
+          managers: '',
+          first_party: '',
+          property_manage: '',
+          second_party: '',
+          customer_code: '',//商户编号
+          contract_create_date: '',
+          unit_code: '',
+          date: '',
+          area:'',
+          data_source:1,
+
+        },
+        rentDetailAddDataArray: {
+          start_date: '',          //开始时间
+          end_date: '',            //结束时间
+          rent_date: '',            //结束时间
+          fixed_money: '',         //商铺类型
+          rent_calculate_mode: '',    //租金计算
+          total_rent_cycle: '',      //收取周期
+          charge_type: '',           //费用类型
+          area: '',                  //面积
+          price: '',                 //金额
+          payment_date: ''        //缴费日期
+        },
+        guaranteeData: {
+          deposit_guarantee_type: '',
+          rent_date:'',
+          money: '',
+          is_return: 1,    //是否返还
+          total_cycle: 1,     //收取周期
+          residentialPool:'',//公摊系数
+        },
+        entry: {
+          avoidNo: false,
+          dialogTableVisible: false,
+          fieldChoice: false,
+          attractChoice: false,
+          categoryChoice: false,
+          brandChoice: false,
+          rentDetailAdd: false,
+          guaranteeAdd: false,
+          dateNull: false,
+          costmeNo: true,
+          avoidTypeNo: true,
+          viewNo: false,
+          view_add: true,
+          avoidLease: true,
+        },
+        preData: {},
+
+        rules: {
+          'mall.mall_id': [{required: true, message: '门店不能为空', trigger: 'change'}],
+          'mall.operation_model': [{required: true, message: '运营方式不能为空', trigger: 'change'}],
+          'store.operation_type_name': [{required: true, message: '品类不能为空', trigger: 'change'}],
+          'mall.is_decorated': [{required: true, message: '乙方承租请是否以装修不能为空', trigger: 'change'}],
+          'mall.avoid_type': [{required: true, message: '免租方式不能为空', trigger: 'change'}],
+          'mall.avoid_lease': [{required: true, message: '免租天数不能为空', trigger: 'change'}],
+          'mall.contract_type': [{required: true, message: '合同类型不能为空', trigger: 'change'}],
+          'mall.manager': [{required: true, message: '招商人员不能为空', trigger: 'change'}],
+          'mall.is_rent': [{required: true, message: '是否参与出租率计算不能为空', trigger: 'change'}],
+          'mall.return_times': [{required: true, message: '返款次数不能为空', trigger: 'change'}],
+          'rent.advance': [{required: true, message: '是否预收不能为空', trigger: 'change'}],
+          'rent.from_management_fee': [ {required: true, message: '免租期管理费不能为空', trigger: 'change'},],
+          'rent.shop_electricity_price': [{required: true, message: '铺内电费不能为空', trigger: 'change'}],
+          'rent.public_electricity_price': [{required: true, message: '公共区域电费不能为空', trigger: 'change'}],
+          'mall.total_rent_cycle': [{required: true, message: '租金周期不能为空', trigger: 'change'}],
+          'guarantee.money': [{required: true, message: '押金明细金额不能为空', trigger: 'change'}],
+          'store.store_name': [{required: true, message: '商铺名称不能为空', trigger: 'change'}],
+          'store.merchant_type_id': [{required: true, message: '商铺类型费不能为空', trigger: 'change'}],
+          'store.brand_name': [{required: true, message: '主营品牌不能为空', trigger: 'change'}],
+          'store.capital_type': [{required: true, message: '资本类型不能为空', trigger: 'change'}],
+          'store.contact_number': [{required: true, message: '商铺电话不能为空', trigger: 'change'}],
+          'mall.start_date': [{required: true, message: '请选择日期', trigger: 'change'}],
+          'mall.second_party': [{required: true, message: '请选择乙方', trigger: 'change'}],
+        },
+        rentDetailRules: {
+          'charge_type': [{required: true, message: '费用类型不能为空', trigger: 'change'}],
+          'rent_calculate_mode': [{required: true, message: '计算方式不能为空', trigger: 'change'}],
+          'total_rent_cycle': [{required: true, message: '收取不能为空', trigger: 'change'}],
+          'price': [{required: true, message: '费用单价不能为空', trigger: 'change'}],
+          'fixed_money': [{required: true, message: '费用金额不能为空', trigger: 'change'}],
+        },
+        guaranteeDataRules: {
+          'deposit_guarantee_type': [{required: true, message: '押金类型不能为空', trigger: 'change'}],
+          'money': [{required: true, message: '金额不能为空', trigger: 'change'}],
+        },
+        routerType: '',
+        source: [],
+      }
+    },
+    created() {
+      let that = this;
+      that.currentDate();
+      that.getPreData();
+      that.statusName();
+      if(this.$route.query.status == 'add') {
+        common.lookup('L011', this).then((res) => {
+          res.forEach((index, i) => {
+            if(that.mall_add.data_source == res[i].values_code) {
+              that.create.mall.data_source = res[i].values_code;
+              that.mall_add.data_source = res[i].values_name;
+            }
+          })
+        })
+      }
+    },
+    components: {
+      Custome,
+      Filed,
+      attract,
+      category,
+      brand
+    },
+    methods: {
+      submitForm(formName) {
+        this.subMethod(formName,2)
+      },
+      keep(formName) {
+        this.subMethod(formName,1)
+      },
+      empty() {
+        this.$router.push({
+          path: '/contract/index',
+        })
+      },
+      subMethod(formName, status) {
+
+        let subTitle = '';
+        if(status == 1) {
+          this.create.mall.status = status;
+        }else {
+          this.create.mall.status = status;
+        }
+        this.$refs[formName].validate((valid) => {
+          let retrunTrue = 0;
+          if (valid) {
+            this.create.rentDetail.forEach((index, i) => {
+              if (this.create.rentDetail[i].price == '' || this.create.rentDetail[i].total_rent_cycle == '') {
+                this.$message({
+                  message: '租金明细尚未填写完',
+                  type: 'warning'
+                });
+              }else {
+                retrunTrue +=1;
+              }
+            });
+            if(retrunTrue>=2) {
+              this.create.guarantee.forEach((index, i) => {
+                if (this.create.guarantee[i].money == '') {
+                  this.$message({
+                    message: '押金明细尚未填写完',
+                    type: 'warning'
+                  });
+                }else {
+                  retrunTrue +=1;
+                }
+              });
+            }
+            let startDays = this.AddDays(this.mall_add.date[0], this.create.mall.decorate_days, this.create.mall.avoid_lease);
+            let endDays = this.AddDays(this.mall_add.date[1], this.create.mall.decorate_days, this.create.mall.avoid_lease);
+            this.create.rentDetail.start_date = startDays;
+            this.create.rentDetail.end_date = endDays;
+            let createMall = JSON.stringify(this.create.mall);
+            let createRent = JSON.stringify(this.create.rent);
+            let createRentDetail = JSON.stringify(this.create.rentDetail);
+            let createGuarantee = JSON.stringify(this.create.guarantee);
+            let createStore = JSON.stringify(this.create.store);
+            let that = this;
+            if(parseInt(retrunTrue) >= 4) {
+              if (this.routerType == 'add' ) {
+                if(this.create.mall.status == 0) {
+                  subTitle = '添加成功';
+                }else {
+                  subTitle = '保存成功';
+                }
+                this.http.post('api/addContract',{
+                  main: createMall,
+                  rent: createRent,
+                  rentDetail: createRentDetail,
+                  guarantee: createGuarantee,
+                  store: createStore
+                }).then(res => {
+                  that.$message({
+                    message: subTitle,
+                    type: 'success'
+                  });
+                  that.$router.push({
+                    path: '/contract/index',
+                  })
+                }).catch((err) => {
+                  that.$message.error(err.response.data.msg);
+                });
+              }else if (this.routerType == 'edit') {
+                if(this.create.mall.status == 0) {
+                  subTitle = '修改成功';
+                }else {
+                  subTitle = '保存成功';
+                }
+
+                this.http.post('api/editContract', {
+                  contract_main_id:this.$route.query.type,
+                  main: createMall,
+                  rent: createRent,
+                  rentDetail: createRentDetail,
+                  guarantee: createGuarantee,
+                  store: createStore
+                }).then(res => {
+                  that.$message({
+                    message: subTitle,
+                    type: 'success'
+                  });
+                  that.$router.push({
+                    path: '/contract/index',
+                  })
+                }).catch((err) => {
+                  that.$message.error(err.response.data.msg);
+                });
+              }
+            }
+          }else {
+            this.$message({
+              message: '请输入完整信息！！！',
+              type: 'warning'
+            })
+          }
+        });
+      },
+      statusName() {
+        const routerParams = this.$route.query.status;
+        const routerType = this.$route.query.type;
+        if (routerParams == 'view') {
+          this.view(routerType, routerParams);
+          this.routerType = 'view';
+        } else if (routerParams == 'edit') {
+          this.entry.avoidLease = false;
+          this.view(routerType, routerParams);
+          this.routerType = 'edit';
+        }else if(routerParams == 'add'){
+          this.routerType = 'add';
+        }
+      },
+      view(data, type) {
+        let that = this;
+        this.http.post('contract_main/getContractRelateInfo', {contract_main_id: data}).then(res => {
+          let data = res.data.data.main;
+          let manageName = '';
+          if(data.manager == 1) {
+            manageName ='李琳'
+          }else{
+            manageName ='张瑞'
+          }
+          let mall = {
+            mall_id: data.mall_id, //门店Id
+            contract_type: data.contract_type,   //合同类型
+            contract_area: data.contract_area,   //签约面积
+            start_date: data.start_date,      //开始时间
+            end_date: data.end_date,        //结束时间
+            avoid_lease: data.avoid_lease,     //免租期天数
+            first_party: data.first_party,     //甲方
+            second_party: data.second_party,    //乙方
+            property_manage: data.property_manage, //物业管理公司
+            data_source: data.data_source,     //合同来源
+            rent_date: data.rent_date,       //计租日期
+            avoid_type: data.avoid_type,      //免租方式
+            is_decorated: data.is_decorated,     //乙方承租前是否装修
+            decorate_days: data.decorate_days,     //装修天数
+            first_bill_day: data.first_bill_day,    //首期账单截止日
+            return_times: data.return_times,      //返款次数
+            manager: data.manager,           //招商人员
+            treasurer: data.treasurer,         //财务人员（合同管理员）
+            status: data.status,            //状态
+            is_rent: data.is_rent,            //是否参与出租率计算
+            operation_model: data.operation_model,     //运营方式
+            from_contract_main_id: data.from_contract_main_code, //原合同ID
+            note: data.note,                  //备注
+            contract_code: data.contract_code,         //合同ID
+            last_updated_by:1,//更新人
+            created_by:1 //创建人
+          };
+          let rent = {
+            rent_calculate_mode: 1,       //租金方式*先传假数据
+            advance: data.advance,                   //是否预收
+            fixed_money: data.count_money,                //租金总额
+            total_rent_cycle: data.total_rent_cycle,          //租金周期
+            created_by: 1,                //创建人ID
+            last_updated_by: 1,           //更新人ID
+            from_management_fee: data.from_management_fee,       //免租期管理费
+            shop_electricity_price: data.shop_electricity_price,    //铺内电费单价
+            public_electricity_price: data.public_electricity_price,  //公共区域电费
+          };
+          let store = {
+            store_code: data.store_code,      //商铺编号
+            store_name: data.store_name,     //商铺名称
+            brand_name: data.brand_name,
+            merchant_type_id: parseInt(data.merchant_type_id),     //商铺类型
+            merchant_type_name: data.merchant_type_name,    //商铺name
+            property_unit_ids: parseInt(data.property_unit_ids),      //场地ID
+            operation_type_id: data.operation_type_id,           //经营业态Id(品类id)
+            operation_type_name: data.operation_type_name,         //品类
+            brand_id: data.brand_id,            //品牌信息Id
+            customer_code: data.customer_code,     //合同来源
+            capital_type: data.capital_type,            //资本类型
+            area: data.area,            //测量面积
+            valid_from: data.start_date,            //
+            valid_to: data.end_date,         //更新人
+            created_by: 1,            //创建人
+            last_updated_by: 1,            //更新人
+            contact_number: data.contact_number,    //商铺电话
+          };
+
+          let mall_add = {
+            legal_person: data.legal_person,
+            j_address: data.j_address,
+            legal: data.legal,
+            y_address: data.y_address,
+            operation_type_id: data.operation_type_id,
+            merchant_type_name: data.merchant_type_name,
+            managers: manageName,
+            first_party: data.corp_name,
+            property_manage: data.corp_name,
+            second_party: data.customer_name,
+            customer_code: data.customer_code,//商户编号
+            contract_create_date: data.created_time.split(' ')[0],
+            unit_code: data.store_code,
+            date: [data.start_date, data.end_date],
+            area: data.area,
+            data_source: data.data_source,     //合同来源
+          };
+          that.create.guarantee = res.data.data.guarantee;
+          that.create.rentDetail = res.data.data.rentDetail;
+          that.create.mall = mall;
+          that.create.rent = rent;
+          that.create.store = store;
+          that.mall_add = mall_add;
+
+          if (type == 'view') {
+            that.entry.viewNo = true;
+            that.entry.avoidLease = true;
+            that.entry.avoidNo = true;
+            that.entry.costmeNo = true;
+            that.entry.view_add = false;
+            that.entry.dateNull = true;
+          }
+          common.lookup('L011', that).then((res) => {
+            res.forEach((index, i) => {
+              if(that.mall_add.data_source == res[i].values_code) {
+                that.create.mall.data_source = res[i].values_code;
+                that.mall_add.data_source = res[i].values_name;
+              }
+            })
+          })
+        }).catch((err) => {
+          that.$message.error(err.response.data.msg);
+        });
+      },
+      mallList(data) { //选择门店默认赋值给甲方、物业管理公司
+        this.preData.mall.forEach(item=> {
+          if(parseInt(item.mall_id) == parseInt(data)) {
+            this.create.mall.first_party = item.corp_id;
+            this.mall_add.first_party = item.corp_name;
+            this.create.mall.property_manage = item.corp_id;
+            this.mall_add.property_manage = item.corp_name;
+            this.mall_add.legal_person = item.legal_person;
+            this.mall_add.j_address = item.address;
+            this.mall_add.j_address = item.address;
+            if (this.mall_add.date == '') {
+              this.entry.dateNull = true;
+            }
+          }
+        })
+      },
+      getPreData() {//预渲染参数
+        let that = this;
+        that.http.post('table_util/getPreData',  {act: 'contract'}).then(res => {
+          that.preData = res.data.data
+        }).catch((err) => {
+          that.$message.error(err.response.data.msg);
+        });
+      },
+      currentDate() {//获取当前日期
+        this.mall_add.contract_create_date = common.currentDate();
+      },
+      isDecorated(data) {//是否承租前装修
+        this.entry.avoidTypeNo = false;
+        this.create.mall.avoid_type = '';
+        this.create.mall.decorate_days = '';
+        this.create.mall.rent_date = '';
+      },
+      avoidType() {//免租方式
+        let that = this;
+        this.http.post('DecorateDays/getDays', {
+          print_avoid_id: this.create.mall.is_decorated,
+          avoid_type: this.create.mall.avoid_type,
+          is_decorated:this.create.mall.is_decorated,
+          area:this.create.mall.contract_area
+        }).then(res => {
+          that.create.mall.decorate_days = res.data;
+          let rentDays = that.AddDays(that.mall_add.date[0], res.data, that.create.mall.avoid_lease);
+          that.create.mall.first_bill_day = that.getLastDay(rentDays);
+          that.create.mall.rent_date = rentDays;
+        }).catch((err) => {
+          that.$message.error(err.response.data.msg);
+        });
+      },
+      startDate(data) {//开始日期
+        this.entry.avoidNo = false;
+        let rentDays = this.AddDays(this.mall_add.date[0], this.create.mall.decorate_days, this.create.mall.avoid_lease);
+        let endDays = this.AddDays(this.mall_add.date[1], this.create.mall.decorate_days, this.create.mall.avoid_lease);
+        this.create.mall.start_date = rentDays;
+        this.create.mall.end_date = endDays;
+        this.create.mall.rent_date = rentDays;
+        this.create.mall.first_bill_day = this.getLastDay(rentDays);
+        this.create.rentDetail.forEach((index, i) => {
+          this.create.rentDetail[i].start_date = rentDays;
+          this.create.rentDetail[i].end_date = endDays;
+        })
+        this.create.store.valid_from = rentDays;
+        this.create.store.valid_to = endDays;
+        this.entry.dateNull = false;
+        this.entry.avoidLease = false
+      },
+      avoidLease(data) {//免租天数
+        let rentDays = this.AddDays(this.mall_add.date[0], this.create.mall.decorate_days, this.create.mall.avoid_lease);
+        this.create.mall.rent_date = rentDays;
+        this.create.mall.first_bill_day = this.getLastDay(rentDays);
+      },
+      AddDays(dates, dayIn, dayRent) {//计租日期
+        if (dayRent == '') dayRent = 0;
+        var date = new Date(dates);
+        var myDate = new Date(date.getTime() + dayIn * 24 * 60 * 60 * 1000 + dayRent * 24 * 60 * 60 * 1000);
+        let myDateList = myDate.toLocaleString().split(' ')[0];
+        let myDateTime = myDateList.split('/');
+
+        return myDateTime[0] + "-" + (myDateTime[1] < 10 ? "0" + myDateTime[1] : myDateTime[1]) + "-" + (myDateTime[2] < 10 ? "0" + myDateTime[2] : myDateTime[2]);
+      },
+      choiceData(data) {//乙方赋值
+        this.create.mall.second_party = data.customer_id;
+        this.mall_add.second_party = data.customer_name;
+        this.mall_add.customer_code = data.customer_code;
+        this.mall_add.legal = data.legal;
+        this.mall_add.y_address = data.address;
+        this.entry.dialogTableVisible = false;
+      },
+      attractData(data) {//招商人员赋值
+        this.entry.attractChoice = false;
+        this.create.mall.manager = data.manager_id;
+        this.mall_add.managers = data.name;
+      },
+      fieldData(data) {//场地赋值
+        let that = this;
+        this.create.mall.contract_area = 0;
+        this.create.store.area = 0;
+        this.create.mall.is_decorated = '';//清空免租方式
+        this.create.mall.avoid_type = '';//清空免租方式
+        let area = 0;
+        if (data.length != undefined) {
+          let areaSelect = 0, contract_area = 0, storeCode = '', unitCode = '', property_unit_ids = '',rent_area = 0;
+          data.forEach((index, i) => {
+            if (i != data.length - 1) {
+              storeCode += index.unit_code + ',';
+              unitCode += index.unit_code + ',';
+              property_unit_ids += index.property_unit_id + ',';
+            } else {
+              storeCode += index.unit_code;
+              unitCode += index.unit_code;
+              property_unit_ids += index.property_unit_id;
+            }
+            this.residentialPool(index.property_unit_id).then((res) => { //计算签约面积 公摊系数 * 测量面积
+              area = parseFloat(index.building_area) * res;
+              rent_area += parseFloat(area);
+              this.create.mall.contract_area = rent_area.toFixed(2);//签约
+              this.create.store.area = rent_area.toFixed(2);//签约
+              this.fieleMoney(rent_area.toFixed(2));
+            });
+            areaSelect += parseFloat(index.building_area);
+          });
+
+          this.create.store.store_code = storeCode;
+          this.mall_add.unit_code = unitCode;
+          this.mall_add.area = areaSelect.toFixed(2); //测量
+          this.create.rentDetail.forEach((index, i) => {
+            this.create.rentDetail[i].area = contract_area.toFixed(2);
+          })
+          this.create.store.property_unit_ids = property_unit_ids;
+        } else {
+          that.residentialPool(data.property_unit_id).then((res) => { //计算签约面积 公摊系数 * 测量面积
+            console.log(res)
+            area = parseFloat(data.building_area)* res;
+            this.create.mall.contract_area = area.toFixed(2);//签约
+            this.create.store.area = area.toFixed(2);//签约
+            this.fieleMoney(area);
+          });
+          this.create.store.store_code = data.unit_code;
+          this.mall_add.unit_code = data.unit_code;
+          this.mall_add.area = data.building_area; //测量
+
+          this.create.rentDetail.forEach((index, i) => {
+            this.create.rentDetail[i].area = data.building_area;
+          })
+          this.create.store.property_unit_ids = data.property_unit_id
+        }
+        this.entry.fieldChoice = false;
+        this.entry.costmeNo = false;
+      },
+      residentialPool(data){
+        let that = this;
+        return that.http.post('property_unit/getCoefficient', { property_unit_id: data }).then((res) => res.data)
+          .catch((err) => {
+          that.$message.error(err.response.data.msg);
+        });
+      },
+      fieleMoney(data) {
+        if (this.create.rentDetail[0].price != '' || this.create.rentDetail[1].price != '') {
+          this.create.rentDetail.forEach((index, i) => {
+            this.create.rentDetail[i].fixed_money = 0;
+            this.create.rentDetail[i].fixed_money = (data * this.create.rentDetail[i].price).toFixed(2);
+          })
+          let fixedMoney = 0
+          this.create.rentDetail.forEach(item=>{
+            fixedMoney +=  parseFloat(item.fixed_money);
+          })
+          this.create.rent.fixed_money = fixedMoney; //修改场地改变租金总额
+        }
+      },
+      categoryData(data) {//品类赋值
+        this.mall_add.operation_type_id = data.id;
+        this.create.store.operation_type_name = data.text;
+        this.create.store.operation_type_id = data.id;
+      },
+      brandChoiceData() {
+        if (this.mall_add.operation_type_id == '') {
+          this.$message({
+            message: '请选择品类',
+            type: 'warning'
+          });
+        } else {
+          this.entry.brandChoice = true;
+        }
+      },
+      categoryDataList() {
+        this.entry.categoryChoice = false;
+      },
+      brandData(data) {//品牌赋值
+        this.entry.brandChoice = false;
+        this.create.store.brand_name = data.brand_name;
+        this.create.store.brand_id = data.brand_id;
+      },
+      getLastDay(rentDays) { // 收取账单截止日期
+        var newMonth = rentDays.split('-')[1];
+        var new_year = rentDays.split('-')[0];//取当前的年份
+        var new_month = newMonth++; //取下一个月的第一天，方便计算（最后一天不固定）
+        if (newMonth == 12) {
+          new_month = 12;
+        } else if (newMonth > 12) {
+          new_month -= 12; //月份减
+          new_year++; //年份增
+        }
+        var new_date = new Date(new_year, new_month, 1); //取当年当月中的第一天
+        var date_count = new Date(new_date.getTime() - 1000 * 60 * 60 * 24).getDate(); //获取当月的天数
+        var last_date = new Date(new_date.getTime() - 1000 * 60 * 60 * 24); //获得当月最后一天的日期
+        var newDate = new_year + '-' + (new_month < 10 ? "0" + new_month : new_month) + "-" + (date_count < 10 ? "0" + date_count : date_count);
+        return newDate;
+      },
+      fieldClick() {
+        //场地点击
+        if (!this.create.mall.mall_id) {
+          this.$message({
+            message: '请选择门店',
+            type: 'warning'
+          });
+        } else {
+          this.entry.fieldChoice = false;
+          this.$nextTick(() => {
+            this.entry.fieldChoice = true;
+          })
+        }
+      },
+      rentMoney(data, index) {//租金明细条款总金额计算
+        // let reg=/(^[1-9]{1}[0-9]*$)|(^[0-9]*\.[0-9]{2}$)/
+        // if(!reg.test(data)){
+        //   this.create.rentDetail[index].price = '';
+        //   this.$message({
+        //     message: '小数点不能超过两位',
+        //     type: 'warning'
+        //   });
+        // }
+        let that = this;
+        if (that.mall_add.unit_code == 'undefined' || that.mall_add.unit_code == '') {
+          that.create.rentDetail[index].price = '';
+          this.$message({
+            message: '请选择场地',
+            type: 'warning'
+          });
+        } else {
+          if(data == '') {
+            data = 0;
+          }
+          this.create.rentDetail[index].fixed_money = (parseFloat(data) * parseFloat(this.create.mall.contract_area)).toFixed(2);
+          if (index == 0 || index == 1) {
+            if(this.create.rentDetail[0].fixed_money == '') {
+              this.create.rent.fixed_money =that.create.rentDetail[0].fixed_money;
+            }else if(this.create.rentDetail[1].fixed_money == '') {
+              this.create.rent.fixed_money = that.create.rentDetail[1].fixed_money;
+            }else {
+              this.create.rent.fixed_money = (parseFloat(that.create.rentDetail[0].fixed_money) + parseFloat(that.create.rentDetail[1].fixed_money)).toFixed(2);
+            }
+          }
+        }
+      },
+      // numBerLimit(data) {
+      //
+      // },
+      guaranteeMoney(data, index) {//押金明细条款金额
+        this.create.guarantee[index].money = data;
+      },
+      rentDetailClick(formName) {//租金明细添加数据赋值
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            delete this.rentDetailAddDataArray.rent_date;
+            this.create.rentDetail.push(JSON.parse(JSON.stringify(this.rentDetailAddDataArray)));
+            this.entry.rentDetailAdd = false;
+          } else {
+            this.$message({
+              message: '请输入完整信息！！！',
+              type: 'warning'
+            })
+            return false;
+          }
+        });
+      },
+      rentDetailAddData(val) {//租金明细添加按钮点击事件
+        if (this.mall_add.unit_code != 'undefined' && this.mall_add.unit_code != '') {
+          this.entry.rentDetailAdd = true;
+          this.entry.iconView = val
+          this.rentDetailAddDataArray.rent_date = this.mall_add.date;
+          this.rentDetailAddDataArray.start_date = this.create.mall.start_date;
+          this.rentDetailAddDataArray.end_date = this.create.mall.end_date;
+          this.rentDetailAddDataArray.area = this.create.mall.contract_area;
+        } else {
+          this.$message({
+            message: '请选择场地',
+            type: 'warning'
+          });
+        }
+      },
+      rentDetailMoney(data) {//租金明细费金额计算
+        this.rentDetailAddDataArray.fixed_money = parseFloat(data * this.rentDetailAddDataArray.area).toFixed(2);
+      },
+      guaranteeClick(formName) {//租金明细添加确定按钮事件
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            delete this.guaranteeData.rent_date;
+            this.create.guarantee.push(JSON.parse(JSON.stringify(this.guaranteeData)));
+            this.entry.guaranteeAdd = false;
+          } else {
+            this.$message({
+              message: '请输入完整信息！！！',
+              type: 'warning'
+            })
+            return false;
+          }
+        });
+
+      },
+      guaranteeAddData() {//租金明细赋值
+        if (this.mall_add.unit_code != 'undefined' && this.mall_add.unit_code != '') {
+          this.entry.guaranteeAdd = true;
+          this.guaranteeData.rent_date = this.mall_add.date;
+          this.guaranteeData.start_date = this.create.mall.start_date;
+          this.guaranteeData.start_date = this.create.mall.end_date;
+        } else {
+          this.$message({
+            message: '请选择场地',
+            type: 'warning'
+          });
+        }
+      },
+      rentDetailTotal(data, index) {//租金明细周期选择
+        this.create.rentDetail[index].total_rent_cycle = data;
+      },
+      incoDel(index, view) {//明细删除
+        if (view == 'rentDetail') {
+          this.create.rentDetail.splice(index, 1);
+        } else {
+          this.create.guarantee.splice(index, 1);
+        }
+
+      },
+      merchantTypeName(data) { //商铺类型
+        this.preData.merchant_type.forEach((index, i) => {
+          if (data == this.preData.merchant_type[i].values_code) {
+            this.create.store.merchant_type_name = this.preData.merchant_type[i].values_name;
+          }
+        });
+      },
+      returnGo() {
+        this.$router.back(-1)
+      }
+    },
+
+  };
+</script>
+
+<style lang="scss">
+  .el-form {
+    background: #fff;
+  }
+
+  .label_rent > .el-form-item__label {
+    width: 80px !important;
+  }
+
+  .label_rent > .el-form-item__content {
+    margin-left: 80px !important;
+  }
+
+  .rentDetail {
+    margin: 0;
+    padding: 5px;
+    background: #f8f8f8;
+  }
+
+
+  .el-form-item__error {
+    display: none;
+  }
+
+  .el-button--mini, .el-button--mini.is-round {
+    margin-top: -3px;
+  }
+
+  .rentDetailIcon {
+    position: absolute;
+    top: 15px;
+    right: 1%;
+  }
+
+  .rentDetailIcon span {
+    display: inline-block;
+    margin-right: 5px;
+    font-size: 20px;
+  }
+  .el-form-item {
+    margin-bottom: 10px;
+  }
+  .el-input-group__append, .el-input-group__prepend{
+    padding: 0px 5px;
+  }
+  .el-input__inner {
+    padding: 0 0 0 5px;
+  }
+</style>

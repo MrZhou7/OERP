@@ -1,0 +1,243 @@
+<template>
+  <div class="roleWrap">
+    <el-row>
+      <el-col :span="6">
+        <div class="category-tree-content">
+          <el-input
+            v-model="filterText"
+            placeholder="输入关键字进行品类搜索"/>
+          <el-tree
+            v-loading="loading"
+            ref="tree2"
+            :highlight-current="true"
+            :data="dataTree"
+            :props="defaultProps"
+            :filter-node-method="filterNode"
+            node-key="id"
+            class="filter-tree"
+            @node-click="handleNodeClick"/>
+        </div>
+      </el-col>
+      <el-col :span="18">
+        <el-form ref="ruleForm" :model="ruleForm" label-width="100px" class="demo-ruleForm">
+          <el-form-item label="资源名称">
+            <el-input v-model="ruleForm.permission_name" class="inputWindth"></el-input>
+          </el-form-item>
+          <el-form-item label="父级资源">
+            <el-select v-model="ruleForm.parent_id" placeholder="请选择上级类别" class="inputWindth">
+              <el-option label="顶级菜单" value="0"></el-option>
+              <el-option v-for="item in fatherId" :key="item.permission_id" :label="item.permission_name" :value="item.permission_id"/>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="资源URL">
+            <el-input v-model="ruleForm.url" class="inputWindth"></el-input>
+          </el-form-item>
+          <el-form-item label="级内顺序">
+            <el-input v-model="ruleForm.sort" class="inputWindth"></el-input>
+          </el-form-item>
+          <el-form-item label="图标">
+            <el-input v-model="ruleForm.permission_icon" class="inputWindth"></el-input>
+          </el-form-item>
+          <el-form-item label="">
+            <el-button type="primary" @click="save('ruleForm')">保 存</el-button>
+            <el-button @click="addChildren('ruleForm')">添加资源</el-button>
+          </el-form-item>
+        </el-form>
+        <el-form :inline="true" :model="menuForm" ref="menuForm" label-width="80px" class="demo-ruleForm">
+          <el-form-item label="操作名称" prop="name">
+            <el-input v-model="menuForm.name"></el-input>
+          </el-form-item>
+          <el-form-item label="操作编码" prop="code">
+            <el-input v-model="menuForm.code"></el-input>
+          </el-form-item>
+          <el-form-item label="">
+            <el-button type="primary" @click="submitForm('menuForm')">新 增</el-button>
+            <el-button @click="resetForm('menuForm')">重 置</el-button>
+          </el-form-item>
+        </el-form>
+        <div class="contract_table">
+          <el-table
+            ref="table"
+            :height="height"
+            :data="tableData"
+            :show-overflow-tooltip="true"
+            border
+            tooltip-effect="dark"
+            style="width: 100%">
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="name"
+              min-width="100"
+              label="操作名称">
+            </el-table-column>
+            <el-table-column
+              prop="code"
+              min-width="100"
+              label="操作编码"/>
+            <el-table-column
+              label="操作"
+              min-width="100">
+              <template slot-scope="scope">
+                <el-button type = "text" size="small" @click.native.prevent="deleteData(scope.$index, tableData)">删 除</el-button>
+                <el-button type = "text" size="small" @click.native.prevent="editData(scope.$index, tableData)">编 辑</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+      </el-col>
+    </el-row>
+  </div>
+</template>
+
+<script>
+import { common } from '@/common/common';
+import building from '@/utils/building';
+export default {
+  name: 'Role',
+  data() {
+    return {
+      dataTree: [], // 权限信息
+      tableData: [], // 橘色权限table
+      filterText: '', // 查询过滤的初始值
+      loading: false,
+      height: window.innerHeight - 485 + 'px',
+      defaultProps: {
+        children: 'children',
+        label: 'text'
+      },
+      ruleForm: {}, // 资源明细表单
+      menuForm: { name: '', code: '' }, // 修改表单
+      fatherId: [], // 父级资源
+      permission_id: null, // 权限id
+    };
+  },
+  watch: {
+    filterText(val) {
+      this.$refs.tree2.filter(val);
+    }
+  },
+  created() {
+    this.loading = true;
+    this.getUserTree();
+    this.getFather();
+  },
+  methods: {
+    filterNode(value, data) { // 组织架构的搜索查询
+      if (!value) return true;
+      return data.text.indexOf(value) !== -1;
+    },
+    handleNodeClick(node, data) { // 点击传参给用户信息，并显示用户信息
+      console.log(node)
+      this.permission_id = node.data.operation_type_id;
+      this.http.post('Permission/getInfo', { permission_id: node.data.operation_type_id }).then(res => {
+        this.ruleForm = res.data.data;
+        this.tableData = res.data.data.list;
+        this.ruleForm.parent_id = node.data.parent_id;
+      });
+    },
+    save(formName) { // 保存修改
+      const that = this;
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          const u = {
+            permission_id: that.permission_id,
+            permission_name: that.ruleForm.permission_name,
+            pid: that.ruleForm.parent_id,
+            url: that.ruleForm.url,
+            sort: that.ruleForm.sort,
+            permission_icon: that.ruleForm.permission_icon,
+          };
+          that.http.post('Permission/editPermission', u).then(res => {
+            console.log(res.data.data);
+            that.$message({ message: '成功！', type: 'success' });
+          });
+        } else {
+          console.log('error submit!!');
+          return false;
+        }
+      });
+    },
+    addChildren(formName) { // 添加子资源
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          const that = this;
+          this.$refs[formName].validate((valid) => {
+            if (valid) {
+              const u = {
+                permission_name: that.ruleForm.permission_name,
+                pid: that.ruleForm.parent_id,
+                url: that.ruleForm.url,
+                sort: that.ruleForm.sort,
+                enabled: 1,
+                permission_icon: that.ruleForm.permission_icon,
+                vue_path: 1
+              };
+              that.http.post('Permission/addPermission', u).then(res => {
+                console.log(res.data.data);
+                that.$message({ message: '成功！', type: 'success' });
+              });
+            } else {
+              console.log('error submit!!');
+              return false;
+            }
+          });
+        } else {
+          console.log('error submit!!');
+          return false;
+        }
+      });
+    },
+    submitForm(formName) { // 新增功能
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          const that = this;
+          this.$refs[formName].validate((valid) => {
+            if (valid) {
+              const u = {
+                permission_id: that.permission_id,
+                name: that.menuForm.name,
+                code: that.menuForm.code,
+                enabled: 1
+              };
+              that.http.post('PermissionOperate/add', u).then(res => {
+                console.log(res.data.data);
+                that.$message({ message: '成功！', type: 'success' });
+              });
+            } else {
+              console.log('error submit!!');
+              return false;
+            }
+          });
+        } else {
+          console.log('error submit!!');
+          return false;
+        }
+      });
+    },
+    resetForm(formName) { // 重置
+      this.$refs[formName].resetFields();
+    },
+    getFather() { // 获取父级资源
+      this.http.post('Permission/equality').then(res => {
+        console.log(res)
+        this.fatherId = res.data.data;
+      });
+    },
+    getUserTree() { // 获取tree信息资源权限信息
+      this.http.post('Permission/PermissionList').then(res => {
+        this.dataTree = res.data.data;
+        this.loading = false;
+      });
+    }
+  }
+};
+</script>
+
+<style scoped lang="scss">
+  .roleWrap{ padding: 15px;}
+  .filter-tree{ overflow: auto;height:calc(100vh - 150px);}
+  .author-tree{ overflow: auto;height:calc(100vh - 60vh);}
+  .category-tree-content{ margin:10px;border: 1px solid #e2e2e2;}
+  .el-form-item{ margin-bottom: 5px; }
+  .inputWindth{ width: 50%; }
+</style>

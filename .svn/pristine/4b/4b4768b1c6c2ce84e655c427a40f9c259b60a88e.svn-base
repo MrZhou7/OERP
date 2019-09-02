@@ -1,0 +1,283 @@
+<template>
+  <div class="app-container">
+    <el-tabs type="border-card" v-show="topNav">
+      <el-tab-pane label="审核通过">
+        <el-form :model="formInline" class="demo-form-inline" label-width="80px">
+          <el-row>
+            <el-col :span="6">
+              <el-form-item label="品牌名称">
+                <el-input v-model="formInline.brand_name" placeholder="请输入品牌名称" clearable></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="品牌编号">
+                <el-input v-model="formInline.brand_code" placeholder="请输入品牌编号" clearable></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="品类">
+                <el-input v-model="operation_type_name" @click.native="getOperation" placeholder="请选择品类" prefix-icon="el-icon-search" clearable></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="品牌等级">
+                <el-select v-model="formInline.brand_rank" placeholder="请选择">
+                  <el-option v-for="item in brandRank" :key="item.values_code" :label="item.values_name" :value="item.values_code"></el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="6">
+              <el-form-item label="品牌状态">
+                <el-select v-model="formInline.brand_status" placeholder="请选择">
+                  <el-option v-for="item in brandStatus" :key="item.values_code" :label="item.values_name" :value="item.values_code"></el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item>
+                <el-button type="primary" @click="inquire">查询</el-button>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-dialog
+            title="选择品类"
+            :visible.sync="dialogVisible"
+            :close-on-click-modal="false"
+            :modal-append-to-body="false"
+            width="30%"
+            top="5%">
+            <el-input placeholder="输入关键字进行品类搜索" v-model="filterText"></el-input>
+            <el-tree
+              v-loading="loading"
+              ref="tree2"
+              :data="dataTree"
+              :props="defaultProps"
+              :filter-node-method="filterNode"
+              default-expand-all
+              class="filter-tree"
+              @node-click="handleNodeClick"/>
+            <span slot="footer" class="dialog-footer">
+              <el-button @click="dialogVisible = false">取 消</el-button>
+              <el-button type="primary" @click="passDate">确 定</el-button>
+            </span>
+          </el-dialog>
+        </el-form>
+        <div class="btn_bottom">
+          <el-button type="primary" @click="addBrand">新增品牌</el-button>
+        </div>
+        <div class="contract_table">
+          <el-table
+            :data="tableData"
+            style="width: 100%;"
+            border
+            :height="tableHeight">
+            <el-table-column
+              type="selection"
+              width="55">
+            </el-table-column>
+            <el-table-column
+              fixed
+              prop="brand_code"
+              label="品牌编码"
+              width="150">
+            </el-table-column>
+            <el-table-column
+              prop="brand_name"
+              label="品牌名称"
+              width="200">
+            </el-table-column>
+            <el-table-column
+              prop="brand_rank"
+              label="品牌等级"
+              width="150">
+              <template slot-scope="scope">
+                <span v-for="(item, index) in brandRank" :key="index">
+                  {{ scope.row.brand_rank == parseInt(item.values_code) ? item.values_name : '' }}
+                </span>
+              </template>
+            </el-table-column>
+            <el-table-column
+              prop="type_name"
+              label="品类"
+              width="150">
+            </el-table-column>
+            <el-table-column
+              prop="brand_desc"
+              label="品牌简介"
+              width="300">
+            </el-table-column>
+            <el-table-column
+              prop="brand_status"
+              label="品牌状态"
+              width="150">
+              <template slot-scope="scope">
+                <span v-for="(item, index) in brandStatus" :key="index">
+                  {{ scope.row.brand_status == parseInt(item.values_code) ? item.values_name : '' }}
+                </span>
+              </template>
+            </el-table-column>
+            <el-table-column
+              prop="enabled"
+              label="是否有效"
+              width="150">
+              <template slot-scope="scope">
+                <span>
+                  {{ scope.row.enabled == 1 ? "有效" : "无效" }}
+                </span>
+              </template>
+            </el-table-column>
+            <el-table-column
+              fixed="right"
+              label="操作"
+              width="200">
+              <template slot-scope="scope">
+                <el-button type="text" @click.native.prevent="checkBrand(scope.$index, tableData)" size="small">查看</el-button>
+                <el-button type="text" size="small" @click.native.prevent="editClick(scope.$index, tableData)">编辑</el-button>
+                <el-button @click.native.prevent="deleteRow(scope.$index, tableData)" v-if="scope.row.enabled == 1" type="text" size="small">作废</el-button>
+                <el-button v-if="scope.row.enabled == 0" @click.native.prevent="startRow(scope.$index, tableData)" type="text" size="small">启用</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          <el-pagination
+            :page-sizes="[10, 20, 30, 40]"
+            :page-size="10"
+            :current-page.sync="currentPage"
+            :total="total"
+            background
+            layout="prev, pager, next, total, sizes"
+            @current-change="pagination"
+            @size-change="handleSizeChange">
+          </el-pagination>
+        </div>
+
+      </el-tab-pane>
+      <el-tab-pane label="审核中">审核中</el-tab-pane>
+      <el-tab-pane label="草稿">草稿</el-tab-pane>
+    </el-tabs>
+  </div>
+</template>
+
+<script>
+var data = {};
+import { common } from '@/common/common';
+export default {
+  data() {
+    return {
+      topNav: true, // 导航是否显示
+      formInline: {
+        status: 3,
+        brand_name: '',
+        brand_code: '',
+        operation_type: '',
+        brand_rank: '',
+        /*enabled:null,*/
+        brand_status: ''
+      },
+      operation_type_name: '',
+      defaultProps: {
+        children: 'children',
+        label: 'text'
+      },
+      loading: false,
+      dataTree: [], // 获取的品类信息树
+      filterText: '', // 品类搜索关键字
+      dialogVisible: false, // 品类选择
+      tableHeight: window.innerHeight - 355 + 'px',
+      total: 0, // 分页
+      currentPage: 1, // 页码
+      tableData: [], // 查询获取的数据
+      brandRank: [], // 品牌等级基础数据
+      brandStatus: [] // 品牌狀態基礎數據
+    }
+  },
+  watch: {
+    filterText(val) {
+      this.$refs.tree2.filter(val);
+    }
+  },
+  created() {
+    this.loading = true;
+    common.lookup('L016', this).then((res) => {
+      this.brandRank = res;
+    });
+    common.lookup('L017', this).then((res) => {
+      this.brandStatus = res;
+    });
+    const searchHistory = common.get('brandSearch');
+    if (searchHistory != null) {
+      this.formInline = searchHistory.search;
+      common.getPreData(searchHistory.search, 'brand_info/getBrandList', this, 'brandSearch')
+    }
+  },
+  methods: {
+    pagination(val) { // 翻页
+      const data = this.formInline;
+      data.page = val;
+      common.getPreData(data, 'brand_info/getBrandList', this, 'brandSearch');
+      common.set('brandSearch', { 'search': data });
+    },
+    handleSizeChange(val) {
+      const data = this.formInline;
+      data.limit = val;
+      common.getPreData(data, 'brand_info/getBrandList', this, 'brandSearch');
+      common.set('brandSearch', { 'search': data });
+    },
+    inquire() { // 查询
+      const data = this.formInline;
+      common.getPreData(data, 'brand_info/getBrandList', this, 'brandSearch');
+      common.set('brandSearch', { 'search': data });
+    },
+    addBrand() { // 新增
+      this.$router.push({ path: '/basic/addBrand' })
+    },
+    editClick(index, table){ // 编辑
+      let editId = table[index].brand_id;
+      this.$router.push({
+        path: '/basic/editBrand',
+        query: { editBrandId: editId }
+      });
+    },
+    deleteRow(index, row) { // 作废
+      common.del('此操作将作废该品牌是否继续', 'brand_info/editBrand', { brand_id: row[index].brand_id, enabled: 0 }, 'brand_info/getBrandList', this)
+    },
+    startRow(index, row) { // 启用
+      common.del('此操作将启用该品牌是否继续', 'brand_info/editBrand', { brand_id: row[index].brand_id, enabled: 1 }, 'brand_info/getBrandList', this)
+    },
+    checkBrand(index, table) { // 查看品牌信息
+      let brandId = table[index].brand_id;
+      this.$router.push({
+        path: '/basic/checkBrand',
+        query: {
+          checkBrandId: brandId
+        }
+      })
+    },
+    filterNode(value, data) {
+      if (!value) return true;
+      return data.text.indexOf(value) !== -1;
+    },
+    passDate() { // 弹框确定按钮
+      this.dialogVisible = false;
+      this.operation_type_name = this.operationData
+    },
+    getOperation() { // 点击弹出树状图，并获取品类信息
+      this.dialogVisible = true;
+      common.getTree('Operation_Type/cateList', this)
+    },
+    handleNodeClick(node, data) { // 点击树状图节点，获取信息
+      this.operationData = data.data.data.type_name;
+      this.formInline.operation_type = data.data.data.operation_type_id
+    }
+  }
+}
+</script>
+
+<style type="text/css" scoped>
+  .el-input--suffix .el-input__inner {padding-right: 15px !important;}
+  .el-dialog .filter-tree{height:calc(100vh - 200px);overflow: auto;}
+  .el-form-item {margin-bottom: 5px;}
+  .el-tabs__header{padding: 0 10px !important;position: relative;}
+</style>
+

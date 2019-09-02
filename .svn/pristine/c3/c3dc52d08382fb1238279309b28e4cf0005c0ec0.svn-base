@@ -1,0 +1,99 @@
+var common = {
+  // 作废事件
+  del(text, url, data, update, that, search) {
+    that.$confirm(text, '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+      center: true
+    }).then(() => {
+      that.axios
+        .post(process.env.BASE_API + url, data)
+        .then((res) => {
+          that.$message({
+            type: 'success',
+            message: '成功!'
+          })
+          this.getPreData(that.formInline, update, that, search) // 重新请求数据
+        })
+        .catch((err) => {
+          that.$message.error(err.response.data.msg)
+        })
+    }).catch(() => {
+      that.$message({
+        type: 'info',
+        message: '已取消'
+      })
+    })
+  },
+  // 获取基础信息
+  lookup(data, itme) {
+    const that = itme
+    return that.axios
+      .post(process.env.BASE_API + 'lookup/getLookupByCode', { lookup_code: data })
+      .then((res) => res.data.data)
+      .catch((err) => {
+        that.$message.error(err.response.data.msg)
+      })
+  },
+  // 查询
+  getPreData(data, url, that, search) {
+    that.axios
+      .post(process.env.BASE_API + url, data)
+      .then(function(res) {
+        if (res.data.code === 0) {
+          that.tableData = res.data.data
+          if(that.tableData.length < 1) {
+            that.$message.warning('暂无数据');
+          }
+          that.total = res.data.count
+          const sessionGet = JSON.parse(sessionStorage.getItem(search)).search
+          that.currentPage = sessionGet.page
+        }
+      })
+      .catch(function(err) {
+        that.$message.error(err.responseJSON.msg)
+      })
+  },
+  // 获取当前日期
+  currentDate() {
+    const myDate = new Date()
+    const createDate = myDate.getFullYear() + '-' + ((parseInt(myDate.getMonth()) + parseInt(1)) < 10 ? '0' + (parseInt(myDate.getMonth()) + parseInt(1)) : (parseInt(myDate.getMonth()) + parseInt(1))[1]) + '-' + (myDate.getDate() < 10 ? '0' + myDate.getDate() : myDate.getDate())
+    return createDate
+  },
+  // 存储
+  set(key, value) {
+    sessionStorage.setItem(key, JSON.stringify(value))
+  },
+  // 取数据
+  get(key) {
+    return JSON.parse(sessionStorage.getItem(key))
+  },
+  // 删除数据
+  remove(key) {
+    sessionStorage.removeItem(key)
+  },
+  // 日期转换
+  dateFormat(dates) {
+    const data = new Date(dates)
+    const myDateList = data.toLocaleString().split(' ')[0]
+    const myDateTime = myDateList.split('/')
+    return myDateTime[0] + '-' + (myDateTime[1] < 10 ? '0' + myDateTime[1] : myDateTime[1]) + '-' + (myDateTime[2] < 10 ? '0' + myDateTime[2] : myDateTime[2])
+  },
+  // 获取tree数据
+  getTree(url, that) {
+    that.axios
+      .post(process.env.BASE_API + url)
+      .then(function(res) {
+        that.dataTree = res.data.data;
+        that.loading = false;
+        common.set('List', that.dataTree);
+      })
+      .catch(function(err) {
+        that.$message.error(err.responseJSON.msg)
+      })
+  }
+}
+export {
+  common
+}

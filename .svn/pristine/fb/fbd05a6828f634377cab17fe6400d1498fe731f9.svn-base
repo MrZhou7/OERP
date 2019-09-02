@@ -1,0 +1,28 @@
+import request from '@/utils/request'
+
+export function login(staff_num, passwd) {
+  return request({
+    url:'http://10.1.200.85/permission/login/doLogin',
+    method: 'post',
+    data: {
+      staff_num,
+      passwd
+    }
+  })
+}
+
+export function getInfo(token) {
+  return request({
+    url: '/user/info',
+    method: 'get',
+    params: { token }
+  })
+}
+
+export function logout() {
+  return request({
+    url: '/user/logout',
+    method: 'post'
+  })
+}
+

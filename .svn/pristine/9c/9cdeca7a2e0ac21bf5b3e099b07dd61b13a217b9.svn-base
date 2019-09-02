@@ -1,0 +1,117 @@
+import { login, logout, getInfo } from '@/api/login'
+import { getToken, setToken, removeToken } from '@/utils/auth'
+import basisData from '@/api/basisData'
+import axios from 'axios'
+
+const user = {
+  state: {
+    token: getToken(),
+    name: '',
+    avatar: '',
+    roles: [],
+    act: [] // 合同类型
+  },
+
+  mutations: {
+    SET_TOKEN: (state, token) => {
+      state.token = token
+    },
+    SET_NAME: (state, name) => {
+      state.name = name
+    },
+    SET_AVATAR: (state, avatar) => {
+      state.avatar = avatar
+    },
+    SET_ROLES: (state, roles) => {
+      state.roles = roles
+    },
+    act: (state, res) => {
+      state.act = res
+    },
+    LOGIN_IN(state, token) {
+      state.UserToken = token
+    },
+    LOGIN_OUT(state) {
+      state.UserToken = ''
+    }
+  },
+
+  actions: {
+    // 登录
+    Login({ commit }, userInfo) {
+      const username = userInfo.staff_num.trim();
+      return new Promise((resolve, reject) => {
+        axios.post(process.env.BASE_Login + 'permission/login/doLogin', { staff_num: username, password: userInfo.password }).then(res => {
+          const data = res.data.data;
+          console.log(data)
+          sessionStorage.setItem('userUrl', data);
+          commit('SET_TOKEN', data);
+          resolve()
+        }).catch((err) => {
+          reject(err)
+        });
+        // login(username, userInfo.password).then(response => {
+        //   const data = response.data
+        //   console.log(data)
+        //   setToken(data.token)
+        //   commit('SET_TOKEN', data.token)
+        //   resolve()
+        // }).catch(error => {
+        //   reject(error)
+        // })
+      })
+    },
+
+    // 获取用户信息
+    GetInfo({ commit, state }) {
+      return new Promise((resolve, reject) => {
+        getInfo(state.token).then(response => {
+          const data = response.data
+          if (data.roles && data.roles.length > 0) { // 验证返回的roles是否是一个非空数组
+            commit('SET_ROLES', data.roles)
+          } else {
+            reject('getInfo: roles must be a non-null array !')
+          }
+          commit('SET_NAME', data.name)
+          commit('SET_AVATAR', data.avatar)
+          resolve(response)
+        }).catch(error => {
+          reject(error)
+        })
+      })
+    },
+
+    // 登出
+    LogOut({ commit, state }) {
+      return new Promise((resolve, reject) => {
+        logout(state.token).then(() => {
+          commit('SET_TOKEN', '')
+          commit('SET_ROLES', [])
+          removeToken()
+          resolve()
+        }).catch(error => {
+          reject(error)
+        })
+      })
+    },
+
+    // 前端 登出
+    FedLogOut({ commit }) {
+      return new Promise(resolve => {
+        commit('SET_TOKEN', '')
+        removeToken()
+        resolve()
+      })
+    },
+
+    // 获取基础信息
+    getMineBaseApi({ commit }) {
+      basisData.mineBaseMsgApi()
+        .then(res => {
+          commit('act', res.data)
+        })
+    }
+  }
+}
+
+export default user

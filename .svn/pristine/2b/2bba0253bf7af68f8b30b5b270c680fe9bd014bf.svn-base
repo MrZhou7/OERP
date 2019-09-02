@@ -1,0 +1,430 @@
+<template>
+  <div>
+    <div class="content">
+      <div class="titleText">
+        <el-row :gutter="20">
+          <el-col :span="4">
+            <div class="block">
+              <span class="demonstration"></span>
+              <el-date-picker
+                v-model="value2"
+                type="month"
+                placeholder="选择立账日期">
+              </el-date-picker>
+            </div>
+          </el-col>
+          <el-col :span="20">
+            <div class="viewHeader">
+              <span @click="toVoid" v-if="typeName">作废</span>
+              <span @click="submission" v-if="typeName">提交审核</span>
+              <span @click="balance" v-if="typeName">一键平衡</span>
+              <span @click="first">首个</span>
+              <span @click="prev">上一个</span>
+              <span @click="next">下一个</span>
+              <span @click="last">末尾</span>
+              <span>100/110</span>
+              <span @click="preservation" v-if="typeName">保存</span>
+            </div>
+          </el-col>
+        </el-row>
+      </div>
+      <el-form ref="form" :model="costView" label-width="90px" class="search">
+        <el-row>
+          <el-col :span="6">
+            <el-form-item label="门店名称">
+              <el-input v-model="costView.mall_name" readonly></el-input>
+            </el-form-item>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="商户编码">
+              <el-input v-model="costView.customer_name" readonly></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="商户名称">
+              <el-input v-model="costView.customer_name" readonly></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6" v-if="typeName">
+            <el-form-item label="剩余抵扣金额" class="width_110">
+              <el-input v-model="costView.store_code" readonly></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="6">
+            <el-form-item label="账单会计期">
+              <el-input v-model="costView.store_name" readonly></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="代收金额">
+              <el-select v-model="costView.balance_process_way" readonly>
+                <el-option :value='1' label="找零"></el-option>
+                <el-option :value='2' label="转存余款账户"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="商户余额">
+              <el-input v-model="costView.total_amount" readonly></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="应收金额">
+              <el-input v-model="costView.paied_amount" readonly></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="6">
+            <el-form-item label="往期欠款">
+              <el-input v-model="costView.change_amount" readonly></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="返款金额">
+              <el-select v-model="costView.user_id" readonly>
+                <el-option :value='0' label="李琳"></el-option>
+                <el-option :value='1' label="张瑞"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="审批状态">
+              <el-input v-model="costView.payment_date" readonly></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="执行状态">
+              <el-select v-model="costView.created_by" readonly>
+                <el-option :value='0' label="李琳"></el-option>
+                <el-option :value='1' label="张瑞"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div class="contract_table">
+        <el-row>
+          <el-col :span="12">
+            <div class="titleText">抵扣费用明细</div>
+            <el-table
+              :data="payDetailList"
+              style="width: 100%;"
+              height="245px"
+              show-summary
+              border>
+              <el-table-column
+                prop="contract_main_id"
+                fixed
+                type="selection"
+                width="55"/>
+              <el-table-column
+                prop="invoice_code"
+                :show-overflow-tooltip="true"
+                min-width="100px"
+                label="店铺名称">
+              </el-table-column>
+              <el-table-column
+                prop="created_time"
+                :show-overflow-tooltip="true"
+                min-width="100px"
+                label="账单编号">
+              </el-table-column>
+              <el-table-column
+                prop="charge_description"
+                :show-overflow-tooltip="true"
+                min-width="100px"
+                label="费用类型">
+              </el-table-column>
+              <el-table-column
+                prop="net_charge_amount"
+                :show-overflow-tooltip="true"
+                min-width="110px"
+                label="费用开始日期">
+              </el-table-column>
+              <el-table-column
+                prop="pay_amount"
+                :show-overflow-tooltip="true"
+                min-width="110px"
+                label="费用结束日期">
+              </el-table-column>
+              <el-table-column
+                prop="pay_amount"
+                :show-overflow-tooltip="true"
+                min-width="100px"
+                label="应收金额">
+              </el-table-column>
+
+              <el-table-column
+                prop="pay_amount"
+                :show-overflow-tooltip="true"
+                min-width="100px"
+                label="已收金额">
+              </el-table-column>
+              <el-table-column
+                fixed="right"
+                prop="edit_no_pay"
+                min-width="120"
+                v-if="typeName"
+                label="本次抵扣金额">
+                <template slot-scope="scope">
+                  <el-input size="small" type="number" v-model="scope.row.edit_no_pay" placeholder="请输入内容"
+                            @change="editFcous(scope.$index, scope.row)"></el-input>
+                </template>
+              </el-table-column>
+            </el-table>
+            <el-pagination
+              :page-sizes="[10, 20, 30, 40, 50]"
+              :page-size="pageSize"
+              :current-page.sync="currentPage"
+              :total="total"
+              background
+              layout="prev, pager, next, total, sizes"
+              @current-change="pagination"
+              @size-change="handleSizeChange"/>
+            </el-pagination>
+          </el-col>
+          <el-col :span="12">
+            <div class="titleText">代收款列表</div>
+            <el-table
+              :data="payTypeList"
+              style="width: 100%;"
+              show-summary
+              height="245px"
+              border>
+              <el-table-column
+                prop="contract_main_id"
+                fixed
+                type="selection"
+                width="55"/>
+              <el-table-column
+                prop="pay_type_name"
+                :show-overflow-tooltip="true"
+                min-width="100px"
+                label="单据号">
+              </el-table-column>
+              <el-table-column
+                prop="pay_amount"
+                :show-overflow-tooltip="true"
+                min-width="100"
+                label="收款日期">
+              </el-table-column>
+              <el-table-column
+                prop="pay_amount"
+                :show-overflow-tooltip="true"
+                min-width="100"
+                label="店铺名称">
+              </el-table-column>
+              <el-table-column
+                prop="pay_amount"
+                :show-overflow-tooltip="true"
+                min-width="100"
+                label="代收类型">
+              </el-table-column>
+              <el-table-column
+                prop="pay_amount"
+                :show-overflow-tooltip="true"
+                min-width="100"
+                label="手续费率">
+              </el-table-column>
+              <el-table-column
+                prop="pay_amount"
+                :show-overflow-tooltip="true"
+                min-width="100"
+                label="交易金额">
+              </el-table-column>
+              <el-table-column
+                prop="pay_amount"
+                :show-overflow-tooltip="true"
+                min-width="100"
+                label="手续费">
+              </el-table-column>
+              <el-table-column
+                prop="pay_amount"
+                :show-overflow-tooltip="true"
+                min-width="100"
+                label="代收金额">
+              </el-table-column>
+            </el-table>
+          </el-col>
+        </el-row>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+  export default {
+    name: 'costViewList',
+    data() {
+      return {
+        costView: {},// 账单查看
+        preData: {},
+        payTypeList: [{pay_amount:1000}],
+        payDetailList: [{pay_amount:1000}],
+        total: 0,//分页总数据
+        currentPage: 1,//当前页码
+        pageSize: 10,//当前页码
+        typeName: false,
+        height: {
+          height: window.innerHeight * 0.7 + 'px'
+        },
+        invoice_code: '',
+        value2:'',
+      }
+    },
+    props: ['costViewListId', 'type'],
+    watch: {
+      costViewListId: function(newVal, oldVal) {
+        let data = {}
+        data.invoice_pay_id = newVal
+        this.costViews(data)
+      },
+      type: function(newVal, oldVal) {
+        console.log(newVal)
+        if (newVal == '查看') {
+          this.typeName = false;
+        } else {
+          this.typeName = true;
+        }
+        let data = {}
+        data.invoice_pay_id = newVal
+        this.costViews(data)
+      }
+    },
+    created() {
+      let data = {}
+      this.getData()
+      data.invoice_pay_id = this.costViewListId
+      this.costViews(data);
+      console.log(this.type )
+      if (this.type == '查看') {
+        this.typeName = false;
+      } else {
+        this.typeName = true;
+      }
+    },
+    methods: {
+      getData() {//预渲染参数
+        let that = this
+        this.axios
+          .post(process.env.BASE_API + 'table_util/getPreData', { act: 'contract' })
+          .then(function(res) {
+            if (res.status == 200) {
+              that.preData = res.data.data
+            }
+          })
+          .catch(function(err) {
+            this.$message.error(err.response.data.msg)
+          })
+      },
+      pagination(val) { // 分页功能
+        let dataSearch = {
+          page: val
+        }
+        common.getPreData(dataSearch, 'InvoicePayHeader/getList', this, 'billRefundListSearch')
+      },
+      handleSizeChange(val) {
+        let dataSearch = {
+          limit: val
+        }
+        common.getPreData(dataSearch, 'InvoicePayHeader/getList', this, 'billRefundListSearch')
+      },
+
+      costViews(data) {
+        let that = this
+        that.axios
+          .post(process.env.BASE_API + 'Bill/getPayDetail', data)
+          .then(function(res) {
+            console.log(res)
+            if (res.data.error_code === 0) {
+              that.costView = res.data.data.main
+              that.payTypeList = res.data.data.payTypeList
+              res.data.data.payDetailList.forEach(item => {
+                item.invoice_code = res.data.data.main.invoice_code
+                item.created_time = res.data.data.main.account_date
+              })
+              that.payDetailList = res.data.data.payDetailList
+              that.total = res.data.data.payTypeList.count
+            }
+          })
+          .catch(function(err) {
+            that.$message.error(err.responseJSON.msg)
+          })
+      },
+      // 编辑框失去焦点
+      editFcous(index, row) {
+        this.payingAmt = 0
+        this.costDetailTable.forEach((item, i) => {
+          let data = this.costDetailTable[i]
+          if (data.edit_no_pay == undefined || data.edit_no_pay == '') data.edit_no_pay = 0
+          const valueMoney = parseFloat(data.net_charge_amount) - parseFloat(data.charged_amount)
+          // if (valueMoney >= 0) {// 收款
+          //   if (data.edit_no_pay > valueMoney) {
+          //     data.edit_no_pay = valueMoney
+          //     this.$message({ message: '请填写输入正确金额', type: 'error' })
+          //   }
+          // } else {// 退款
+          //   if (data.edit_no_pay > Math.abs(valueMoney)) {
+          //     data.edit_no_pay = Math.abs(valueMoney)
+          //     this.$message({ message: '请填写输入正确金额', type: 'error' })
+          //   }
+          // }
+          if (!reg.test(data.edit_no_pay)) {
+            this.$message.error('请保留两位小数')
+            data.edit_no_pay = Math.round(data.edit_no_pay * 100) / 100
+          }
+          this.payingAmt += parseFloat(data.edit_no_pay)
+        })
+        if (this.payingAmt >= 0) { // 判断新增支付方式后是否修改过退款金额 如修改小于退款总额情况支付方式及退款总额
+          if (this.payingAmt < this.refundMoney) {
+            this.$message({ message: '请填写输入正确金额', type: 'error' })
+            this.tableDataFive = []
+            this.refundMoney = 0
+          }
+        }
+        if (this.payingAmt != 0) {
+          this.refundMoneyDisabled = false
+        }
+      },
+      //作废
+      toVoid() {},
+      //提交
+      submission() {},
+      //一键平衡
+      balance() {},
+      //首个
+      first() {},
+      //上一个
+      prev() {},
+      //下一个
+      next() {},
+      //末尾
+      last() {},
+      //保存
+      preservation() {},
+    }
+  }
+</script>
+
+<style lang="scss" scoped>
+  .titleText {
+    padding: 5px 10px;
+    background: #66b1ff;
+    border: #ccc 1px solid;
+    color: #fff;
+  }
+  .viewHeader {
+    padding: 12px;
+    float:right;
+    span {
+      display: inline-block;
+      padding: 0 15px;
+      border-right: 1px solid #97a8be;
+      cursor: pointer;
+    }
+  }
+</style>

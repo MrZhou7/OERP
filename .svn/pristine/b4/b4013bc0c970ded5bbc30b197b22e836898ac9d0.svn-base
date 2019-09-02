@@ -1,0 +1,577 @@
+<template>
+  <el-main>
+    <el-form ref="form" :model="formInline" class="search" label-width="80px">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="门店名称">
+            <el-input v-model="formInline.mall_name" placeholder="请输入门店名称"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="项目类型">
+            <el-select v-model="formInline.mall_rank" placeholder="请选择">
+              <el-option value='' label="全部"></el-option>
+              <el-option
+                v-for="(item,index) in act.mall_rank"
+                :key="index"
+                :label="item.values_name"
+                :value="parseInt(item.values_code)">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="项目状态">
+            <el-select v-model="formInline.enabled" placeholder="请选择项目状态">
+              <el-option  value='' label="全部"></el-option>
+              <el-option :value='1' label="有效"></el-option>
+              <el-option :value='0' label="无效"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6" align="center">
+          <el-button align="center" type="primary" @click="onSecher(formInline)">查询</el-button>
+        </el-col>
+      </el-row>
+    </el-form>
+    <div class="btn_bottom">
+      <el-button type="success" @click="addRow()">新增</el-button>
+    </div>
+    <div class="contract_table">
+      <el-table
+        :data="tableData"
+        style="width: 100%;text-align: center"
+        border
+        align: center
+        :height="tableHeight">
+        <el-table-column
+          prop="contract_main_id"
+          type="selection"
+          width="55">
+        </el-table-column>
+        <el-table-column
+          fixed
+          prop="mall_name"
+          label="门店名称"
+          :show-overflow-tooltip="true"
+          resizable: true
+          algin:center
+          width="240">
+        </el-table-column>
+        <el-table-column
+          prop="mall_code"
+          label="门店编码"
+          :show-overflow-tooltip="true"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="open_time"
+          label="开业时间"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="country[0]"
+          label="省份"
+          :show-overflow-tooltip="true"
+          width="120">
+          <template slot-scope="scope">
+             <span v-for="(item, index) in cityData">
+               {{scope.row.country[0] == item.id ? item.text : ''}}
+             </span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="country[1]"
+          label="地区市"
+          :show-overflow-tooltip="true"
+          width="120">
+          <template slot-scope="scope">
+             <span v-for="(item, index) in cityData" v-if="scope.row.country[0] == item.id">
+               <span v-for="(title, index) in item.children">
+                {{scope.row.country[1] == title.id ? title.text : ''}}
+               </span>
+             </span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="country[2]"
+          label="县区市"
+          :show-overflow-tooltip="true"
+          width="120">
+          <template slot-scope="scope">
+             <span v-for="(item, index) in cityData" v-if="scope.row.country[0] == item.id">
+               <span v-for="(title, index) in item.children">
+                 <span v-for="(text, index) in title.children">
+                  {{scope.row.country[2] == text.id ? text.text : ''}}
+                 </span>
+               </span>
+             </span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="mall_rank"
+          label="项目类型"
+          width="120">
+          <template slot-scope="scope">
+            <span v-for="(item, index) in act.mall_rank">
+               {{scope.row.mall_rank == item.values_code ? item.values_name : ''}}
+             </span>
+          </template>
+        </el-table-column>
+
+        <el-table-column
+          prop="business_manage_corp_name"
+          label="商业管理公司"
+          :show-overflow-tooltip="true"
+          width="200">
+        </el-table-column>
+        <el-table-column
+          prop="owner_corp_name"
+          label="业主公司"
+          :show-overflow-tooltip="true"
+          width="200">
+        </el-table-column>
+        <el-table-column
+          prop="property_manage_corp_name"
+          label="物业公司"
+          :show-overflow-tooltip="true"
+          width="200">
+        </el-table-column>
+        <el-table-column
+          prop="building_area"
+          label="门店建筑面积"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="carport_num"
+          label="车位"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="enabled"
+          label="是否有效"
+          width="120">
+          <template slot-scope="scope">
+            {{ scope.row.enabled == 0? '无效' : '有效' }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="created_by"
+          label="创建人"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="created_time"
+          label="创建时间"
+          width="120">
+        </el-table-column>
+
+        <el-table-column
+          fixed="right"
+          algin="center"
+          label="操作"
+          width="300">
+          <template slot-scope="scope">
+            <el-button
+              @click.native.prevent="viewRow(scope.$index, tableData)"
+              type="text"
+              size="small">
+              查看
+            </el-button>
+            <el-button
+              @click.native.prevent="editRow(scope.$index, tableData)"
+              type="text"
+              size="small" v-if="scope.row.enabled == 1">
+              编辑
+            </el-button>
+            <el-button
+              @click.native.prevent="deleteRow(scope.$index, tableData)"
+              type="text"
+              size="small" v-if="scope.row.enabled == 1">
+              作废
+            </el-button>
+            <el-button
+              @click.native.prevent="maintain(scope.$index, tableData)"
+              type="text"
+              size="small"  v-if="scope.row.enabled == 1">
+              楼栋/楼层维护
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        background
+        layout="prev, pager, next"
+        @current-change="pageinations"
+        :current-page.sync="currentPage"
+        :total="total">
+      </el-pagination>
+
+    </div>
+    <!--新增、修改、查看商管公司弹出层2-->
+    <el-dialog
+      :title="name"
+      :visible.sync="dialogVisible"
+      width="80%" height="60%" top="5%">
+      <el-form label-width="80px" :model="mall" :rules="rules" ref="mall">
+        <blockquote class="elem_quote">项目基础信息</blockquote>
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="项目名称" class="label_required" prop="mall_name">
+              <el-input v-model="mall.mall_name" :disabled='mallView'>
+              </el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="项目编码" class="label_required" prop="mall_code">
+              <el-input v-model="mall.mall_code" :disabled='mallView'>
+              </el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="项目类型" class="label_required" prop="mall_rank">
+              <el-select v-model="mall.mall_rank" placeholder="请选择所属级别" :disabled='mallView'>
+                <el-option
+                  v-for="(item,index) in act.mall_rank"
+                  :key="index"
+                  :label="item.values_name"
+                  :value="item.values_code">
+                </el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="开业时间" class="label_required" prop="open_time">
+              <el-date-picker
+                v-model="mall.open_time"
+                type="date"
+                format="yyyy-MM-dd"
+                value-format="yyyy-MM-dd"
+                placeholder="选择日期" :disabled="mallView">
+              </el-date-picker>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="省/市/区" class="label_required" prop="country">
+              <el-cascader
+                :options="cityData"
+                placeholder="请选择省/市"
+                :props="cityProps"
+                v-model="mall.country" :disabled="mallView"
+                change-on-select></el-cascader>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="项目地址" class="label_required" prop="address">
+              <el-input v-model="mall.address" :disabled='mallView'>
+              </el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <blockquote class="elem_quote">关联信息</blockquote>
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="商业管理公司" class="label_required width_110" prop="business_manage_corp_id">
+              <el-input v-model="mall.business_manage_corp_name" suffix-icon="el-icon-search"
+                        @focus="businessData" :disabled="mallView"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="业主公司" class="label_required" prop="owner_corp_id">
+              <el-input v-model="mall.owner_corp_name" suffix-icon="el-icon-search"
+                        @focus="businessData" :disabled="mallView"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="物业公司" class="label_required" prop="property_manage_corp_id">
+              <el-input v-model="mall.property_manage_corp_name" suffix-icon="el-icon-search"
+                        @focus="businessData" :disabled="mallView"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <blockquote class="elem_quote">面积信息</blockquote>
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="项目建筑面积" class="label_required width_110" prop="building_area">
+              <el-input v-model="mall.building_area" :disabled="mallView"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="项目车位" class="label_required" prop="carport_num">
+              <el-input v-model="mall.carport_num" :disabled="mallView"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <blockquote class="elem_quote">同步信息</blockquote>
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="是否同步" class="label_required" prop="status">
+              <el-select v-model="mall.status" placeholder="请选择是否同步" :disabled='mallView'>
+                <el-option :value='1' label="是"></el-option>
+                <el-option :value='0' label="否"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="代码凭证" class="label_required" prop="nc_code">
+              <el-input v-model="mall.nc_code" :disabled="mallView"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="是否计算账单" class="label_required width_110" prop="auto_generate_bill">
+              <el-select v-model="mall.auto_generate_bill" placeholder="请选择是否计算账单" :disabled='mallView'>
+                <el-option :value='1' label="是"></el-option>
+                <el-option :value='0' label="否"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="账单日" class="label_required" prop="bill_day">
+              <el-input v-model="mall.bill_day" type="number"  :disabled="mallView"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="是否打印二维码" class="label_required width_130" prop="is_print_qrcode">
+              <el-select v-model="mall.is_print_qrcode" placeholder="请选择是否打印二维码" :disabled='mallView'>
+                <el-option :value='1' label="是"></el-option>
+                <el-option :value='0' label="否"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="停车收费系统地址" class="width_160">
+              <el-input v-model="mall.park_url" :disabled="mallView"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="是否自动抵扣" class="label_required width_130" prop="auto_deduct">
+              <el-select v-model="mall.auto_deduct" placeholder="请选择是否打印二维码" :disabled='mallView'>
+                <el-option :value='1' label="是"></el-option>
+                <el-option :value='0' label="否"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div v-if="mallViewBtn" slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="submenus('mall')">提交审核</el-button>
+        <el-button @click="dialogVisible = false">取 消</el-button>
+      </div>
+    </el-dialog>
+    <el-dialog title="公司选择" :visible.sync="business" width="70%" height="70%"
+               :close-on-click-modal="false">
+      <businessChoice v-on:businessChoice="businessChoice"></businessChoice>
+    </el-dialog>
+    <el-dialog title="楼栋/楼层维护" :visible.sync="building" width="100%" height="60%" top="5%"
+               :close-on-click-modal="false">
+      <building :mallId="mallId"></building>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+  var data = {};
+  import { common } from '@/common/common'
+  import businessChoice from '@/components/mall/businessChoice.vue' //商管公司
+  import building from '@/components/mall/building.vue' //乙方
+  export default {
+    data() {
+      return {
+        formInline: {},
+        tableData: [],
+        dialogVisible: false,
+        mallViewBtn: true,
+        mallView: false,
+        mall: {
+          mall_name: '', //门店名称
+          open_time: '', //开业时间
+          country: [], //省市区
+          all_rank: '', //所属级别
+          business_manage_corp_id: '', //商业管理公司
+          owner_corp_id: '', //	业主公司
+          property_manage_corp_id: '', //物业公司
+          owner_corp_name: '',
+          property_manage_corp_name: '',
+          building_area: '', //门店建筑面积
+          carport_num: '', //	项目车位
+          address: '', //	项目地址
+          nc_code: '', //代码凭证
+          auto_generate_bill: '', //是否计算账单
+          bill_day: '', //	账单日
+          park_url: '', //			停车收费系统地址
+          auto_deduct: '', //		是否自动抵扣
+
+        },
+        rules: {
+          'mall_name': [{ required: true, message: '门店名称为空', trigger: 'change' }],
+          'mall_code': [{ required: true, message: '项目编码为空', trigger: 'change' }],
+          'mall_rank': [{ required: true, message: '项目类型为空', trigger: 'change' }],
+          'open_time': [{ required: true, message: '开业时间为空', trigger: 'change' }],
+          'country': [{ required: true, message: '省市区为空', trigger: 'change' }],
+          'all_rank': [{ required: true, message: '所属级别为空', trigger: 'change' }],
+          'business_manage_corp_id': [{ required: true, message: '商业管理公司为空', trigger: 'change' }],
+          'owner_corp_id': [{ required: true, message: '业主公司为空', trigger: 'change' }],
+          'property_manage_corp_id': [{ required: true, message: '物业公司为空', trigger: 'change' }],
+          'building_area': [{ required: true, message: '门店建筑面积为空', trigger: 'change' }],
+          'carport_num': [{ required: true, message: '项目车位为空', trigger: 'change' }],
+          'address': [{ required: true, message: '项目地址为空', trigger: 'change' }],
+          'nc_code': [{ required: true, message: '代码凭证为空', trigger: 'change' }],
+          'auto_generate_bill': [{ required: true, message: '是否计算账单为空', trigger: 'change' }],
+          'bill_day': [{ required: true, message: '账单日为空', trigger: 'change' }],
+          'auto_deduct': [{ required: true, message: '是否自动抵扣为空', trigger: 'change' }],
+          'status': [{ required: true, message: '是否同步为空', trigger: 'change' }],
+          'is_print_qrcode': [{ required: true, message: '是否打印二维码为空', trigger: 'change' }]
+        },
+        cityData: [],//请求本地的城市文件
+        cityProps: {
+          children: 'children',
+          label: 'text',
+          value: 'id'
+        },
+        name: '',
+        total: 0,//分页
+        currentPage:1,//页码
+        business: false,
+        building: false, //楼栋/楼层
+        mallId: '',
+        tableHeight: window.innerHeight - 258
+      }
+    },
+    computed: {
+      act () {
+        return this.$store.getters.act
+      }
+    },
+    components: {
+      businessChoice,
+      building
+    },
+    created: function() {
+      this.axios.post(process.env.BASE_CITY).then((res) => {
+        this.cityData = res.data
+      });
+      const searchHistory = common.get('mallsearch');
+      if (searchHistory != null) {
+        this.formInline = searchHistory.search;
+        common.getPreData(searchHistory.search, 'mall_info/getMallInfoList', this, 'mallsearch')
+      };
+      this.$store.dispatch('getMineBaseApi');
+    },
+    methods: {
+      pageinations(val) {//分页功能
+        data = this.formInline;
+        data.page = val;
+        data.limit = 10;
+        common.getPreData(data, 'mall_info/getMallInfoList', this, 'mallsearch');
+        common.set('mallsearch',{'search': data});
+      },
+      onSecher() {//查询
+        data = this.formInline;
+        common.getPreData(data, 'mall_info/getMallInfoList', this ,'mallsearch');
+        common.set('mallsearch',{'search': data});
+      },
+      addRow() {//新增显示弹出框
+        this.dialogVisible = true;
+        this.name = '新增项目公司';
+        this.mall = {};
+        this.mallView = false;
+        this.mallViewBtn = true;
+      },
+      viewRow(index, row) {//根据id获取信息
+        this.name = '查看项目公司'
+        this.mallList(row[index]['mall_id']);
+        this.mallView = true;
+        this.mallViewBtn = false;
+      },
+      editRow(index, row) {//根据id获取信息
+        this.name = '修改项目公司'
+        this.mallList(row[index]['mall_id']);
+        this.mallView = false;
+        this.mallViewBtn = true;
+      },
+      deleteRow(index, row) {//作废
+        common.del('此操作将作废项目公司是否继续?', 'mallInfo/delMallInfo', { mall_id: row[index].mall_id,enabled: 0 }, 'mall_info/getMallInfoList',this, 'search');
+      },
+      maintain(index, row) {
+        this.building = true;
+        this.mallId = row[index]['mall_id'];
+      },
+      mallList(data) {//获取详细信息
+        const that = this
+        this.axios
+          .post(process.env.BASE_API + 'mall_info/getCorpList', {
+            mall_id: data
+          })
+          .then(function(res) {
+            if (res.status == 200) {
+              that.mall = res.data;
+              that.dialogVisible = true;
+            }
+          })
+          .catch(function(err) {
+            that.$message.error(err.response.data.msg);
+          })
+      },
+      submenus(formName) {//新增和修改门店
+        let that = this;
+        let url = '';
+        let title = '';
+        if (this.name == '新增项目公司') {
+          url = 'mall_info/addMallInfo';
+          title = '新增成功';
+        } else {
+          url = 'mall_info/editMallInfo';
+          title = '修改成功';
+        }
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            this.mall.district_id = 1;
+            console.log(this.mall)
+            this.axios
+              .post(process.env.BASE_API + url, this.mall)
+              .then(function(res) {
+                if (res.data.errorCode == 0) {
+                  data = that.formInline;
+
+                  common.getPreData(data, 'mall_info/getMallInfoList', that, 'mallsearch');
+                  that.$message({
+                    message: title,
+                    type: 'success'
+                  });
+                  that.dialogVisible = false;
+                }
+              })
+              .catch(function(err) {
+                that.$message.error(err.response.data.msg);
+              })
+          }
+        })
+      },
+      businessData() { //商管公司查询
+        this.business = true
+      },
+      businessChoice(data) {//乙方赋值
+        this.mall.business_manage_corp_id = data.corp_id
+        this.mall.owner_corp_id = data.corp_id
+        this.mall.property_manage_corp_id = data.corp_id
+        this.mall.business_manage_corp_name = data.corp_name
+        this.mall.owner_corp_name = data.corp_name
+        this.mall.property_manage_corp_name = data.corp_name
+        this.business = false
+      }
+
+    }
+  }
+</script>
+
+<style rel="stylesheet/scss" lang="scss">
+  .el-date-editor.el-input, .el-date-editor.el-input__inner {
+    width: 100%;
+  }
+</style>

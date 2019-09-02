@@ -1,0 +1,375 @@
+<template>
+  <div>
+    <el-row>
+      <el-col :span="8">
+        <div class="category-tree-content">
+          <el-input
+            v-model="filterText"
+            placeholder="输入关键字进行品类搜索">
+          </el-input>
+          <el-tree
+            v-loading="loading"
+            ref="tree2"
+            :highlight-current="true"
+            :data="dataTree"
+            :props="defaultProps"
+            :filter-node-method="filterNode"
+            class="filter-tree"
+            @node-click="handleNodeClick">
+            <span class="slot-t-node" slot-scope="{ node, data }">
+              <i class="iconfont icon-renyuan" style="color: #009688;" />
+              <span>{{ node.label }}</span>
+            </span>
+          </el-tree>
+        </div>
+      </el-col>
+      <el-col :span="16">
+        <div class="category-tree-content grid-content bg-purple-light">
+          <el-form ref="formInline" :model="formInline" label-width="70px" class="demo-ruleForm">
+            <el-row class="searchHearch">
+              <el-col :span="6">
+                <el-form-item label="产品编码">
+                  <el-input v-model="formInline.customer_code"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="6">
+                <el-form-item label="产品名称">
+                  <el-input v-model="formInline.customer_name"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="6">
+                <el-form-item label="条码">
+                  <el-input v-model="formInline.id"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="6">
+                <el-form-item label="是否打印">
+                  <el-select v-model="formInline.synctag1" placeholder="请选择">
+                    <el-option label="全部" value=""></el-option>
+                    <el-option label="是" :value="1"></el-option>
+                    <el-option label="否" :value="0"></el-option>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="6">
+                <el-form-item label="是否有效">
+                  <el-select v-model="formInline.synctag" clearable placeholder="请选择">
+                    <el-option label="全部" value=""></el-option>
+                    <el-option label="启用" :value="1"></el-option>
+                    <el-option label="停用" :value="0"></el-option>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :span="6">
+                <el-form-item label="商铺编码">
+                  <el-input v-model="formInline.synctag1"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="6">
+                <el-form-item label="商铺">
+                  <el-input v-model="store_name" suffix-icon="el-icon-search" clearable ref="getPayWayChang" @focus="fieldClick"></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="6" align="center">
+                <el-button align="center" type="primary" @click="onSecher(formInline)">查询</el-button>
+              </el-col>
+            </el-row>
+          </el-form>
+          <div class="btn_bottom">
+            <el-button @click="addCommodity" :disabled="addFalse">新增</el-button>
+            <el-button @click="addDefault" :disabled="addFalse">新增默认商铺</el-button>
+            <el-button @click="importCommodity" :disabled="addFalse">导入</el-button>
+          </div>
+          <el-table
+            ref="multipleTable"
+            :height="tableHeight"
+            :data="tableData"
+            :show-overflow-tooltip="true"
+            border
+            tooltip-effect="dark"
+            style="width: 100%"
+            @row-click="clickRow"
+            @selection-change="changFun">
+            <el-table-column
+              prop="invoice_code"
+              :show-overflow-tooltip="true"
+              label="产品名称"
+              min-width="110">
+            </el-table-column>
+            <el-table-column
+              prop="invoice_code"
+              :show-overflow-tooltip="true"
+              label="产品类型"  min-width="120">
+            </el-table-column>
+            <el-table-column
+              prop="customer_code"
+              :show-overflow-tooltip="true"
+              label="价格" min-width="120">
+            </el-table-column>
+            <el-table-column
+              prop="contract_code"
+              :show-overflow-tooltip="true"
+              label="有效类型"
+              min-width="150">
+            </el-table-column>
+            <el-table-column
+              prop="store_code"
+              :show-overflow-tooltip="true"
+              label="默认商铺"
+              min-width="150">
+            </el-table-column>
+            <el-table-column
+              prop="store_name"
+              :show-overflow-tooltip="true"
+              label="产品编码"  min-width="150">
+            </el-table-column>
+            <el-table-column
+              prop="paid_status"
+              :show-overflow-tooltip="true"
+              label="条码"  min-width="120">
+            </el-table-column>
+
+            <el-table-column
+              fixed="right"
+              algin="center"
+              label="操作"
+              min-width="150">
+              <template slot-scope="scope">
+                <el-button
+                  @click.native.prevent="viewRow(scope.row)"
+                  type="text"
+                  size="small">
+                  查看
+                </el-button>
+                <el-button
+                  @click.native.prevent="editRow(scope.row)"
+                  type="text"
+                  size="small">
+                  编辑
+                </el-button>
+                <el-button
+                  @click.native.prevent="deleteRow(scope.row)"
+                  type="text"
+                  size="small">
+                  {{scope.row == 1 }} 启动
+                  {{scope.row == 2 }} 停用
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          <el-pagination
+            :page-sizes="[10, 20, 30, 40, 50]"
+            :page-size="pageSize"
+            :current-page.sync="currentPage"
+            :total="total"
+            background
+            layout="prev, pager, next, total, sizes"
+            @current-change="pagination"
+            @size-change="handleSizeChange"/>
+        </div>
+      </el-col>
+    </el-row>
+    <el-dialog title="商铺选择" :visible.sync="fieldChoice" v-if="fieldChoice" width="70%" height="70%"
+               :close-on-click-modal="false" :append-to-body="true">
+      <Shops v-on:fieldData="fieldData" :mall="formInline.mall_id"></Shops>
+    </el-dialog>
+    <el-dialog :title="name" :visible.sync="commodityChoice" v-if="commodityChoice" width="70%" height="70%" top="3%"
+               :close-on-click-modal="false" :append-to-body="true">
+      <commodity v-on:commodityData="commodityData"  :mall="checkData.mall_id" :commdityType="commdityType" :commdityId="checkData.id"></commodity>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+  import { common } from '@/common/common';
+  import Shops from '@/components/order/shops.vue' //商铺
+  import commodity from '@/components/sale/shops/commodity.vue' //商品
+
+  export default {
+    name: 'commodityManagement',
+    components: {
+      Shops,commodity
+    },
+    data() {
+      return {
+        formInline:{},
+        filterText: '',
+        isShow: false, // 品类信息是否显示
+        dataTree: [], // 树状图显示数据
+        defaultProps: {
+          children: 'children',
+          label: 'text'
+        },
+        fieldChoice:false,
+        tableHeight: window.innerHeight - 136,//表格高度
+        tableData: [],
+        total: 0,//分页总数据
+        currentPage: 1,//当前页码
+        pageSize: 10,//当前页码
+        checkData: {},
+        payModeId:'',//弹出层 新增-查看-编辑支付方式
+        payModeType:'',
+        payModeName:'',
+        loading: false,
+        store_name:'',
+        addFalse: true,
+        mallId:'',//门店id
+        commodityChoice:false,//新增商品
+        commdityType:'',
+        commdityId:'',
+        name:'',
+      };
+    },
+    watch: {
+      filterText(val) {
+        this.$refs.tree2.filter(val);
+      }
+    },
+    created() {
+      this.loading = true;
+      const list = common.get('List');
+      if (list != null) {
+        this.dataTree = list;
+        this.loading = false;
+      } else {
+        this.getCategoryTree(); // 获取树状图数据
+      }
+    },
+    methods: {
+      pagination(val) {// 列表分页
+        data = this.formInline;
+        data.page = val;
+        common.getPreData(data, 'InvoiceHeader/getList', this, 'billAdminIndexSearch');
+        common.set('billAdminIndexSearch', { 'search': {mall_id:this.formInline.mall_id,page: val} });
+      },
+      handleSizeChange(val) {// 列表分页
+        data = this.formInline;
+        data.limit = val;
+        common.getPreData(data, 'InvoiceHeader/getList', this, 'billAdminIndexSearch');
+        common.set('billAdminIndexSearch', { 'search': {mall_id:this.formInline.mall_id,limit: val} });
+      },
+      clickRow(row) {//选择当前行
+        this.$refs.multipleTable.toggleRowSelection(row);
+        this.checkData = row;
+      },
+      changFun(row) {//获取当前行数据
+        if (row.length > 1) { //去除多选
+          this.$refs.multipleTable.clearSelection();
+          this.$refs.multipleTable.toggleRowSelection(row.pop());
+        }else {
+          if(row.length == 0) {
+            this.checkData = {}
+          }
+        }
+      },
+      fieldClick() {
+        //场地点击
+        if (!this.payWayForm.mall_id) {
+          this.$message({
+            message: '请选择门店',
+            type: 'warning'
+          })
+        } else {
+          if (!this.payWayForm.store_id) {
+            this.fieldChoice = true
+          } else {
+            this.formInline.store_id = ''
+            this.store_name = ''
+            this.$nextTick(() => {
+              this.$refs.getPayWayChang.blur()
+            })
+          }
+        }
+      },
+      fieldData(data) {//场地赋值
+        if (data.length == undefined) {
+          this.store_name = data.store_name
+          this.formInline.store_id = data.store_id
+        } else {
+          let store_id = '', store_name = ''
+          data.forEach((index, i) => {
+            if (i != data.length - 1) {
+              store_id += index.store_id + ','
+              store_name += index.store_name + ','
+            } else {
+              store_id += index.store_id
+              store_name += index.store_name
+            }
+            this.store_name = store_name
+            this.formInline.store_id = store_id
+          })
+        }
+        this.fieldChoice = false
+      },
+      filterNode(value, data) {
+        if (!value) return true;
+        return data.text.indexOf(value) !== -1;
+      },
+      handleNodeClick(node, data) { // 点击传参给品类信息子组件，并显示品类信息
+        console.log(node)
+        console.log(data)
+        this.mallId = data.id
+        this.addFalse = false;
+        // this.axios({
+        //   method: 'post',
+        //   url: process.env.BASE_API + 'Operation_Type/getName',
+        //   data: parentId
+        // }).then((res) => {
+        //   if (res.status == 200) {
+        //     this.parent_id = res.data.data;
+        //   }
+        // }).catch(function(err) {
+        //   this.$message.error(err.response.data.msg);
+        // });
+      },
+      getCategoryTree() { // 获取树状图数据
+        common.getTree('Operation_Type/cateList', this, 'List');
+      },
+      //新增商铺
+      addCommodity(){
+        this.commodityType(3, '新增商品')
+      },
+      //新增默认商铺
+      addDefault(){},
+      //导入
+      importCommodity(){},
+      viewRow(row) {
+        this.commodityType(1, '查看商品')
+      },
+      editRow(row) {
+        this.commodityType(2, '编辑商品')
+      },
+      commodityType(type, name) {
+        this.commodityChoice = true;
+        this.commdityType = type; // 1查看 2编辑 3新增
+        this.name = name; // 1查看 2编辑 3新增
+      },
+      commodityData(data) {
+        this.commodityChoice = data;
+      },
+    }
+  };
+</script>
+<style rel="stylesheet/scss" lang="scss" scoped>
+  @import "../../../font/iconfont.css";
+  #app {
+    font-family: 'Avenir', Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-align: center;
+    color: #666;
+  }
+  .category-tree-content{margin:10px;border: 1px solid #e2e2e2;height: calc(100vh - 10vh);
+  .category-text{background: #f7f7f7;line-height: 40px;font-size: 14px;color: #606266;padding: 0 15px;box-sizing: border-box;font-weight: bold;}
+  }
+  .filter-tree{overflow: auto;height:calc(100vh - 15vh);}
+  .addCategory{
+    color: #38f;
+    float:right;
+    cursor:pointer;
+    padding: 0 15px;
+  }
+</style>
+

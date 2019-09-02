@@ -1,0 +1,204 @@
+<template>
+  <div class="authorityWrap">
+    <el-button type="success" class="btn_bottom" @click="addAuthority">添加权限</el-button>
+    <el-table
+      :data="tableData"
+      :show-overflow-tooltip="true"
+      :header-cell-style="styleObj"
+      border
+      size="medium"
+      tooltip-effect="dark"
+      style="width: 100%">
+      <el-table-column
+        :show-overflow-tooltip="true"
+        prop="table"
+        label="权限表"
+        align="center"
+        width="200">
+        <template slot-scope="scope">
+          <el-button @click="change(scope.$index, scope.row)" type = "text" size="medium">{{ scope.row.table }}</el-button>
+        </template>
+      </el-table-column>
+      <el-table-column
+        :show-overflow-tooltip="true"
+        prop="user"
+        label="用户">
+        <template slot-scope="scope">
+          <el-button v-for="(item, index) in scope.row.user" :key="index" @click="change(scope.$index, scope.row,index, item)" type = "text" size="medium">{{ item }}</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <el-dialog
+      :title="title"
+      :close-on-click-modal="false"
+      :visible.sync="dialogFormVisible"
+      top="5%"
+      width="40%">
+      <el-form ref="ruleForm" :model="ruleForm" :rules="rules" label-width="100px" class="demo-ruleForm">
+        <el-form-item label="权限名称" prop="name">
+          <el-col :span="16">
+            <el-input v-model="ruleForm.name"></el-input>
+          </el-col>
+        </el-form-item>
+        <el-form-item label="权限图标" prop="name">
+          <el-col :span="16">
+            <el-input v-model="ruleForm.name"></el-input>
+          </el-col>
+        </el-form-item>
+        <el-form-item label="模块名称" prop="name">
+          <el-col :span="16">
+            <el-input v-model="ruleForm.name"></el-input>
+          </el-col>
+        </el-form-item>
+        <el-form-item label="控制器名称" prop="name">
+          <el-col :span="16">
+            <el-input v-model="ruleForm.name"></el-input>
+          </el-col>
+        </el-form-item>
+        <el-form-item label="方法名称" prop="name">
+          <el-col :span="16">
+            <el-input v-model="ruleForm.name"></el-input>
+          </el-col>
+        </el-form-item>
+        <el-form-item label="所属上级" prop="region">
+          <el-col :span="16">
+            <el-select v-model="ruleForm.region" placeholder="请选择">
+              <el-option label="无上级" value="shanghai"></el-option>
+              <el-option label="系统管理" value="beijing"></el-option>
+            </el-select>
+          </el-col>
+        </el-form-item>
+        <el-form-item v-show="isTimeShow" label="创建时间">
+          <el-col :span="16">
+            <span>
+              {{ ruleForm.newTime }}
+            </span>
+          </el-col>
+        </el-form-item>
+        <el-form-item v-show="isTimeShow" label="更新时间">
+          <el-col :span="16">
+            <span>
+              {{ ruleForm.updateTime }}
+            </span>
+          </el-col>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="submitForm('ruleForm')">添 加</el-button>
+          <el-button @click="dialogFormVisible = false">返 回</el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import { common } from '@/common/common';
+
+export default {
+  name: 'Index',
+  data() {
+    return {
+      styleObj: { // 表头的样式
+        background: '#eef1f6',
+        color: '#606266',
+        textAlign: 'center'
+      },
+      ruleForm: { // 表单内容
+        name: '',
+        region: '',
+        newTime: '2018-02-09 10:08:14',
+        updateTime: '2018-02-09 10:08:14'
+      },
+      rules: {
+        name: [
+          { required: true, message: '请输入角色名称', trigger: 'blur' },
+        ],
+        region: [
+          { required: true, message: '请输入角色名称', trigger: 'blur' },
+        ]
+      },
+      dialogFormVisible: false,
+      title: '',
+      isTimeShow: false,
+      tableData: [{
+        user: ['角色管理', '权限管理', '区域管理', '组织架构'],
+        table: '系统管理'
+      }, {
+        user: ['角色管理', '权限管理', '区域管理'],
+        table: '合同管理'
+      },
+      {
+        user: ['角色管理', '权限管理'],
+        table: '销售管理'
+      },
+      {
+        user: ['角色管理'],
+        table: '物业管理'
+      },
+      {
+        user: ['角色管理', '权限管理'],
+        table: '订单管理'
+      },
+      {
+        user: ['角色管理', '权限管理', '区域管理', '组织架构'],
+        table: '报表管理'
+      }]
+    };
+  },
+  created() {
+    this.CurentTime();
+  },
+  methods: {
+    addAuthority() { // 添加权限按钮
+      this.title = '添加权限';
+      this.dialogFormVisible = true;
+    },
+    submitForm(formName) { // 添加权限内容
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          alert('submit!');
+        } else {
+          console.log('error submit!!');
+          return false;
+        }
+      });
+    },
+    change(index, row, inde, item) { //编辑权限
+      this.title = '修改权限';
+      this.dialogFormVisible = true;
+      this.isTimeShow = true;
+      console.log(index);
+      console.log(row);
+      console.log(inde);
+      console.log(item);
+    },
+    CurentTime() { // 获取当前时间 年月日时分秒
+      var now = new Date();
+      var year = now.getFullYear(); // 年
+      var month = now.getMonth() + 1; // 月
+      var day = now.getDate(); // 日
+      var hh = now.getHours(); // 时
+      var mm = now.getMinutes(); // 分
+      var ss = now.getSeconds();
+      var clock = year + '-';
+      if (month < 10) clock += '0';
+      clock += month + '-';
+      if (day < 10) clock += '0';
+      clock += day + ' ';
+      if (hh < 10) clock += '0';
+      clock += hh + ':';
+      if (mm < 10) clock += '0';
+      clock += mm + ':';
+      if (ss < 10) clock += '0';
+      clock += ss;
+      return (clock);
+    }
+  }
+};
+</script>
+
+<style scoped>
+ .authorityWrap{
+   margin: 20px;
+ }
+</style>

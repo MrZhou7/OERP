@@ -1,0 +1,562 @@
+<template>
+  <el-main>
+    <el-form ref="formInline" :model="formInline" label-width="100px" class="demo-ruleForm">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="门店">
+            <el-select v-model="formInline.mall_id" placeholder="请选择门店名称" clearable>
+              <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name" :value="mall.mall_id"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="合同ID">
+            <el-input v-model="formInline.contract_main_id" clearable/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="合同编号">
+            <el-input v-model="formInline.contract_code" clearable/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="代收类型">
+            <el-select v-model="formInline.pay_in_type" clearable placeholder="请选择">
+              <el-option label="银行刷卡" value="1"/>
+              <el-option label="银联代收" value="2"/>
+              <el-option label="租赁代刷卡" value="3"/>
+              <el-option label="其它1" value="4"/>
+              <el-option label="其它2" value="5"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row v-show="formShow">
+        <el-col :span="6">
+          <el-form-item label="商户编号">
+            <el-input v-model="formInline.customer_code" clearable/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商铺编号">
+            <el-input v-model="formInline.store_code" clearable/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="起始日期">
+            <el-date-picker
+              v-model="start_date"
+              :picker-options="pickerOptions"
+              type="daterange"
+              value-format="yyyy-MM-dd"
+              align="right"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              @change="startDate($event)"/>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row v-show="formShow">
+        <el-col :span="6">
+          <el-form-item label="处理状态">
+            <el-select v-model="formInline.return_flag" clearable placeholder="请选择">
+              <el-option label="未处理" value="0"/>
+              <el-option label="部分处理" value="1"/>
+              <el-option label="已全部处理" value="2"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="取消状态">
+            <el-select v-model="formInline.cancel_flag" clearable placeholder="请选择">
+              <el-option label="未取消" value="0"/>
+              <el-option label="已取消" value="1"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="状态">
+            <el-select v-model="formInline.status" clearable placeholder="请选择">
+              <el-option label="全部" value=""/>
+              <el-option label="草稿" value="0"/>
+              <el-option label="审批中" value="1"/>
+              <el-option label="作废" value="3"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="订单编号">
+            <el-input v-model="formInline.code" clearable/>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="12">
+          <el-form-item>
+            <el-button type="primary" @click="submitForm('formInline')">查 询</el-button>
+            <span class="searchRight" @click="moreSearch">{{ formShow ? '收起' : '展开' }}<i :class="searchRight"/></span>
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+    <div class="btn_bottom">
+      <!--<el-button :disabled="submitAgency" @click="submitList">提交审核</el-button>-->
+      <!--<el-button :disabled="auditAgency" @click="auditList">审核</el-button>-->
+      <el-button @click="cancleList">代收款取消</el-button>
+      <!--<el-button :disabled="invalidAgency" @click="invalid">作废</el-button>-->
+    </div>
+    <div class="contract_table">
+      <el-table
+        ref="table"
+        :height="height"
+        :data="tableData"
+        :show-overflow-tooltip="true"
+        highlight-current-row
+        border
+        tooltip-effect="dark"
+        style="width: 100%"
+        @selection-change="getRadio"
+        @row-click="getDetails">
+        <el-table-column
+          type="selection"
+          width="55"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="pay_in_code"
+          min-width="100"
+          label="编号"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="mall_name"
+          min-width="100"
+          label="门店"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="customer_name"
+          min-width="100"
+          label="商户名称"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="customer_code"
+          min-width="100"
+          label="商户编号"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="contract_code"
+          min-width="100"
+          label="合同编号"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="store_code"
+          min-width="100"
+          label="商铺编号"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="pay_in_type"
+          min-width="100"
+          label="代收款类型">
+          <template slot-scope="scope">
+            <span v-if="scope.row.pay_in_type == 1">银行刷卡</span>
+            <span v-else-if="scope.row.pay_in_type == 2">银联代收</span>
+            <span v-else-if="scope.row.pay_in_type == 3">租赁代刷卡</span>
+            <span v-else-if="scope.row.pay_in_type == 4">其它1</span>
+            <span v-else-if="scope.row.pay_in_type == 5">其它2</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="pay_in_amt"
+          min-width="120"
+          label="金额"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="balance"
+          min-width="120"
+          label="可用余额"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="status"
+          min-width="100"
+          label="审核状态">
+          <template slot-scope="scope">
+            <span v-if="scope.row.status == 0">草稿</span>
+            <span v-else-if="scope.row.status == 1">审批中</span>
+            <span v-else-if="scope.row.status == 3">作废</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="cancel_flag"
+          min-width="100"
+          label="取消状态">
+          <template slot-scope="scope">
+            <span v-if="scope.row.cancel_flag == 0">未取消</span>
+            <span v-else-if="scope.row.cancel_flag == 1">已取消</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="return_flag"
+          min-width="100"
+          label="处理状态">
+          <template slot-scope="scope">
+            <span v-if="scope.row.return_flag == 0">未处理</span>
+            <span v-else-if="scope.row.return_flag == 1">部分处理</span>
+            <span v-else-if="scope.row.return_flag == 2">已全部处理</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="code"
+          min-width="120"
+          label="订单编号"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="pay_time"
+          min-width="120"
+          label="收款日期"/>
+        <el-table-column
+          fixed="right"
+          label="操作"
+          min-width="80">
+          <template slot-scope="scope">
+            <el-button type = "text" size="small" @click.native.prevent="checkAgency(scope.$index, tableData)">查 看</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        :page-sizes="[20, 30, 40, 50]"
+        :page-size="20"
+        :current-page.sync="currentPage"
+        :total="total"
+        background
+        layout="prev, pager, next, total, sizes"
+        @current-change="pagination"
+        @size-change="handleSizeChange"/>
+    </div>
+    <!--代收款查看-->
+    <el-dialog
+      :visible.sync="DialogVisible"
+      :close-on-click-modal="false"
+      title="查看"
+      top="5%"
+      width="80%">
+      <div class="height">
+        <el-form :model="ruleForm" label-width="100px" class="demo-ruleForm">
+          <el-row>
+            <el-col :span="6">
+              <el-form-item label="门店">
+                <el-input v-model="ruleForm.mall_name" :readonly="true"/>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="公司">
+                <el-input v-model="ruleForm.corp_name" :readonly="true"/>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="客户">
+                <el-input v-model="ruleForm.customer_id" :readonly="true"/>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="合同编号">
+                <el-input v-model="ruleForm.contract_code" :readonly="true"/>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="6">
+              <el-form-item label="代收款类型">
+                <el-select v-model="ruleForm.pay_in_type" disabled>
+                  <el-option :value="1" label="银行刷卡"/>
+                  <el-option :value="2" label="银联代收"/>
+                  <el-option :value="3" label="租赁代刷卡"/>
+                  <el-option :value="4" label="其它1"/>
+                  <el-option :value="5" label="其它2"/>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="代收款金额">
+                <el-input v-model="ruleForm.pay_in_amt" :readonly="true"/>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="余额">
+                <el-input v-model="ruleForm.pay_in_amt" :readonly="true"/>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="已处理金额">
+                <el-input v-model="ruleForm.pay_out_amt" :readonly="true"/>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="6">
+              <el-form-item label="状态">
+                <el-select v-model="ruleForm.status" disabled>
+                  <el-option :value="3" label="已生成"/>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="取消状态">
+                <el-select v-model="ruleForm.cancel_flag" disabled>
+                  <el-option :value="0" label="未生成"/>
+                  <el-option :value="1" label="已生成"/>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="处理状态">
+                <el-select v-model="ruleForm.return_flag" disabled>
+                  <el-option :value="0" label="未生成"/>
+                  <el-option :value="1" label="已生成"/>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="生成人">
+                <el-input v-model="ruleForm.user_id" :readonly="true"/>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="6">
+              <el-form-item label="开始日期">
+                <el-input v-model="ruleForm.start_date" :readonly="true"/>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="结束日期">
+                <el-input v-model="ruleForm.end_date" :readonly="true"/>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+        <div class="contract_table">
+          <el-table
+            ref="tableOne"
+            :show-overflow-tooltip="true"
+            :data="tableDataSecond"
+            border
+            tooltip-effect="dark">
+            <el-table-column
+              type="selection"
+              width="40"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="store_name"
+              min-width="150"
+              label="商铺名称"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="trans_date"
+              min-width="100"
+              label="交易日期"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="pay_in_type"
+              min-width="100"
+              label="代收款类型">
+              <template slot-scope="scope">
+                <span v-if="scope.row.pay_in_type == 1">银行刷卡</span>
+                <span v-else-if="scope.row.pay_in_type == 2">联营代收银</span>
+                <span v-else-if="scope.row.pay_in_type == 3">租赁代刷卡</span>
+              </template>
+            </el-table-column>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="customer_id"
+              min-width="100"
+              label="客户"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="trans_type"
+              min-width="100"
+              label="交易类型">
+              <template slot-scope="scope">
+                <span v-if="scope.row.trans_type == 1">销售</span>
+                <span v-else-if="scope.row.trans_type == 2">退货</span>
+              </template>
+            </el-table-column>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="pay_amt"
+              min-width="100"
+              label="付款金额"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="paid_amt_by_store	"
+              min-width="100"
+              label="分摊金额"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="rate"
+              min-width="100"
+              label="手续费率"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="net_amt"
+              min-width="100"
+              label="净额"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="fee_amt"
+              min-width="100"
+              label="手续费"/>
+          </el-table>
+        </div>
+      </div>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+import { common } from '@/common/common';
+import building from '@/utils/building';
+
+export default {
+  name: 'AgencyTable',
+  data() {
+    return {
+      formInline: { mall_id: '' }, // 搜索条件信息
+      ruleForm: {}, // 查看详情
+      height: window.innerHeight - 300 + 'px',
+      DialogVisible: false, // 收款查看弹框
+      loading: false,
+      total: 0,
+      currentPage: 1, // 页码
+      submitAgency: true, // 提交审核
+      auditAgency: true, // 审核
+      invalidAgency: true, // 作废
+      mall_name: [], // 门店信息
+      tableDataSecond: [], // 代收费用明细
+      pickerOptions: building.publicTime(),
+      tableData: [], // 订单table
+      idList: [], // 获取勾选中的id
+      agencyList: '', // 单行点击的数据
+      searchRight: 'el-icon-arrow-down',
+      formShow: false, // 更多搜索
+      start_date: '' // 起始日期
+    };
+  },
+  created() {
+    building.Mall(this); // 先获取门店数据
+    const searchHistory = common.get('agencyList');
+    if (searchHistory != null) {
+      this.formInline = searchHistory.search;
+      common.getPreData(searchHistory.search, 'PayIn/getList', this, 'agencyList');
+    }
+  },
+  methods: {
+    submitForm() { // 查询
+      const data = this.formInline;
+      data.limit = 20;
+      common.getPreData(data, 'PayIn/getList', this, 'agencyList');
+      common.set('agencyList', { 'search': data });
+    },
+    getDetails(row) { // 点击table的row获取当前行数据
+      this.$refs.table.toggleRowSelection(row);
+      this.agencyList = row;
+      this.checkedList(row);
+    },
+    getRadio(val) {
+      this.idList = val;
+    },
+    checkedList(row) {
+      switch (row.cancel_status) {
+        case 1: // 未取消收款
+          this.submitAgency = true; // 提交审核
+          this.auditAgency = true; // 审核
+          this.invalidAgency = true; // 作废
+          break;
+        case 2: // 确认取消
+          this.submitAgency = true; // 提交审核
+          this.auditAgency = true; // 审核
+          this.invalidAgency = true; // 作废
+          break;
+        case 3: // 确认取消
+          this.submitAgency = true; // 提交审核
+          this.auditAgency = true; // 审核
+          this.invalidAgency = true; // 作废
+          break;
+      }
+    },
+    submitList() { // 提交审核
+      common.del('您将提交审核, 是否继续?', 'ChargeNotice/produceBill', { charge_notice_id: this.costList.charge_notice_id },
+        'ChargeNotice/getList', this, 'costList');
+      this.cancel();
+    },
+    auditList() { // 审核
+      common.del('您将提交审核, 是否继续?', 'ChargeNotice/produceBill', { charge_notice_id: this.costList.charge_notice_id },
+        'ChargeNotice/getList', this, 'costList');
+      this.cancel();
+    },
+    cancleList() { // 代收款取消
+      if (this.idList.length < 1) {
+        this.$message({ message: '请至少选择一行', type: 'warning' });
+      } else {
+        let d = '';
+        for (var i = 0; i < this.idList.length; i++) {
+          d += this.idList[i].id + ',';
+        }
+        common.del('是否取消选中的代收款?', 'PayIn/batchCancel', { id: d }, 'PayIn/getList', this, 'agencyList');
+      }
+    },
+    invalid() { // 作废
+      common.del('您将提交审核, 是否继续?', 'ChargeNotice/produceBill', { charge_notice_id: this.costList.charge_notice_id },
+        'ChargeNotice/getList', this, 'costList');
+      this.cancel();
+    },
+    cancel() {
+      this.submitAgency = true; // 提交审核
+      this.auditAgency = true; // 审核
+      this.invalidAgency = true; // 作废
+    },
+    checkAgency(index, row) { // 查看代收款明细
+      this.DialogVisible = true;
+      this.http.post('PayIn/getDetail', { id: row[index].id }).then(res => {
+        this.ruleForm = res.data.data;
+        this.tableDataSecond.push(res.data.data);
+      });
+    },
+    pagination(val) { // 分页功能
+      const data = this.formInline;
+      data.page = val;
+      common.getPreData(data, 'PayIn/getList', this, 'agencyList');
+      common.set('agencyList', { 'search': data });
+    },
+    handleSizeChange(val) {
+      const data = this.formInline;
+      data.limit = val;
+      common.getPreData(data, 'PayIn/getList', this, 'agencyList');
+      common.set('agencyList', { 'search': data });
+    },
+    moreSearch() { // 更多搜索
+      if (this.searchRight == 'el-icon-arrow-down') {
+        this.formShow = true;
+        this.searchRight = 'el-icon-arrow-up';
+        this.height = window.innerHeight - 390;
+      } else {
+        this.formShow = false;
+        this.searchRight = 'el-icon-arrow-down';
+        this.height = window.innerHeight - 300;
+      }
+    },
+    startDate(e) { // 搜索日期赋值
+      e ? this.formInline.start = e[0] : this.formInline.start = '';
+      e ? this.formInline.end = e[1] : this.formInline.end = '';
+    }
+  }
+};
+</script>
+
+<style scoped>
+  .btn_bottom{padding-left: 15px;}
+  .height{overflow: auto;height: calc(100vh - 40vh)}
+  .el-row > div > .el-form-item { margin-bottom: 5px !important; }
+</style>

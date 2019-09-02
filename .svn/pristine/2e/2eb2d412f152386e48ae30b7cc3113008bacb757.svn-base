@@ -1,0 +1,216 @@
+
+<template>
+  <div class="content">
+    <el-form ref="form" label-width="80px">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="楼栋" class="search_lable">
+            <el-select v-model="building.building_id" placeholder="请选择" @change="buildings($event)">
+              <el-option value="" >请选择</el-option>
+              <el-option
+                v-for="item in allBuild"
+                :key="item.building_id"
+                :label="item.building_name"
+                :value="item.building_id">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="楼层" class="search_lable">
+            <el-select v-model="building.floor_id" placeholder="请选择">
+              <el-option
+                v-for="item in allFloor"
+                :key="item.floor_id"
+                :label="item.floor_name"
+                :value="item.floor_id">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="场地编号" class="search_lable">
+            <el-input v-model="building.unit_code" placeholder="请输入场地编号"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6" align="center" class="search_lable" style="margin-top: 5px">
+          <el-button align="center" type="primary" size="small" @click="onSecher()">查询</el-button>
+          <el-button align="center" type="primary" size="small" @click="onSelectSub()">多选</el-button>
+        </el-col>
+      </el-row>
+    </el-form>
+    <el-table
+      :data="customer_list"
+      style="width: 100%;text-align: center;height: 100%"
+      @selection-change="onSelect"
+      border
+      :show-overflow-tooltip="true"
+      ref="multipleTable"
+      align: center
+      max-height="350">
+      <el-table-column
+        fixed
+        prop="unit_code"
+        type="selection"
+        align="center"
+        width="55">
+      </el-table-column>
+      <el-table-column
+        align="center"
+        prop="store_code"
+        label="商铺编码"
+        :show-overflow-tooltip="true"
+        resizable: true>
+      </el-table-column>
+      <el-table-column
+        align="center"
+        prop="store_name"
+        label="商铺名称"
+        :show-overflow-tooltip="true"
+        resizable: true>
+      </el-table-column>
+      <el-table-column
+        prop="area"
+        align="center"
+        label="面积">
+      </el-table-column>
+      <el-table-column
+        fixed="right"
+        label="操作"
+        align="center"
+        width="100">
+        <template slot-scope="scope">
+          <el-button @click="choice(scope.row)" type="text" size="small">选择</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <el-pagination
+      :page-sizes="[10, 20, 30, 40, 50]"
+      :page-size="pageSize"
+      :current-page.sync="currentPage"
+      :total="total"
+      background
+      layout="prev, pager, next, total, sizes"
+      @current-change="pagination"
+      @size-change="handleSizeChange"/>
+  </div>
+</template>
+<script>
+  var data = {};
+  export default {
+    name: 'shops',
+    data() {
+      return {
+        building:{
+          building_id: '',
+          floor_id: '',
+          unit_code: '',
+        },
+
+        customer_list: [],
+        total: 0,//分页总数据
+        currentPage: 1,//当前页码
+        pageSize: 10,//当前页码
+        mall_id: 0,
+        multipleSelection: [],
+        allBuild: [],//楼栋
+        allFloor: [], //楼层
+      }
+    },
+    props: ['mall'],
+    watch: {
+      mall:function(newVal,oldVal){
+        this.building.mall_id = newVal;
+        this.getCustomer(this.building);
+        this.getAllBuild();
+      },
+    },
+    created() {
+      this.building.mall_id = this.mall;
+      this.getCustomer(this.building);
+      this.getAllBuild();
+    },
+
+    methods: {
+      onSecher() {
+        this.building.mall_id = this.mall;
+        this.getCustomer(this.building);
+      },
+      getCustomer(data) {//根据门店Id获取场地信息
+        let that = this;
+        this.axios
+          .post(process.env.BASE_API + "store/getStoreList", data)
+          .then(function (res) {
+            if (res.data.errorCode == 0) {
+              that.total = res.data.count;
+              that.customer_list = res.data.data;
+            }
+          })
+          .catch(function (err) {
+            this.$message.error(err.response.data.msg);
+          });
+      },
+      pagination(val) {
+        this.building.mall_id = this.mall;
+        this.building.page = val;
+        this.getCustomer(data);
+      },
+      handleSizeChange(val) {// 列表分页
+        this.building.mall_id = this.mall;
+        this.building.limit = val;
+        this.getCustomer(data);
+      },
+      buildings(val) {
+        console.log(val)
+        let that = this;
+        this.axios
+          .post(process.env.BASE_API + "floor_info/getAllFloor", {mall_id: this.mall,building_id: val})
+          .then(function (res) {
+            if (res.data.code == 0) {
+              that.allFloor = res.data.data;
+            }
+          })
+          .catch(function (err) {
+            this.$message.error(err.response.data.msg);
+          });
+      },
+      getAllBuild() {//根据门店ID获取楼栋信息
+        let that = this;
+        this.axios
+          .post(process.env.BASE_API + "building_info/getAllBuild", {mall_id: this.mall})
+          .then(function (res) {
+            if (res.data.code == 0) {
+              that.allBuild = res.data.data;
+            }
+          })
+          .catch(function (err) {
+            this.$message.error(err.response.data.msg);
+          });
+      },
+      onSelect(val) {
+        let that = this;
+        that.multipleSelection = val;
+      },
+      onSelectSub() {
+        this.choice(this.multipleSelection)
+      },
+      choice(data) {
+        this.$emit('fieldData', data);
+      }
+    }
+  }
+</script>
+
+<style lang="scss">
+  .search_lable {
+    margin-bottom: 0px !important;
+  }
+
+  .search_lable > .el-form-item__label {
+    width: 80px !important;
+  }
+
+  .search_lable .el-form-item__content {
+    margin-left: 80px !important;
+  }
+</style>

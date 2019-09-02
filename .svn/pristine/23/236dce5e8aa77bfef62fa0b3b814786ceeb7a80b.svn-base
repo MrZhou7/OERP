@@ -1,0 +1,568 @@
+<template>
+  <el-main :style="height">
+    <el-tabs v-model="activeName" type="border-card">
+      <el-tab-pane label="订单信息" name="orderInfo">
+        <el-card class="box-card" shadow="always">
+          <blockquote class="elem_quote">订单详情</blockquote>
+          <div class="content">
+            <el-form ref="form" :model="formInline" label-width="120px" class="search">
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="订单编号">
+                    <el-input v-model="formInline.code" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="门店名称">
+                    <el-input v-model="formInline.mall_name" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="配送状态">
+                    <el-select v-model="formInline.deliver_status" disabled>
+                      <el-option value='0' label="未配送"></el-option>
+                      <el-option value='1' label="部分配送"></el-option>
+                      <el-option value='2' label="已配送"></el-option>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="导购">
+                    <el-input v-model="formInline.store_person_id" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="商铺编号">
+                    <el-input v-model="formInline.store_code" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="订单金额">
+                    <el-input v-model="formInline.total_amt" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="缴款金额">
+                    <el-input v-model="formInline.paid_amt" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="交易日期">
+                    <el-input v-model="formInline.order_date" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="消费者姓名">
+                    <el-input v-model="formInline.full_name" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="联系电话">
+                    <el-input v-model="formInline.mobile_no" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="配送日期">
+                    <el-input v-model="formInline.deliver_date" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="参与活动">
+                    <el-input v-model="formInline.corp_name" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="12">
+                  <el-form-item label="配送地址">
+                    <el-input v-model="formInline.address_info" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+
+                <el-col :span="12">
+                  <el-form-item label="备注信息">
+                    <el-input v-model="formInline.remark" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </el-form>
+            <div class="contract_table" style="margin-top: 10px;">
+              <el-table
+                :data="orderInfo"
+                style="width: 100%;"
+                height="215px"
+                border
+                align: center>
+                <el-table-column
+                  prop="bar_code"
+                  :show-overflow-tooltip="true"
+                  label="商品编号">
+                </el-table-column>
+                <el-table-column
+                  prop="product_type_id"
+                  :show-overflow-tooltip="true"
+                  label="商品类型">
+                  <template slot-scope="scope">
+                    {{ scope.row.product_type_id == 0? '正常商品' : '促销商品' }}
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="product_name"
+                  :show-overflow-tooltip="true"
+                  label="商品名称">
+                </el-table-column>
+                <el-table-column
+                  prop="old_price"
+                  :show-overflow-tooltip="true"
+                  label="原价">
+                </el-table-column>
+                <el-table-column
+                  prop="new_price"
+                  :show-overflow-tooltip="true"
+                  label="现价">
+                </el-table-column>
+                <el-table-column
+                  prop="product_counts"
+                  :show-overflow-tooltip="true"
+                  label="数量">
+                </el-table-column>
+                <el-table-column
+                  prop="net_amt"
+                  :show-overflow-tooltip="true"
+                  label="总额">
+                </el-table-column>
+                <el-table-column
+                  prop=""
+                  :show-overflow-tooltip="true"
+                  label="备注">
+                </el-table-column>
+              </el-table>
+            </div>
+          </div>
+        </el-card>
+      </el-tab-pane>
+      <el-tab-pane label="支付信息" name="pay">
+        <el-card class="box-card">
+          <blockquote class="elem_quote">支付信息</blockquote>
+          <div class="content">
+            <el-form ref="form" :model="formInline" label-width="80px" class="search">
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="订单编号">
+                    <el-input v-model="formInline.code" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="门店名称">
+                    <el-input v-model="formInline.mall_name" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="商铺编号">
+                    <el-input v-model="formInline.store_code" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="商铺名称">
+                    <el-input v-model="formInline.store_name" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="配送状态">
+                    <el-select v-model="formInline.deliver_status" disabled>
+                      <el-option value='0' label="未配送"></el-option>
+                      <el-option value='1' label="部分配送"></el-option>
+                      <el-option value='2' label="已配送"></el-option>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="订单金额">
+                    <el-input v-model="formInline.total_amt" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="缴款金额">
+                    <el-input v-model="formInline.paid_amt" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="交易日期">
+                    <el-input v-model="formInline.order_date" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </el-form>
+            <div class="contract_table" style="margin-top: 10px;">
+              <el-table
+                :data="payTable"
+                style="width: 100%;"
+                height="305px"
+                border
+                align: center>
+                <el-table-column
+                  fixed
+                  prop="code"
+                  :show-overflow-tooltip="true"
+                  label="订单编号"
+                  resizable: true
+                  width="140">
+                </el-table-column>
+                <el-table-column
+                  prop="pay_time"
+                  :show-overflow-tooltip="true"
+                  label="支付日期">
+                </el-table-column>
+                <el-table-column
+                  prop="pay_name"
+                  :show-overflow-tooltip="true"
+                  label="支付方式">
+                </el-table-column>
+                <el-table-column
+                  prop="pay_amt"
+                  :show-overflow-tooltip="true"
+                  label="付款金额">
+                </el-table-column>
+                <el-table-column
+                  prop="net_amt"
+                  :show-overflow-tooltip="true"
+                  label="实付金额">
+                </el-table-column>
+                <el-table-column
+                  prop="fee_amt"
+                  :show-overflow-tooltip="true"
+                  label="手续费">
+                </el-table-column>
+                <el-table-column
+                  prop="cancel_status"
+                  :show-overflow-tooltip="true"
+                  label="取消状态">
+                  <template slot-scope="scope">
+                    {{ scope.row.cancel_status == 0 ? "未取消" : "已取消" }}
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="created_by"
+                  :show-overflow-tooltip="true"
+                  label="添加人">
+                  <template slot-scope="scope">
+                    {{ scope.row.created_by == 0 ? "张瑞" : "李琳" }}
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </div>
+        </el-card>
+      </el-tab-pane>
+      <el-tab-pane label="回访信息" name="retrunVisit">
+        <el-card class="box-card">
+          <blockquote class="elem_quote">回访信息</blockquote>
+          <div class="content">
+            <el-form ref="form" :model="formInline" label-width="90px" class="search">
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="订单编号">
+                    <el-input v-model="formInline.code" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="门店名称">
+                    <el-input v-model="formInline.mall_name" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="配送状态">
+                    <el-select v-model="formInline.deliver_status" disabled>
+                      <el-option value='0' label="未配送"></el-option>
+                      <el-option value='1' label="部分配送"></el-option>
+                      <el-option value='2' label="已配送"></el-option>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="商铺编号">
+                    <el-input v-model="formInline.store_code" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="订单金额">
+                    <el-input v-model="formInline.total_amt" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="缴款金额">
+                    <el-input v-model="formInline.paid_amt" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="交易日期">
+                    <el-input v-model="formInline.order_date" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="配送地址">
+                    <el-input v-model="formInline.address_info" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="消费者姓名">
+                    <el-input v-model="formInline.full_name" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="联系电话">
+                    <el-input v-model="formInline.mobile_no" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="配送日期">
+                    <el-input v-model="formInline.deliver_date" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="备注信息">
+                    <el-input v-model="formInline.remark" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </el-form>
+            <span @click="addReturnVisit"
+                  style="float: right;padding-right: 10px;margin-bottom: 10px;color: rgb(64, 158, 255);cursor: pointer">新增订单回访</span>
+            <div class="contract_table">
+              <el-table
+                :data="returnVisitTable"
+                style="width: 100%;"
+                height="235px"
+                border
+                align: center>
+                <el-table-column
+                  prop="contract_main_id"
+                  type="selection"
+                  width="55">
+                </el-table-column>
+                <el-table-column
+                  fixed
+                  prop="code"
+                  :show-overflow-tooltip="true"
+                  label="回访编号"
+                  resizable: true
+                  algin:center
+                  width="140">
+                </el-table-column>
+                <el-table-column
+                  prop="call_back_time"
+                  :show-overflow-tooltip="true"
+                  label="回访日期">
+                </el-table-column>
+                <el-table-column
+                  prop="user_id"
+                  :show-overflow-tooltip="true"
+                  label="回访人">
+                  <template slot-scope="scope">
+                    {{ scope.row.user_id == 0 ? "张瑞" : "李琳" }}
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="end_type"
+                  :show-overflow-tooltip="true"
+                  label="回访状态">
+                  <template slot-scope="scope">
+                    <span v-if="scope.row.end_type == 0">未知</span>
+                    <span v-else-if="scope.row.end_type == 1">已送货</span>
+                    <span v-else-if="scope.row.end_type == 2">送货中</span>
+                    <span v-else-if="scope.row.end_type == 3">未送货</span>
+                    <span v-else-if="scope.row.end_type == 4">联系不上</span>
+                    <span v-else-if="scope.row.end_type == 5">问题处理中</span>
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="note"
+                  :show-overflow-tooltip="true"
+                  label="问题记录">
+                </el-table-column>
+              </el-table>
+            </div>
+          </div>
+        </el-card>
+      </el-tab-pane>
+      <el-tab-pane label="订单评分" name="scoreView">
+        <el-card class="box-card">
+          <blockquote class="elem_quote">回访信息</blockquote>
+          <div class="content">
+            <el-rate
+              v-model="rate"
+              show-text
+              :texts="textS"
+              :colors="colors">
+            </el-rate>
+          </div>
+        </el-card>
+      </el-tab-pane>
+    </el-tabs>
+    <el-dialog title="新增订单回访" :visible.sync="addReturn" append-to-body width="500px" :close-on-click-modal="false">
+      <el-form ref="rentDetailRules" :model="addReturnObj" :rules="rentDetailRules" label-width="80px">
+        <el-form-item label="订单编号">
+          <el-input v-model="addReturnObj.code" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="回访类型" class="label_required " prop="call_back_type">
+          <el-select v-model="addReturnObj.call_back_type" placeholder="请选择合同状态">
+            <el-option label="未知" value="0"></el-option>
+            <el-option label="在线回访" value="1"></el-option>
+            <el-option label="电话回访" value="2"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="回访结论" class="label_required " prop="end_type">
+          <el-select v-model="addReturnObj.end_type" placeholder="请选择合同状态">
+            <el-option label="未知" value="0"></el-option>
+            <el-option label="已送货" value="1"></el-option>
+            <el-option label="送货中" value="2"></el-option>
+            <el-option label="未送货" value="3"></el-option>
+            <el-option label="联系不上" value="4"></el-option>
+            <el-option label="问题处理中" value="5"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="回访问题记录" class="width_110 label_required" prop="note">
+          <el-input v-model="addReturnObj.note"></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer">
+        <el-button @click="addReturn = false">取 消</el-button>
+        <el-button type="primary" @click="addTure('rentDetailRules')">确 定</el-button>
+      </span>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+  export default {
+    name: 'orderAdmin',
+    data() {
+      return {
+        formInline: {},
+        addReturnObj: {},
+        returnVisitTable: [],// 回访表格
+        orderInfo: [],// 订单信息
+        payTable: [],// 支付信息
+        addReturn: false,
+        activeName: 'orderInfo',
+        rate: null, // 评分
+        textS: ['极差', '失望', '一般', '满意', '很满意'],
+        colors: ['#99A9BF', '#F7BA2A', '#FF9900'],
+        height: {
+          height: window.innerHeight * 0.7 + 'px'
+        },
+        rentDetailRules: {
+          'call_back_type': [{ required: true, message: '请选择回访类型', trigger: 'change' }],
+          'end_type': [{ required: true, message: '请选择回访结论', trigger: 'change' }],
+          'note': [{ required: true, message: '请填写回访问题记录', trigger: 'change' }]
+        }
+      }
+    },
+    props: ['view', 'type'],
+    created() {
+     this.orderDetail();
+    },
+    methods: {
+      orderDetail() {
+        let that = this;
+        this.activeName = this.type;
+        that.addReturnObj.order_id = this.view;
+        that.http.post('OrderMain/orderDetail',   { id: this.view }).then(res => {
+          that.formInline = res.data.data
+          that.orderInfo = res.data.data.product;// 订单信息
+          that.returnVisitTable = res.data.data.callBackList;// 回访表格
+          that.payTable = res.data.data.payingDetailList;// 支付信息
+          that.addReturnObj.code = res.data.data.code
+        }).catch((err) => {
+          that.$message.error(err.response.data.msg);
+        });
+      },
+      addReturnVisit(formName) {
+        this.addReturn = true;
+      },
+      addTure(formName) {
+        let that = this;
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            that.http.post('OrderCallback/addOrder',  this.addReturnOb).then(res => {
+              that.addReturn = false;
+              that.$emit('orderAdmin','1');
+              that.orderDetail();
+              // that.created()
+            }).catch((err) => {
+              that.$message.error(err.response.data.msg);
+            });
+          } else {
+            this.$message({
+              message: '请输入完整信息！！！',
+              type: 'warning'
+            })
+          }
+        })
+      }
+    }
+  }
+</script>
+
+<style lang="scss" scoped>
+  .el-card__header {
+    padding: 8px 20px;
+    border-bottom: 1px solid #ebeef5;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    background: #2ac5c9;
+    color: #fff;
+  }
+
+  .content {
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .elem_quote {
+    margin-bottom: 0;
+  }
+  .el-card__body {
+    padding: 0 0 5px 0;
+  }
+</style>
+
+<style lang="scss">
+  .el-card__header {
+    padding: 8px 20px;
+    border-bottom: 1px solid #ebeef5;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    background: #409eff;
+    color: #fff;
+  }
+
+  .el-input.is-disabled .el-input__inner {
+    color: #000;
+  }
+
+  .el-card__body {
+    padding: 0 0 5px 0;
+  }
+
+  .search > .el-row > div > .el-form-item {
+    margin-bottom: 5px !important;
+  }
+
+</style>

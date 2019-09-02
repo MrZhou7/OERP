@@ -1,0 +1,51 @@
+{
+  "_from": "vue-wechat-title",
+  "_id": "vue-wechat-title@2.0.5",
+  "_inBundle": false,
+  "_integrity": "sha512-bCfKnJpbquqNY5ygNN7nRgNHGhyinWd277ecVh0Z15Tk8nS69catrvQSJIuRxXUOxoO/4Y32c6IfNbQUA8oh0g==",
+  "_location": "/vue-wechat-title",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "tag",
+    "registry": true,
+    "raw": "vue-wechat-title",
+    "name": "vue-wechat-title",
+    "escapedName": "vue-wechat-title",
+    "rawSpec": "",
+    "saveSpec": null,
+    "fetchSpec": "latest"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/vue-wechat-title/-/vue-wechat-title-2.0.5.tgz",
+  "_shasum": "628dd4bedca10ef39b9a98f67ca564a4db77260b",
+  "_spec": "vue-wechat-title",
+  "_where": "C:\\Users\\rui\\Desktop\\vue-admin-template-master",
+  "author": {
+    "name": "Deboy"
+  },
+  "bugs": {
+    "url": "https://github.com/deboyblog/vue-wechat-title/issues"
+  },
+  "bundleDependencies": false,
+  "deprecated": false,
+  "description": "给Vuejs单页应用添加在微信页面中动态设置网页标题功能的指令",
+  "homepage": "https://github.com/deboyblog/vue-wechat-title#readme",
+  "keywords": [
+    "Vuejs",
+    "微信导航栏标题"
+  ],
+  "license": "MIT",
+  "main": "vue-wechat-title.js",
+  "name": "vue-wechat-title",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deboyblog/vue-wechat-title.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "version": "2.0.5"
+}

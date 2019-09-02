@@ -1,0 +1,356 @@
+<template>
+  <div class="userWrap">
+    <el-row>
+      <el-col :span="6">
+        <div class="userWrapTitle">组织架构</div>
+        <div class="category-tree-content">
+          <el-input
+            v-model="filterText"
+            placeholder="输入关键字进行品类搜索">
+          </el-input>
+          <el-tree
+            v-loading="loading"
+            ref="tree2"
+            :highlight-current="true"
+            :data="dataTree"
+            :props="defaultProps"
+            :default-expand-all="true"
+            :filter-node-method="filterNode"
+            class="filter-tree"
+            @node-click="handleNodeClick"
+          />
+        </div>
+      </el-col>
+      <el-col :span="18">
+        <div class="userWrapTitle">用户信息</div>
+        <el-form ref="ruleForm" :model="ruleForm" label-width="100px" class="demo-ruleForm">
+          <el-row>
+            <el-col :span="8">
+              <el-form-item label="部门">
+                <el-input v-model="ruleForm.dept_code" placeholder="请输入部门"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item label="工号">
+                <el-input v-model="ruleForm.staff_num" placeholder="请输入工号"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item label="姓名">
+                <el-input v-model="ruleForm.staff_name" placeholder="请输入姓名"></el-input>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="8">
+              <el-form-item label="状态">
+                <el-input v-model="ruleForm.staff_name" placeholder="请选择状态"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item>
+                <el-button type="primary" @click="searchForm('ruleForm')">查询</el-button>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item>
+                <el-button type="success" @click="addUser">新增用户</el-button>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+        <el-table
+          ref="table"
+          :data="tableData"
+          :show-overflow-tooltip="true"
+          :height="height"
+          border
+          tooltip-effect="dark"
+          style="width: 100%;"
+          @row-click="clickRow">
+          <el-table-column
+            type="selection">
+          </el-table-column>
+          <el-table-column
+            prop="staff_num"
+            min-width="100"
+            label="工号">
+          </el-table-column>
+          <el-table-column
+            prop="staff_name"
+            min-width="100"
+            label="用户名">
+          </el-table-column>
+          <el-table-column
+            prop="dept_code"
+            min-width="80"
+            label="部门">
+          </el-table-column>
+          <el-table-column
+            :show-overflow-tooltip="true"
+            prop="create_time"
+            min-width="180"
+            label="创建时间">
+          </el-table-column>
+          <el-table-column
+            :show-overflow-tooltip="true"
+            prop="last_login_time"
+            min-width="180"
+            label="最后登录时间">
+          </el-table-column>
+          <el-table-column
+            prop="status"
+            min-width="80"
+            label="状态">
+            <template slot-scope="scope">
+              {{ scope.row.status == 0 ? '无效' : '有效' }}
+            </template>
+          </el-table-column>
+          <el-table-column
+            fixed="right"
+            label="操作"
+            min-width="150">
+            <template slot-scope="scope">
+              <el-button type = "text" size="small" @click.native.prevent="checkRol(scope.$index, tableData)">查 看</el-button>
+              <el-button type = "text" size="small" @click.native.prevent="editRol(scope.$index, tableData)">编 辑</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        <el-pagination
+          :page-sizes="[10, 20, 30, 40]"
+          :page-size="10"
+          :current-page.sync="currentPage"
+          :total="total"
+          background
+          layout="prev, pager, next, total, sizes"
+          @current-change="pageinations">
+        </el-pagination>
+      </el-col>
+    </el-row>
+    <el-dialog
+      :title="title"
+      :visible.sync="dialogVisible"
+      :close-on-click-modal="false"
+      width="40%"
+      top="5%">
+      <el-form ref="addForm" :rules="rules" :model="addForm" status-icon label-width="100px" class="demo-ruleForm">
+        <el-form-item label="工号" prop="staff_num">
+          <el-col :span="8">
+            <el-input v-model="addForm.staff_num" placeholder="请输入工号"></el-input>
+          </el-col>
+        </el-form-item>
+        <el-form-item label="姓名" prop="staff_name">
+          <el-col :span="8">
+            <el-input v-model="addForm.staff_name" placeholder="请输入姓名"></el-input>
+          </el-col>
+        </el-form-item>
+        <el-form-item label="	密码" prop="passwd">
+          <el-col :span="8">
+            <el-input v-model="addForm.passwd" type="password" placeholder="请输入密码" auto-complete="off"></el-input>
+          </el-col>
+        </el-form-item>
+        <el-form-item label="确认密码" prop="checkPass">
+          <el-col :span="8">
+            <el-input v-model="addForm.checkPass" type="password" placeholder="请再次输入密码" auto-complete="off"></el-input>
+          </el-col>
+        </el-form-item>
+        <el-form-item label="是否是管理员">
+          <el-radio-group v-model="addForm.enabled">
+            <el-radio :label="0">否</el-radio>
+            <el-radio :label="1">是</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item>
+          <el-col :span="8">
+            <el-button type="primary" @click="saveForm('addForm')">保存</el-button>
+          </el-col>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+var data = {};
+import { common } from '@/common/common';
+export default {
+  name: 'User',
+  data() {
+    var validatePass = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('请输入密码'));
+      } else {
+        if (this.addForm.checkPass !== '') {
+          this.$refs.addForm.validateField('checkPass');
+        }
+        callback();
+      }
+    };
+    var validatePass2 = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('请再次输入密码'));
+      } else if (value !== this.addForm.passwd) {
+        callback(new Error('两次输入密码不一致!'));
+      } else {
+        callback();
+      }
+    };
+    return {
+      title: '',
+      dialogVisible: false,
+      height: window.innerHeight - 330 + 'px',
+      filterText: '', // 查询过滤的初始值
+      dataTree: [], // 树状图显示数据
+      defaultProps: {
+        children: 'children',
+        label: 'text'
+      },
+      depCode: '', // 获取赋值部门代码
+      loading: false,
+      tableData: [], // 表格数据
+      currentPage: 1, // 页码
+      total: 0,
+      ruleForm: {
+        dept_code: '', // 部门代码
+        staff_num: '', // 员工工号
+        staff_name: '', // 员工姓名
+        status: '' // 状态
+      },
+      addForm: {
+        staff_num: '',
+        staff_name: '',
+        passwd: '',
+        checkPass: '',
+        enabled: 0,
+        dept_code: '' // 所属部门代码
+      },
+      rules: {
+        staff_num: [
+          { required: true, message: '请输入工号', trigger: 'blur' },
+          { min: 6, max: 6, message: '长度在6个字符', trigger: 'blur' }
+        ],
+        staff_name: [
+          { required: true, message: '请输入姓名', trigger: 'blur' }
+        ],
+        passwd: [
+          { required: true, validator: validatePass, trigger: 'blur' }
+        ],
+        checkPass: [
+          { validator: validatePass2, trigger: 'blur' }
+        ]
+      }
+    };
+  },
+  watch: {
+    filterText(val) {
+      this.$refs.tree2.filter(val);
+    }
+  },
+  created() {
+    this.loading = true;
+    var list = common.get('List');
+    if (list != null) {
+      this.dataTree = list;
+      this.loading = false;
+    } else {
+      this.getUserTree();
+    }
+  },
+  methods: {
+    filterNode(value, data) { // 组织架构的搜索查询
+      if (!value) return true;
+      return data.text.indexOf(value) !== -1;
+    },
+    pageinations(val) { // 分页功能
+      /*data = this.form;
+      data.page = val;
+      data.limit = 10;
+      common.getPreData(data, 'Role/roleList', this, 'roalSearch');
+      common.set('roalSearch', { 'search': data });*/
+    },
+    getUserTree() { // 获取tree信息个表格的查询及点击组织架构获取信息
+      common.getTree('dept/getDeptTree', this);
+    },
+    handleNodeClick(node, data) { // 点击传参给用户信息，并显示用户信息
+      this.depCode = { dept_code: data.data.data.dept_code };
+      this.addForm.dept_code = data.data.data.dept_code;
+      common.getPreData(this.depCodee, 'dept/getAdminTree', this);
+    },
+    clickRow(row) { // 点击table当前行
+      this.$refs.table.toggleRowSelection(row);
+    },
+    addUser() { // 新增用户
+      if (this.depCode == '') {
+        this.$message({
+          message: '请先确认所属部门',
+          type: 'warning'
+        });
+        return false;
+      }
+      this.dialogVisible = true;
+    },
+    searchForm() { // 查询数据
+      for (var i in this.ruleForm) {
+        if (this.ruleForm[i]) {
+          common.getPreData(this.ruleForm, 'dept/getAdminTree', this);
+          return;
+        }
+      }
+      this.$message({
+        message: '请输入查询信息',
+        type: 'warning'
+      });
+    },
+    saveForm(formName) { // 保存
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          this.axios({
+            method: 'post',
+            data: this.addForm,
+            url: process.env.BASE_API + 'admin/addAdmin'
+          }).then((res) => {
+            this.dialogVisible = false;
+            this.$message({
+              message: '新增成功',
+              type: 'success'
+            });
+            console.log(res);
+          }).catch(function(err) {
+            this.$message.error(err.response.data.msg);
+          });
+        } else {
+          console.log('error submit!!');
+          return false;
+        }
+      });
+    }
+  }
+};
+</script>
+
+<style scoped lang="scss">
+  .userWrap{
+    padding: 15px;
+    .userWrapTitle{
+      position: relative;
+      height: 42px;
+      line-height: 42px;
+      padding: 0 15px;
+      border-bottom: 1px solid #f6f6f6;
+      color: #333;
+      border-radius: 2px 2px 0 0;
+      font-size: 14px;
+      background-color: #DFEAF2;
+    }
+  }
+  .el-input--suffix .el-input__inner {
+    padding-right:15px;
+  }
+  .filter-tree{
+    overflow: auto;height:calc(100vh - 200px);
+  }
+  .category-tree-content{
+    margin:10px;
+    border: 1px solid #e2e2e2;
+  }
+</style>

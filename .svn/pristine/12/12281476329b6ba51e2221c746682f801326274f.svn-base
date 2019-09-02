@@ -1,0 +1,577 @@
+<template>
+  <div class="roleWrap">
+    <el-row>
+      <el-col :span="6">
+        <div class="category-tree-content">
+          <el-input
+            v-model="filterText"
+            placeholder="输入关键字进行品类搜索"/>
+          <el-tree
+            v-loading="loading"
+            ref="tree2"
+            :highlight-current="true"
+            :data="dataTree"
+            :props="defaultProps"
+            :filter-node-method="filterNode"
+            :load="loadNode"
+            node-key="id"
+            class="filter-tree"
+            lazy
+            @node-click="handleNodeClick"/>
+        </div>
+      </el-col>
+      <el-col :span="18">
+        <el-form ref="form" :model="form" label-width="100px">
+          <el-row>
+            <el-col :span="6">
+              <el-form-item label="角色名称">
+                <el-input v-model="form.role_name"/>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item>
+                <el-button type="primary" @click="search">搜索</el-button>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+        <div class="btn_bottom">
+          <el-button type="primary" @click="addRole">新增角色</el-button>
+        </div>
+        <div class="contract_table">
+          <el-table
+            ref="table"
+            :height="height"
+            :data="tableData"
+            :show-overflow-tooltip="true"
+            border
+            tooltip-effect="dark"
+            style="width: 100%"
+            @row-click="clickRow">
+            <el-table-column
+              type="selection"
+              width="55"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="departmentname"
+              min-width="180"
+              label="部门">
+            </el-table-column>
+            <el-table-column
+              prop="role_name"
+              min-width="180"
+              label="角色名称"/>
+            <el-table-column
+              prop="subject_code"
+              min-width="180"
+              label="角色描述"/>
+            <el-table-column
+              fixed="right"
+              label="操作"
+              min-width="180">
+              <template slot-scope="scope">
+                <el-button type = "text" size="small" @click.native.prevent="checkRol(scope.$index, tableData)">查 看</el-button>
+                <el-button type = "text" size="small" @click.native.prevent="editRol(scope.$index, tableData)">编 辑</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          <el-pagination
+            :page-sizes="[10, 20, 30, 40]"
+            :page-size="20"
+            :current-page.sync="currentPage"
+            :total="total"
+            background
+            layout="prev, pager, next, total, sizes"
+            @size-change="handleSizeChange"
+            @current-change="pagination"/>
+        </div>
+      </el-col>
+    </el-row>
+    <!--新增、编辑、查看角色-->
+    <el-dialog
+      :title="editTitle"
+      :close-on-click-modal="false"
+      :visible.sync="dialogVisible.one"
+      top="5%"
+      width="60%"
+      @close="handleClose">
+      <el-form ref="ruleForm" :model="ruleForm" :rules="rules" label-width="100px" class="demo-ruleForm">
+        <blockquote class="elem_quote">基础信息</blockquote>
+        <el-form-item label="角色名称" prop="role_name">
+          <el-col :span="12">
+            <el-input v-model="ruleForm.role_name"/>
+          </el-col>
+        </el-form-item>
+        <el-form-item label="角色描述" prop="subject_code">
+          <el-col :span="12">
+            <el-input v-model="ruleForm.subject_code" type="textarea" autosize />
+          </el-col>
+        </el-form-item>
+        <el-tabs type="border-card">
+          <el-tab-pane label="功能权限">
+            <el-button v-show="isShowSubmit" size="small" type="primary" @click="submitForm('ruleForm')">保 存</el-button>
+            <el-button v-show="isShowSave" size="small" type="primary" @click="saveForm('ruleForm')">保 存</el-button>
+            <el-input
+              v-model="filterTextRole"
+              placeholder="输入关键字进行过滤"/>
+            <el-tree
+              ref="tree"
+              :props="defaultPropsRole"
+              :filter-node-method="filterNodeOne"
+              :default-checked-keys="defaultCheckedKeys"
+              :data="roleData"
+              disabled
+              class="author-tree"
+              node-key="id"
+              show-checkbox/>
+          </el-tab-pane>
+          <el-tab-pane label="数据权限">
+            <el-button size="small" type="primary" @click="addMall">添 加</el-button>
+            <el-button :disabled="deleteBtnOne" size="small" type="primary" @click="delateMall">删 除</el-button>
+            <el-table
+              ref="table"
+              :data="tableDataOne"
+              :show-overflow-tooltip="true"
+              border
+              class="author-tree"
+              tooltip-effect="dark"
+              style="width: 100%;"
+              @selection-change="getRadioOne"
+              @row-click="clickRowOne">
+              <el-table-column
+                type="selection"/>
+              <el-table-column
+                prop="mall_code"
+                min-width="100"
+                label="项目编号"/>
+              <el-table-column
+                prop="mall_name"
+                min-width="100"
+                label="项目名称"/>
+              <el-table-column
+                prop="open_time"
+                min-width="80"
+                label="开业时间"/>
+            </el-table>
+          </el-tab-pane>
+          <el-tab-pane label="相关用户">
+            <el-button size="small" type="primary" @click="addUser">添 加</el-button>
+            <el-button :disabled="deleteBtnTwo" size="small" type="primary" @click="delateUser">解除关系</el-button>
+            <el-table
+              ref="table"
+              :data="tableDataTwo"
+              :show-overflow-tooltip="true"
+              border
+              class="author-tree"
+              tooltip-effect="dark"
+              style="width: 100%;"
+              @selection-change="getRadioTwo"
+              @row-click="clickRowTwo">
+              <el-table-column
+                type="selection"/>
+              <el-table-column
+                prop="status"
+                min-width="80"
+                label="状态">
+                <template slot-scope="scope">
+                  <span v-if="scope.row.status == 0">试 用</span>
+                  <span v-else-if="scope.row.status == 1">正 式</span>
+                  <span v-else-if="scope.row.status == 2">临 时</span>
+                  <span v-else-if="scope.row.status == 3">试用延期</span>
+                  <span v-else-if="scope.row.status == 4">解 聘</span>
+                  <span v-else-if="scope.row.status == 5">离 职</span>
+                  <span v-else-if="scope.row.status == 6">退 休</span>
+                  <span v-else-if="scope.row.status == 7">无 效</span>
+                </template>
+              </el-table-column>
+              <el-table-column
+                prop="loginid"
+                min-width="80"
+                label="工号"/>
+              <el-table-column
+                prop="lastname"
+                min-width="80"
+                label="姓名"/>
+              <el-table-column
+                prop="jobtitlename"
+                min-width="80"
+                label="岗位"/>
+            </el-table>
+          </el-tab-pane>
+        </el-tabs>
+      </el-form>
+    </el-dialog>
+    <!--数据权限添加-->
+    <el-dialog
+      :visible.sync="dialogVisible.three"
+      :close-on-click-modal="false"
+      title="选择项目"
+      top="5%"
+      width="80%">
+      <ChooseMall :user-id="userId" @chooseMall="chooseMall"/>
+    </el-dialog>
+    <!--选择用户-->
+    <el-dialog
+      :visible.sync="dialogVisible.two"
+      :close-on-click-modal="false"
+      title="选择用户"
+      top="5%"
+      width="80%">
+      <ChooseUser :user-id="userId" @chooseUser="chooseUser"/>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+var data = {};
+import { common } from '@/common/common';
+import building from '@/utils/building';
+import ChooseUser from '@/components/system/role/chooseUser';
+import ChooseMall from '@/components/system/role/chooseMall';
+export default {
+  name: 'Role',
+  components: { ChooseUser, ChooseMall },
+  data() {
+    return {
+      userId: null, // 角色id
+      filterTextRole: '',
+      ruleForm: {
+        role_name: '', // 角色名称
+        subject_code: '', // 角色描述
+        district_id: '',
+        menu: '',
+        operate: '',
+        dept_code: ''
+      },
+      isShowSubmit: false, // 新增保存按鈕的显示隐藏
+      isShowSave: false, // 编辑保存按鈕的显示隐藏
+      defaultCheckedKeys: [], // 默认展开的数组
+      defaultExpandedKeys: [], // 默认展开的节点
+      roleData: [], // 权限信息
+      tableDataOne: [], // 权限stable
+      tableData: [], // 橘色权限table
+      tableDataTwo: [], // 相关用户table
+      defaultPropsRole: {
+        children: 'children',
+        label: 'text'
+      },
+      rules: {
+        role_name: [
+          { required: true, message: '请输入角色名称', trigger: 'blur' },
+          { min: 1, max: 8, message: '长度在 1 到 8 个字符', trigger: 'blur' }],
+        subject_code: [
+          { required: true, message: '请输入角色描述', trigger: 'blur' },
+          { min: 1, max: 30, message: '长度在 1 到 30 个字符', trigger: 'blur' }]
+      },
+      form: {
+        role_name: ''
+      },
+      disable: false,
+      editTitle: '', // 弹窗的name
+      filterText: '', // 查询过滤的初始值
+      loading: false,
+      total: 0,
+      height: window.innerHeight - 275 + 'px',
+      currentPage: 1, // 页码
+      dialogVisible: {
+        one: false, // 新增角色弹窗
+        two: false, // 新增用户弹窗
+        three: false, // 数据权限弹窗
+      },
+      dataTree: [], // 树状图显示数据
+      defaultProps: {
+        children: [],
+        label: 'name',
+        isLeaf: 'leaf'
+      },
+      MallData: [], // 获取勾选的门店
+      userData: [], // 获取勾选的用户
+      deleteBtnOne: true, // 项目删除
+      deleteBtnTwo: true, // 用户删除
+    };
+  },
+  watch: {
+    filterText(val) {
+      this.$refs.tree2.filter(val);
+    },
+    filterTextRole(val) {
+      this.$refs.tree.filter(val);
+    }
+  },
+  created() {
+    this.getRole();
+    this.loading = true;
+    // const userTreeData = common.get('userTreeData');
+    // if (userTreeData != null) {
+    //   this.dataTree = userTreeData;
+    //   this.defaultExpandedKeys = [this.dataTree[0].id];
+    //   this.loading = false;
+    // } else {
+    //   this.getUserTree();
+    // }
+    this.getUserTree();
+  },
+  methods: {
+    filterNode(value, data) { // 组织架构的搜索查询
+      if (!value) return true;
+      return data.name.indexOf(value) !== -1;
+    },
+    filterNodeOne(value, data) { // 组织架构的搜索查询
+      if (!value) return true;
+      return data.text.indexOf(value) !== -1;
+    },
+    // 异步树叶子节点懒加载逻辑
+    loadNode(node, resolve) {
+      // console.log(node);
+      // 一级节点处理
+      if (node.level === 0) {
+        this.getUserTree(resolve);
+      }
+      // 其余节点处理
+      if (node.level >= 1) {
+        // 注意！把resolve传到你自己的异步中去
+        this.getTree(node, resolve);
+      }
+    },
+    handleNodeClick(node, data) { // 点击传参给用户信息，并显示用户信息
+      this.http.post('role/roleList', { type: node.type, id: node.id }).then(res => {
+        console.log(res)
+        this.tableData = res.data.data;
+      });
+      if (node.num == 0 && node.type == 'dev') {
+        this.ruleForm.dept_code = node.id;
+      } else {
+        this.ruleForm.dept_code = '';
+      }
+    },
+    pagination(val) { // 分页功能
+      // data = this.form;
+      // data.page = val;
+      // common.getPreData(data, 'Role/roleList', this, 'roalSearch');
+      // common.set('roalSearch', data);
+    },
+    handleSizeChange(val) {
+      // const data = this.formInline;
+      // data.limit = val;
+      // common.getPreData(data, 'Role/roleList', this, 'roalSearch');
+      // common.set('roalSearch', { 'search': data });
+    },
+    search() { // 搜索
+      if (this.form.role_name == '') {
+        this.$message({ message: '角色名称不能为空', type: 'warning' });
+      } else {
+        const data = this.form;
+        common.getPreData(data, 'Role/roleList', this, 'roalSearch');
+        common.set('roalSearch', data);
+      }
+    },
+    addRole() { // 新增角色
+      if (this.ruleForm.dept_code == '') {
+        this.$message({ message: '请先确认所属部门', type: 'warning' });
+        this.editTitle = '新增角色信息';
+        return false;
+      }
+      this.isShowSubmit = true;
+      this.dialogVisible.one = true;
+    },
+    clickRow(row) { // 点击table当前行
+      this.$refs.table.toggleRowSelection(row);
+    },
+    clickRowOne(row) { // 点击table当前行
+      this.$refs.table.toggleRowSelection(row);
+    },
+    getRadioOne(val) { // 获取选中的项目
+      this.MallData = val;
+      if (this.MallData) {
+        this.deleteBtnOne = false;
+      }
+      console.log(this.MallData)
+    },
+    clickRowTwo(row) { // 点击table当前行
+      this.$refs.table.toggleRowSelection(row);
+    },
+    getRadioTwo(val) { // 获取选中的用户
+      this.userData = val;
+      if (this.userData) {
+        this.deleteBtnOne = false;
+      }
+      console.log(this.userData)
+    },
+    checkRol(index, table) { // 查看
+      this.dialogVisible.one = true;
+      this.editTitle = '查看角色信息';
+      this.getRoleList(index, table);
+    },
+    editRol(index, table) { // 编辑
+      this.isShowSave = true;
+      this.dialogVisible.one = true;
+      this.disable = true;
+      this.editTitle = '编辑角色信息';
+      this.getRoleList(index, table);
+    },
+    addMall() { // 项目新增
+      if (!this.userId) {
+        this.$message.warning('请先保存角色信息！！！');
+      } else {
+        this.dialogVisible.three = true;
+      }
+    },
+    delateMall() { // 项目删除
+      const u = [];
+      for (let i = 0, len = this.MallData.length; i < len; i++) {
+        u.push(this.MallData[i].mall_id);
+      }
+      console.log(u)
+      this.MallData = u.join(',');
+      console.log(this.MallData)
+      this.http.post('RoleDataEntity/del', { id: this.MallData }).then(res => {
+        console.log(res);
+        this.$message({ message: '成功！', type: 'success' });
+      });
+    },
+    addUser() { // 添加用户
+      if (!this.userId) {
+        this.$message.warning('请先保存角色信息！！！');
+      } else {
+        this.dialogVisible.two = true;
+      }
+    },
+    delateUser() { // 解除用户关系
+      const u = [];
+      for (let i = 0, len = this.userData.length; i < len; i++) {
+        u.push(this.userData[i].id);
+      }
+      this.userData = u.join(',');
+      this.http.post('AdminRole/del', { id: this.userData }).then(res => {
+        console.log(res)
+        this.$message({ message: '成功！', type: 'success' });
+      });
+    },
+    chooseUser(data) { // 选择用户弹窗回调方法
+      this.dialogVisible.two = false;
+    },
+    chooseMall(data) { // 选择项目弹窗回调方法
+      console.log(data)
+      this.dialogVisible.three = false;
+    },
+    handleClose() { // 弹窗关闭
+      // 清空弹窗内容
+      this.$refs.ruleForm.resetFields();
+      this.$refs.tree.setCheckedKeys([]);
+      this.dialogVisible.one = false;
+      this.disable = false;
+      // 隐藏保存按钮
+      this.isShowSave = false;
+      this.isShowSubmit = false;
+    },
+    submitForm(formName) { // 新增保存
+      const title = '新增角色成功';
+      const url = 'Role/add';
+      const that = this;
+      this.save(formName, url, title, that);
+    },
+    saveForm(formName) { // 编辑保存
+      const title = '修改角色成功';
+      const url = 'Role/editRole';
+      const that = this;
+      this.save(formName, url, title, that);
+    },
+    save(formName, url, title, that) { // 保存
+      that.$refs[formName].validate((valid) => {
+        if (valid) {
+          const res = that.$refs.tree.getCheckedNodes();
+          const arr = [];
+          res.forEach((item) => {
+            arr.push(item.id);
+          });
+          let menu = '';
+          let operate = '';
+          for (var j = 0, len = arr.length; j < len; j++) {
+            if (arr[j] < 10000) {
+              menu += arr[j] + ',';
+            } else {
+              operate += arr[j] + ',';
+            }
+          }
+          that.ruleForm.menu = menu.substr(0, menu.length - 1);
+          that.ruleForm.operate = operate.substr(0, operate.length - 1);
+          that.ruleForm.district_id = 1;
+          that.ruleForm.mall_id = 1;
+          that.http.post(url, that.ruleForm).then((res) => {
+            //that.form.dept_code = that.ruleForm.dept_code;
+            //const data = that.form;
+            // common.getPreData(data, 'Role/roleList', that, 'roalSearch');
+            // common.set('roalSearch', data);
+            this.userId = res.data.data;
+            that.$message({ showClose: true, message: title, type: 'success' });
+          });
+        } else {
+          this.$message({
+            message: '请输入完整信息！！！',
+            type: 'warning'
+          });
+        }
+      });
+    },
+    getRole() { // 获取权限tree列表
+      this.http.post('Permission/PermissionListC').then((res) => {
+        this.roleData = res.data.data;
+      })
+    },
+    getRoleList(index, table) { // 编辑和查看时获取的数据
+      //this.$refs.tree.setCheckedKeys([]);
+      this.userId = table[index].role_id;
+      const that = this;
+      this.http.post('Role/getInfo', { role_id: table[index].role_id }).then((res) => {
+        console.log(res)
+        that.ruleForm = res.data.data.role;
+        that.tableDataOne = res.data.data.mall;
+        that.tableDataTwo = res.data.data.user.list;
+        that.defaultCheckedKeys = that.ruleForm.menu.concat(that.ruleForm.operate);
+      })
+    },
+    getTree(node, resolve) { // 获取tree信息个表格的查询及点击组织架构获取信息
+      if (node.data.type == 'subcompany') {
+        this.param = {
+          company_id: 1,
+          sub_parent_id: node.data.id
+        };
+      } else {
+        this.param = {
+          company_id: 1,
+          sub_parent_id: node.parent.data.id,
+          supdepid: node.data.id
+        };
+      }
+      this.http.post('Organization/getSubList', this.param)
+        .then(res => {
+          // console.log(res.data.data);
+          // 此处需要后台传过来一个值来判断每个节点有无子节点,实际项目中必须加上（如isRealLeaf），不传都默认为叶子节点
+          //  out.data.data.forEach(value => {
+          //   if (value.isRealLeaf === 'Y') {
+          //     value.leaf = true//不为叶子节点
+          //   } else {
+          //     value.leaf = false//为叶子节点
+          //   }
+          // })
+          const data = res.data.data;
+          resolve(data);
+        });
+    },
+    getUserTree() { // 获取tree信息个表格的查询及点击组织架构获取信息
+      this.http.post('Organization/getSubList', { company_id: 1, sub_parent_id: 0 }).then(res => {
+        this.dataTree = res.data.data;
+        // console.log(this.dataTree)
+        this.loading = false;
+      });
+    }
+  }
+};
+</script>
+
+<style scoped lang="scss">
+  .roleWrap{padding: 15px;}
+  .filter-tree{overflow: auto;height:calc(100vh - 150px);}
+  .author-tree{overflow: auto;height:calc(100vh - 60vh);}
+  .category-tree-content{margin:10px;border: 1px solid #e2e2e2;}
+</style>

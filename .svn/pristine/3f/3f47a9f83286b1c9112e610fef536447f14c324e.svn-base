@@ -1,0 +1,341 @@
+<template>
+  <el-row>
+    <el-col :span="10">
+        <p class="title">楼栋信息</p>
+        <el-form :model="buildingForm" :rules="buildingRules" ref="buildingForm" label-width="100px" class="demo-ruleForm">
+          <el-form-item label="楼栋名称" prop="building_name">
+            <el-col :span="12">
+              <el-input v-model="buildingForm.building_name" placeholder="请输入楼栋名称"></el-input>
+            </el-col>
+          </el-form-item>
+          <el-form-item label="建筑面积" prop="area">
+            <el-col :span="12">
+              <el-input v-model="buildingForm.area" placeholder="请输入建筑面积">
+                <template slot="append">平米</template>
+              </el-input>
+              <template slot="append">平米</template>
+            </el-col>
+            <el-col :span="6">
+              <el-button type="primary" @click="buildingAdd('buildingForm')" size="small" v-if="isActive">添加</el-button>
+              <el-button type="success" @click="buildingAmend('buildingForm')" size="small" v-if="!isActive">修改</el-button>
+            </el-col>
+            <el-col :span="6">
+              <el-button @click="buildingEmpty('buildingForm')" size="small">清空</el-button>
+            </el-col>
+          </el-form-item>
+        </el-form>
+        <el-table
+          :data="buildingData"
+          stripe
+          @row-click="getFloor"
+          :highlight-current-row="true"
+          style="width: 100%">
+          <el-table-column
+            prop="building_name"
+            label="楼栋名称"
+            width="200">
+          </el-table-column>
+          <el-table-column
+            prop="area"
+            label="建筑面积(平米)"
+            width="150">
+          </el-table-column>
+          <el-table-column
+            fixed="right"
+            label="操作"
+            width="180">
+            <template slot-scope="scope">
+              <el-button @click="editBuilding(scope.row)" type="text" size="small">编辑</el-button>
+              <el-button @click="deleteBuilding(scope.row)" type="text" size="small">作废</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+    </el-col>
+    <el-col :span="14">
+        <p class="title">楼层信息</p>
+        <el-form :model="floorForm" :rules="floorRules" ref="floorForm" label-width="100px" class="demo-ruleForm">
+          <el-row>
+            <el-col :span="10">
+              <el-form-item label="楼栋名称" prop="building_name">
+                  <el-select v-model="floorForm.building_id" placeholder="请选择楼栋">
+                    <el-option v-for="(item ,index) in buildingData"  :label="item.building_name" :value="item.building_id"></el-option>
+                  </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="10">
+              <el-form-item label="楼层名称" prop="floor_name">
+                  <el-input v-model="floorForm.floor_name" placeholder="请输入楼层名称"></el-input>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="10">
+              <el-form-item label="建筑面积" prop="indoor_area">
+                <el-input v-model="floorForm.indoor_area" placeholder="请输入建筑面积">
+                  <template slot="append">平米</template>
+                </el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="公摊系数" prop="residential_pool_coefficient">
+                <el-col :span="12">
+                  <el-input v-model="floorForm.residential_pool_coefficient" placeholder="请输入公摊系数"></el-input>
+                </el-col>
+                <el-col :span="6">
+                  <el-button type="primary" @click="floorAdd('floorForm')" size="small" v-if="isShow">添加</el-button>
+                  <el-button type="success" @click="floorAmend('floorForm')" size="small" v-if="!isShow">修改</el-button>
+                </el-col>
+                <el-col :span="6">
+                  <el-button @click="floorEmpty('floorForm')" size="small">清空</el-button>
+                </el-col>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+        <el-table
+          :data="floorData"
+          stripe
+          style="width: 100%">
+          <el-table-column
+            type="index"
+            label="序号"
+            width="50">
+          </el-table-column>
+          <el-table-column
+            prop="floor_name"
+            label="楼层名称"
+            width="180">
+          </el-table-column>
+          <el-table-column
+            prop="indoor_area"
+            label="建筑面积(平米)"
+            width="150">
+          </el-table-column>
+          <el-table-column
+            prop="residential_pool_coefficient"
+            label="公摊系数"
+            width="100">
+          </el-table-column>
+          <el-table-column
+            fixed="right"
+            label="操作"
+            width="180">
+            <template slot-scope="scope">
+              <el-button @click="editFloor(scope.row)" type="text" size="small">编辑</el-button>
+              <el-button @click="deleteFloor(scope.row)" type="text" size="small">作废</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+    </el-col>
+  </el-row>
+</template>
+
+<script>
+  export default {
+    name: 'building',
+    data() {
+      return{
+        buildingForm:{
+          area:'',
+          building_name:"",
+          mall_id:1
+        },
+        buildingRules:{
+          building_name: [
+            { required: true, message: '请输入楼栋名称', trigger: 'blur' },
+          ],
+          area: [
+            { required: true, message: '请输入建筑面积', trigger: 'blur' }
+          ]
+        },
+        floorForm:{
+          indoor_area:'',
+          building_id:"",
+          residential_pool_coefficient:''
+        },
+        floorRules:{
+          building_id: [
+            { required: true, message: '请输入楼栋名称', trigger: 'blur' },
+          ],
+          indoor_area: [
+            { required: true, message: '请输入建筑面积', trigger: 'blur' }
+          ],
+          residential_pool_coefficient: [
+            { required: true, message: '请输入公摊系数', trigger: 'blur' }
+          ],
+          floor_name: [
+            { required: true, message: '请输入楼层名称', trigger: 'blur' }
+          ]
+        },
+        buildingData:[],//楼栋表格数据
+        floorData:[],//楼层表格数据
+        isActive:true,//楼栋添加/修改的显示
+        isShow:true//楼层添加/修改的显示
+      }
+    },
+    methods:{
+      //添加楼栋信息
+        buildingAdd(formName){
+          this.$refs[formName].validate((valid) => {
+            if (valid) {
+              this.axios({
+                method:'post',
+                data:this.buildingForm,
+                url:process.env.BASE_API + 'building_info/addBuildInfo'
+              }).then((res)=>{
+                console.log(res)
+                this.$message({
+                  message: '添加成功',
+                  type: 'success'
+                })
+              })
+            } else {
+              this.$message({
+                message: '请输入完整信息！！！',
+                type: 'warning'
+              })
+              return false;
+            }
+          });
+        },
+      //清空楼栋修改 添加信息
+        buildingEmpty(){
+          this.buildingForm = {};
+          this.isActive = true;
+        },
+      //单击楼栋列表传递楼栋名称给楼层列表
+        getFloor(row,event){
+          console.log(row)
+          this.axios({
+            method:'post',
+            data:{building_id:row.building_id},
+            url:process.env.BASE_API + 'floor_info/getFloorList'
+          }).then((res)=>{
+            console.log(res)
+            this.floorData = res.data.data;
+            this.floorForm.building_id = row.building_id;
+          })
+        },
+      //点击楼栋编辑
+        editBuilding(row){
+          this.isActive = false;
+          this.buildingForm = row;
+        },
+      //点击修改楼栋信息
+        buildingAmend(formName){
+          this.$refs[formName].validate((valid) => {
+            if (valid) {
+              this.axios({
+                method:'post',
+                data:this.buildingForm,
+                url:process.env.BASE_API + 'building_info/editBuild'
+              }).then((res)=>{
+                this.isActive = true;
+                this.$message({
+                  message: '修改成功',
+                  type: 'success'
+                })
+              })
+            } else {
+              this.$message({
+                message: '请输入完整信息！！！',
+                type: 'warning'
+              })
+              return false;
+            }
+          })
+        },
+      //添加楼层信息
+        floorAdd(formName){
+        this.$refs[formName].validate((valid) => {
+          console.log(this.floorForm)
+          if (valid) {
+            this.axios({
+              method:'post',
+              data:this.floorForm,
+              url:process.env.BASE_API + 'floor_info/addFloor'
+            }).then((res)=>{
+              console.log(res)
+              this.$message({
+                message: '添加成功',
+                type: 'success'
+              })
+            })
+          } else {
+            this.$message({
+              message: '请输入完整信息！！！',
+              type: 'warning'
+            })
+            return false;
+          }
+        });
+      },
+      //清空楼层修改 添加信息
+        floorEmpty(){
+          this.floorForm = {};
+          this.isShow = true;
+        },
+      //编辑楼层信息
+        editFloor(row){
+          console.log(row)
+          this.isShow = false;
+          this.floorForm = row;
+        },
+      //点击修改楼层信息
+        floorAmend(formName){
+          this.$refs[formName].validate((valid) => {
+            if (valid) {
+              this.axios({
+                method:'post',
+                data:this.floorForm,
+                url:process.env.BASE_API + 'floor_info/editFloor'
+              }).then((res)=>{
+                this.isShow = true;
+                this.$message({
+                  message: '修改成功',
+                  type: 'success'
+                })
+              })
+            } else {
+              this.$message({
+                message: '请输入完整信息！！！',
+                type: 'warning'
+              })
+              return false;
+            }
+          })
+        },
+      //根据门店ID获取该门店楼栋列表信息
+        getBuild(){
+          let mall = {mall_id:1}
+            this.axios({
+              method:'post',
+              data:mall,
+              url:process.env.BASE_API + 'building_info/getBuildList'
+            }).then((res)=>{
+              this.buildingData = res.data.data;
+            })
+        }
+      },
+    created() {
+      //根据门店ID获取该门店楼栋列表信息
+      this.getBuild()
+    }
+  }
+</script>
+
+<style scoped>
+ .title{
+   position: relative;
+   height: 42px;
+   line-height: 42px;
+   padding: 0 15px;
+   border-bottom: 1px solid #f6f6f6;
+   color: #333;
+   border-radius: 2px 2px 0 0;
+   font-size: 14px;
+ }
+ .el-input-group__append, .el-input-group__prepend{
+   padding: 0px 5px;
+ }
+</style>

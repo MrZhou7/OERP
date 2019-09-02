@@ -1,0 +1,172 @@
+.el-form {
+  margin: 10px;
+  padding: 10px;
+  background: #f8f8f8 !important;
+}
+.el-dialog__header{
+  padding: 10px 20px;
+}
+.el-dialog__body{
+  padding: 10px 20px;
+}
+.el-date-editor--daterange.el-input__inner {
+  width: 100%;
+}
+.el-select .el-input__inner {   //select的右边距调整
+  cursor: pointer;
+  padding-right: 15px;
+}
+.el-input--suffix .el-input__inner {
+  padding-right: 15px;
+}
+.el-cascader { //层级选择器width位100%
+  width: 100%;
+}
+.el-input__inner {
+  border-radius: 2px;
+  border: 1px solid #e4e4e4;
+}
+
+.el-select {
+  width: 100%;
+}
+
+.btn_bottom {
+  margin-bottom: 5px;
+}
+
+.cell {
+  button span {
+    padding-right: 15px;
+    border-right: 1px solid #6aa3a9;
+  }
+
+  button:last-child span {
+    border-right: 0;
+  }
+}
+
+.elem_quote {
+  margin-bottom: 10px;
+  padding: 10px;
+  line-height: 22px;
+  border-left: 5px solid #009688;
+  border-radius: 0 2px 2px 0;
+  background-color: #f2f2f2;
+  color: #888d92;
+  font-size: 14px;
+}
+
+
+.label_required>.el-form-item__label:before {
+  content: "*";
+  color: #ff0000;
+}
+.el-dialog__wrapper{
+  background: rgba(0, 0, 0, 0.34);
+}
+//加载上传图片
+.avatar-uploader .el-upload {
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.avatar-uploader .el-upload:hover {
+  border-color: #409EFF;
+}
+.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 178px;
+  height: 178px;
+  line-height: 178px;
+  text-align: center;
+}
+.avatar {
+  width: 178px;
+  height: 178px;
+  display: block;
+}
+.width_100 .el-form-item__label {
+  width: 100px !important;
+}
+
+.width_100 .el-form-item__content, .width_100 .el-form-item__content {
+  margin-left: 100px !important;
+}
+.width_110 .el-form-item__label {
+  width: 110px !important;
+}
+.width_110 .el-form-item__content, .width_110 .el-form-item__content {
+  margin-left: 110px !important;
+}
+.width_130 .el-form-item__label {
+  width: 130px !important;
+}
+.width_130 .el-form-item__content, .width_130 .el-form-item__content {
+  margin-left: 130px !important;
+}
+.width_160 .el-form-item__label {
+  width: 165px !important;
+}
+.width_160 .el-form-item__content, .width_160 .el-form-item__content {
+  margin-left: 165px !important;
+}
+//被选择菜单
+#app .sidebar-container .is-active > .el-submenu__title {
+  background-color:#307375 !important;
+}
+#app .el-menu-item.is-active {
+  color:#2ac5c9 !important;
+}
+ #app .sidebar-container .el-submenu .el-menu-item {
+   color:#ded7d7 !important;;
+ }
+.el-submenu__title {
+  background-color: #285d5f !important;
+  color: #fff !important;
+}
+#app .sidebar-container .el-submenu .el-menu-item:hover {
+  background-color:#304156 !important;
+}
+
+#app .sidebar-container .el-submenu .el-submenu__title:hover {
+  background-color: #304156 !important;
+}
+
+#app .sidebar-container .el-submenu .el-menu-item.is-active{
+  color:#2ac5c9 !important;
+}
+#app .sidebar-container .el-menu {
+  background-color:#285d5f !important;
+}
+.el-menu-item{
+  background-color: #285d5f !important;
+ color: #c6c9d0 !important;
+}
+.el-date-editor.el-input, .el-date-editor.el-input__inner {
+  width: 100% !important;
+}
+
+//表格高度
+.el-table td, .el-table th {
+  padding: 5px 0 !important;
+}
+.el-table__fixed-body-wrapper {
+  top: 34px !important;
+}
+
+// form表单提交样式
+.sub > div {
+  background: rgba(69, 177, 172, 0.44);
+  margin-bottom: 0;
+  height: 60px;
+  line-height: 60px;
+  text-align: center;
+}
+// 查询
+.search>.el-row>div>.el-form-item{
+  margin-bottom: 0 !important;
+}

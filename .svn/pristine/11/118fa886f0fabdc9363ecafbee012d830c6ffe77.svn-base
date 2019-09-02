@@ -1,0 +1,152 @@
+<template>
+  <div>
+    <el-form ref="formInline" :model="formInline" label-width="120px" class="demo-ruleForm">
+      <el-form-item label="项目名称">
+        <el-select v-model="formInline.mall_id" placeholder="请选择门店名称">
+          <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name" :value="mall.mall_id"/>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="成员名称">
+        <el-input v-model="member" suffix-icon="el-icon-search" clearable @click.native="chooseMember()"/>
+      </el-form-item>
+      <el-form-item label="成员类型" prop="boss">
+        <el-select v-model="formInline.boss" placeholder="请选择上级类别" class="inputWindth">
+          <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name" :value="mall.mall_id"/>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="状态">
+        <el-select v-model="formInline.mall_id" placeholder="请选择门店名称">
+          <el-option label="停用" value="0"/>
+          <el-option label="启用" value="1"/>
+        </el-select>
+      </el-form-item>
+      <el-form-item>
+        <el-col :span="12">
+          <el-button type="primary" @click="save('formInline')">保存</el-button>
+        </el-col>
+      </el-form-item>
+    </el-form>
+    <!--选择成员的弹窗-->
+    <el-dialog
+      :visible.sync="dialogVisible"
+      :close-on-click-modal="false"
+      append-to-body
+      title="选择成员"
+      top="5%"
+      width="60%">
+      <el-form ref="searchForm" :model="searchForm" label-width="100px" class="demo-ruleForm">
+        <el-row>
+          <el-col :span="8">
+            <el-form-item label="用户名">
+              <el-input v-model="searchForm.month_name" clearable/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="姓名">
+              <el-input v-model="searchForm.month_name" clearable/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item>
+              <el-button size="medium" type="primary" @click="search('searchForm')">查 询</el-button>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div class="contract_table">
+        <el-table
+          ref="table"
+          :data="tableData"
+          :show-overflow-tooltip="true"
+          :highlight-current-row="true"
+          border
+          tooltip-effect="dark"
+          style="width: 100%">
+          <el-table-column
+            fixed="right"
+            label=""
+            min-width="80">
+            <template slot-scope="scope">
+              <el-button type="text" size="mini" @click="choose(scope.$index, tableDataTwo)">选 择</el-button>
+            </template>
+          </el-table-column>
+          <el-table-column
+            :show-overflow-tooltip="true"
+            prop="account_year"
+            min-width="100"
+            label="用户名"/>
+          <el-table-column
+            :show-overflow-tooltip="true"
+            prop="account_month"
+            min-width="100"
+            label="姓名"/>
+          <el-table-column
+            :show-overflow-tooltip="true"
+            prop="month_name"
+            min-width="120"
+            label="部门"/>
+        </el-table>
+        <el-pagination
+          :page-sizes="[10, 20, 30, 40, 50]"
+          :page-size="20"
+          :current-page.sync="currentPage"
+          :total="total"
+          background
+          layout="prev, pager, next, total, sizes"
+          @size-change="handleSizeChange"
+          @current-change="pagination"/>
+      </div>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import building from '@/utils/building'
+import { common } from '@/common/common'
+export default {
+  name: 'TeamMember',
+  data() {
+    return {
+      formInline: { mall_id: '' }, // 搜索条件信息
+      searchForm: {},
+      tableData: [], // table
+      mall_name: [], // 门店信息
+      member: '', // 成员名称
+      dialogVisible: false, // 多选成员弹框
+      total: 0,
+      currentPage: 1,
+    }
+  },
+  created() {
+    building.Mall(this); // 获取项目名称信息
+  },
+  methods: {
+    chooseMember() { // 选择成员
+      this.dialogVisible = true;
+    },
+    search() { // 成员查询
+
+    },
+    pagination(val) { // 分页功能
+      const data = this.formInline;
+      data.page = val;
+      common.getPreData(data, 'ChargeNotice/getList', this, 'costList');
+      common.set('costList', { 'search': data });
+    },
+    handleSizeChange(val) {
+      const data = this.formInline;
+      data.limit = val;
+      common.getPreData(data, 'ChargeNotice/getList', this, 'costList');
+      common.set('costList', { 'search': data });
+    },
+    choose() { // 选择
+
+
+    }
+  }
+}
+</script>
+
+<style scoped>
+
+</style>

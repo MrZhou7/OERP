@@ -1,0 +1,71 @@
+<template>
+  <div id="addRentWrap">
+    <el-form ref="formInline" :model="formInline" label-width="100px" class="demo-ruleForm">
+      <el-row>
+        <el-col :span="12">
+          <el-form-item label="门店" prop="mall_id">
+            <el-select v-model="formInline.mall_id">
+              <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name" :value="mall.mall_id"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="合同ID" prop="contract_id">
+            <el-input v-model="formInline.contract_id" clearable/>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="12">
+          <el-form-item label="会计期">
+            <el-input v-model="formInline.peroid_id"/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="费用类型">
+            <el-input v-model="formInline.charge_type_id" clearable/>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="12">
+          <el-form-item label="优惠金额">
+            <el-input v-model="formInline.dis_amt" clearable/>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="24">
+          <el-form-item label="备注">
+            <el-input v-model="formInline.remark" clearable/>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <div>
+        <el-button type="primary" @click="delaySub('rentDetailRules')">提交审核</el-button>
+        <el-button @click="editItem.editCloseVisible = false">取 消</el-button>
+      </div>
+    </el-form>
+  </div>
+</template>
+
+<script>
+import { common } from '@/common/common';
+import building from '@/utils/building';
+export default {
+  name: 'AddRent',
+  data() {
+    return {
+      formInline: { mall_id: '' }, // 新增表单内容
+      mall_name: [], // 门店信息
+    };
+  },
+  created() {
+    building.Mall(this); // 获取项目名称信息
+  },
+};
+</script>
+
+<style scoped>
+  .el-form-item {margin-bottom: 10px;}
+</style>

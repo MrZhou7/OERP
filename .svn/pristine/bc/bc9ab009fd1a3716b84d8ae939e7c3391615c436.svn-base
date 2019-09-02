@@ -1,0 +1,375 @@
+<template>
+  <el-main class="siteWrap">
+    <div class="siteWrapTitle">场地管理</div>
+    <el-form :model="siteMess" class="demo-form-inline" label-width="80px">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="门店名称">
+            <el-select v-model="siteMess.mall_id" placeholder="请选择项目名称" @change="getBuild">
+              <el-option v-for="(maill ,index) in mall_name" :key="index" :label="maill.mall_name" :value="maill.mall_id"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="所属楼栋">
+            <el-select v-model="siteMess.building_id" placeholder="请选择所属楼栋" @change="getFloor">
+              <el-option v-for="(build, index) in building_name" :key="index" :label="build.building_name" :value="build.building_id"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="所属楼层">
+            <el-select v-model="siteMess.floor_id" placeholder="请选择所属楼层">
+              <el-option v-for="(floor,index) in floor_name" :key="index" :label="floor.floor_name" :value="floor.floor_id"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="经营区域" prop="operate_area_id">
+            <el-select v-model="siteMess.operate_area_id" placeholder="请选择经营区域" clearable>
+              <el-option v-for="(item,index) in BusinessArea" :key="index" :label="item.values_name" :value="item.values_code"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="场地编号">
+            <el-input v-model="siteMess.unit_code" clearable placeholder="请输入场地编号"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="资源类别">
+            <el-select v-model="siteMess.unit_kind" clearable placeholder="请选择资源类别" @change="getMerchantType">
+              <el-option v-for="(item,index) in BusinessUnit" :key="index" :label="item.values_name" :value="item.values_code"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="场地类型">
+            <el-select v-model="siteMess.merchant_type_id" clearable placeholder="请选择场地类型">
+              <el-option v-for="(item,index) in MerchantType" :key="index" :label="item.type_name" :value="item.merchant_type_id"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="场地状态">
+            <el-select v-model="siteMess.status" clearable placeholder="请选择">
+              <el-option :value = '1' label="启用"></el-option>
+              <el-option :value = '0' label="停用"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item>
+            <el-button type="primary" @click="inquireSite">查询</el-button>
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+    <div class="btn_bottom ">
+      <el-row>
+        <el-button type="primary" @click="addSite">新增场地</el-button>
+        <el-button disabled>拆分场地</el-button>
+        <el-button disabled>合并场地</el-button>
+        <el-button disabled>批量删除</el-button>
+      </el-row>
+    </div>
+    <el-table
+      :data="tableData"
+      style="width: 100%;"
+      align="center"
+      header-align="center"
+      border
+      :height="tableHeight">
+      <el-table-column
+        type="selection"
+        width="55">
+      </el-table-column>
+      <el-table-column
+        fixed
+        prop="mall_name"
+        label="门店名称"
+        width="150">
+      </el-table-column>
+      <el-table-column
+        prop="building_name"
+        label="所属楼栋"
+        width="150">
+      </el-table-column>
+      <el-table-column
+        prop="floor_name"
+        label="所属楼层"
+        width="150">
+      </el-table-column>
+      <el-table-column
+        prop="unit_kind"
+        label="资源类别"
+        width="150">
+        <template slot-scope="scope">
+          <span v-for="(item, index) in BusinessUnit" :key="index">
+            {{ scope.row.unit_kind == item.values_code ? item.values_name : '' }}
+          </span>
+        </template>
+      </el-table-column>
+      <el-table-column
+        prop="operate_area_id"
+        label="经营区域"
+        width="150">
+        <template slot-scope="scope">
+          <span v-for="(item, index) in BusinessArea" :key="index">
+            {{ scope.row.operate_area_id == item.values_code ? item.values_name : '' }}
+          </span>
+        </template>
+      </el-table-column>
+      <el-table-column
+        prop="unit_code"
+        label="场地编号"
+        width="150">
+      </el-table-column>
+      <el-table-column
+        prop="building_area"
+        label="测量面积"
+        width="150">
+      </el-table-column>
+      <el-table-column
+        prop="merchant_type_id"
+        label="场地类型"
+        width="150">
+        <template slot-scope="scope">
+          <span v-for="(item, index) in allMerchantType" :key="index">
+            {{ scope.row.merchant_type_id == parseInt(item.merchant_type_id) ? item.type_name : '' }}
+          </span>
+        </template>
+      </el-table-column>
+      <el-table-column
+        prop="status"
+        label="场地状态"
+        width="150">
+        <template slot-scope="scope">
+          {{ scope.row.status == 0 ?"无效":"有效" }}
+        </template>
+      </el-table-column>
+      <el-table-column
+        fixed="right"
+        label="操作"
+        width="240">
+        <template slot-scope="scope">
+          <el-button @click.native.prevent="checkSite(scope.$index, tableData)" type = "text" size = "small">查看</el-button>
+          <el-button @click.native.prevent="editSite(scope.$index, tableData)" type ="text" size = "small">编辑</el-button>
+          <el-button v-if="scope.row.status == 0" @click.native.prevent="stareSite(scope.$index, tableData)" type="text" size="small">启用</el-button>
+          <el-button v-if="scope.row.status == 1" @click.native.prevent="stopSite(scope.$index, tableData)" type="text" size="small">停用</el-button>
+          <el-button @click.native.prevent="deleteSite(scope.$index, tableData)" type= "text" size ="small">删除</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <el-pagination
+      background
+      layout="prev, pager, next"
+      :current-page.sync="currentPage"
+      @current-change="pagination"
+      :total="total">
+    </el-pagination>
+    <el-dialog
+      :title="siteTitle"
+      :close-on-click-modal="false"
+      :visible.sync="editSiteVisible"
+      width="80%" height="100%" top="0">
+      <EditSite :editSiteData="editSiteData" :checkSiteBool="checkSiteBool" @isEditShow="isEditShow"></EditSite>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="editSiteVisible = false">返回</el-button>
+      </span>
+    </el-dialog>
+    <el-dialog
+      title="新增场地"
+      :close-on-click-modal="false"
+      :visible.sync="addSiteVisible"
+      width="80%" height="100%" top="5%">
+      <AddSite @isShow="isShow"></AddSite>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+var data = {};
+import EditSite from '@/components/business/editSite';
+import AddSite from '@/components/business/addSite';
+import { common } from '@/common/common';
+import building from '@/utils/building';
+export default {
+  name: 'SiteManage',
+  components: {
+    EditSite, AddSite
+  },
+  data() {
+    return {
+      siteTitle: '', // 编辑 查看的title
+      total: 0,
+      currentPage: 1, // 当前页码
+      tableHeight: window.innerHeight - 430,
+      editSiteVisible: false,
+      checkSiteBool: false,
+      editSiteData: {},
+      addSiteVisible: false, // 新增场地不显示
+      tableData: [], // 获取的table数据
+      mall_name: [],
+      building_name: [],
+      floor_name: [],
+      MerchantType: [], // 场地类型
+      siteMess: {
+        status: '', // 场地状态
+        unit_code: '', // 场地编号
+        mall_id: '',
+        building_id: '',
+        floor_id: '',
+        operate_area_id: '', // 经营区域
+        unit_kind: '', // 资源类别
+        merchant_type_id: '' // 场地类型
+      },
+      BusinessArea: [], // 经营区域基础信息
+      BusinessUnit: [], // 资源类别基础数据
+      allMerchantType: [] // 获取所有的场地类型
+    };
+  },
+  created() {
+    this.getMall() // 先获取数据
+    this.getAllMerchantType() // 获取所有的场地类型
+    const searchHistory = common.get('siteSearch');
+    if (searchHistory != null) {
+      this.siteMess = searchHistory.search;
+      common.getPreData(searchHistory.search, 'property_unit/getAllUnit', this);
+    }
+    common.lookup('L010', this).then((res) => {
+      this.BusinessArea = res;
+    });
+    common.lookup('L013', this).then((res) => {
+      this.BusinessUnit = res;
+    });
+  },
+  methods: {
+    addSite() { // 新增场地
+      this.addSiteVisible = true;
+    },
+
+    isShow(data) { // 新增场地不显示
+      this.addSiteVisible = data;
+    },
+    inquireSite() { // 查询
+      data = this.siteMess;
+      common.getPreData(data, 'property_unit/getAllUnit', this, 'siteSearch');
+      common.set('siteSearch', { 'search': data });
+    },
+    pagination(val) { // 分頁
+      data = this.siteMess;
+      data.page = val; // 页码。第几页
+      data.limit = 10; // 每页显示数据数量
+      common.getPreData(data, 'property_unit/getAllUnit', this,'siteSearch');
+      common.set('siteSearch', { 'search': data });
+    },
+
+    getMall() { // 获取项目名称信息
+      building.Mall(this);
+    },
+    getBuild(index) { // 获取楼栋信息
+      this.siteMess.floor_id = '';
+      this.siteMess.building_id = '';
+      building.build(this, index);
+    },
+    getFloor(index) { // 获取楼层信息
+      this.siteMess.floor_id = '';
+      building.floor(this, index);
+    },
+    getMerchantType(index) { // 获取场地类型
+      this.axios({
+        method: 'post',
+        data: { unit_kind: index },
+        url: process.env.BASE_API + 'propertyUnit/getMerchantType'
+      }).then((res) => {
+        if(res.data.code == 0) {
+          this.MerchantType = res.data.data;
+        }
+      })
+    },
+    deleteSite(index, row) { // 删除
+      common.del('此操作将删除该场地是否继续?', 'propertyUnit/delUnit', {
+        property_unit_id: row[index].property_unit_id,
+        enabled: 0
+      }, 'property_unit/getAllUnit', this);
+    },
+    stopSite(index, row) { // 停用
+      common.del('此操作将停用该场地是否继续?', 'propertyUnit/stopUnit', {
+        property_unit_id: row[index].property_unit_id,
+        status: 0
+      }, 'property_unit/getAllUnit', this);
+    },
+
+    stareSite(index, row) { // 启用
+      common.del('此操作将启用该场地是否继续?', 'propertyUnit/stopUnit', {
+        property_unit_id: row[index].property_unit_id,
+        status: 1
+      }, 'property_unit/getAllUnit', this)
+    },
+
+    isEditShow(data) { // 接受子组件参数
+      this.editSiteVisible = data
+    },
+    editSite(index, table) { // 编辑
+      this.siteTitle = '编辑场地'
+      this.editSiteVisible = true
+      this.checkSiteBool = false
+      this.getData(index, table)
+    },
+    checkSite(index, table) { // 查看场地信息
+      this.siteTitle = '查看场地'
+      this.editSiteVisible = true
+      this.checkSiteBool = true
+      this.getData(index, table)
+    },
+    getAllMerchantType() { // 获取所有的场地类型
+      this.axios({
+        method: 'post',
+        url: process.env.BASE_API + 'merchantType/getAreaList'
+      }).then((res) => {
+        if(res.data.code == 0) {
+          this.allMerchantType = res.data.data;
+        }
+      })
+    },
+    getData(index, table) {
+      const that = this
+      this.axios({
+        method: 'post',
+        data: { property_unit_id: table[index].property_unit_id },
+        url: process.env.BASE_API + 'propertyUnit/getUnitDetail'
+      }).then((res) => {
+        that.editSiteData = res.data.data
+
+      }).catch(function(err) {
+        that.$message.error(err.response.data.msg)
+      })
+    }
+  }
+};
+</script>
+
+<style scoped lang="scss">
+  .siteWrap{
+    padding: 15px;
+    .siteWrapTitle{
+      position: relative;
+      height: 42px;
+      line-height: 42px;
+      padding: 0 15px;
+      border-bottom: 1px solid #f6f6f6;
+      color: #333;
+      border-radius: 2px 2px 0 0;
+      font-size: 14px;
+    }
+  }
+  .el-input--suffix .el-input__inner {
+    padding-right:15px;
+  }
+
+</style>

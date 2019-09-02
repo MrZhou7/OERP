@@ -1,0 +1,101 @@
+<template>
+    <div id="checkBrandWrap">
+      <el-tabs v-model="activeName" @tab-click="handleClick">
+        <el-tab-pane label="基本信息" name="first">
+          <div class="brandStyle">品牌信息</div>
+            <el-row :gutter="20">
+              <el-col :span="8" :offset="1" class="grid-content">品牌名称：{{checkTableData.brand_name}}</el-col>
+            </el-row>
+            <el-row :gutter="20">
+              <el-col :span="8" :offset="1" class="grid-content">品牌编号：{{checkTableData.brand_code}}</el-col>
+            </el-row>
+            <el-row :gutter="20">
+              <el-col :span="8" :offset="1" class="grid-content">品牌选择：{{checkTableData.brand_type}}</el-col>
+            </el-row>
+            <el-row :gutter="20">
+              <el-col :span="8" :offset="1" class="grid-content">品牌等级：{{checkTableData.brand_rank}}</el-col>
+            </el-row>
+            <el-row :gutter="20">
+              <el-col :span="8" :offset="1" class="grid-content">品牌logo：
+                  <div v-if="checkTableData.logo">
+                    <img width="100%" :src="'http://10.1.200.85/' + checkTableData.logo" alt="">
+                  </div>
+                  <span v-else="!checkTableData.logo">
+                    暂无
+                  </span>
+              </el-col>
+            </el-row>
+            <el-row :gutter="20">
+              <el-col :span="8" :offset="1" class="grid-content">品牌说明：{{checkTableData.brand_desc}}</el-col>
+            </el-row>
+        </el-tab-pane>
+        <el-tab-pane label="品牌商户" name="second">品牌商户</el-tab-pane>
+        <el-tab-pane label="角色管理" name="third">操作记录</el-tab-pane>
+        <el-tab-pane label="审核记录" name="fourth">审核记录</el-tab-pane>
+      </el-tabs>
+    </div>
+</template>
+
+<script>
+    export default {
+        name: "checkBrand",
+        props:['tableBrandMess'],
+        data() {
+          return {
+            activeName: 'first',
+            checkTableData:{}//接受点击传过来的品牌信息
+          };
+        },
+        methods: {
+          handleClick(tab, event) {
+            //console.log(tab, event);
+          },
+          //获取当前品牌信息
+          getCheckBrand() {
+            let BrandId = {brand_id:this.$route.query.checkBrandId};
+            this.axios({
+              method:'post',
+              data:BrandId,
+              url:process.env.BASE_API + 'brand_info/getBrandInfo'
+            }).then((res)=>{
+              this.checkTableData = res.data.data;
+              console.log(this.checkTableData)
+            });
+          }
+        },
+        created() {
+          this.getCheckBrand();
+        }
+    }
+</script>
+
+<style scoped>
+ #checkBrandWrap{
+   position: absolute;
+   top: 0;
+   left: 0;
+   width: 100%;
+   height: 100%;
+   z-index: 999;
+   background-color: white;
+ }
+  .brandStyle{
+    margin-bottom: 10px;
+    padding: 10px 15px;
+    line-height: 22px;
+    border-left: 5px solid #009688;
+    border-radius: 0 2px 2px 0;
+    background-color: #f2f2f2;
+  }
+ .grid-content {
+   border-radius: 4px;
+   min-height: 36px;
+   line-height:36px;
+ }
+  .el-row{
+    padding: 9px 15px;
+    font-weight: 400;
+    line-height: 20px;
+    margin-bottom: 15px;
+  }
+</style>

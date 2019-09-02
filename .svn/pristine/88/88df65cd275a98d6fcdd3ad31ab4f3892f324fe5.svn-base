@@ -1,0 +1,247 @@
+<template>
+  <el-main>
+    <h5 class="storeType">场地类型列表</h5>
+    <div class="btn_bottom">
+      <el-button type="primary" @click="addStore">新增</el-button>
+      <el-button type="danger" :disabled="batch"  @click="batchDelete">删除</el-button>
+    </div>
+    <div class="contract_table">
+      <el-table
+        ref="multipleTable"
+        :height="height"
+        :data="tableData"
+        :show-overflow-tooltip="true"
+        :highlight-current-row="true"
+        border
+        @row-click="clickRow"
+        @selection-change="changFun"
+        tooltip-effect="dark"
+        style="width: 100%">
+        <el-table-column
+          type="selection"
+          width="55"/>
+        <el-table-column
+          type="index"
+          label="序号"
+          width="55"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="unit_name"
+          min-width="120"
+          label="资源类别"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="type_name"
+          min-width="100"
+          label="商铺类型"/>
+        <!--<el-table-column-->
+          <!--:show-overflow-tooltip="true"-->
+          <!--prop="contract_main_id"-->
+          <!--min-width="100"-->
+          <!--label="编号"/>-->
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="type_desc"
+          min-width="100"
+          label="描述"/>
+        <el-table-column
+          fixed="right"
+          label="操作"
+          width="130">
+          <template slot-scope="scope">
+            <el-button type = "text" size="small" @click.native.prevent="edit(scope.row)">编 辑</el-button>
+            <el-button type = "text" size="small" @click.native.prevent="deleteStore(scope.row)">删 除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        :page-sizes="[20, 30, 40, 50]"
+        :page-size="20"
+        :current-page.sync="currentPage"
+        :total="total"
+        background
+        layout="prev, pager, next, total, sizes"
+        @size-change="handleSizeChange"
+        @current-change="pagination"/>
+    </div>
+    <!--新增和编辑的弹窗-->
+    <el-dialog
+      :close-on-click-modal="false"
+      :visible.sync="dialogVisible"
+      :title="title"
+      top="5%"
+      width="40%"
+      @close="handleClose('ruleForm')">
+      <div class="contract_table">
+        <el-tabs type="border-card">
+          <el-form ref="ruleForm" :model="ruleForm" label-width="100px" class="demo-ruleForm">
+            <el-form-item label="资源类别" prop="unit_kind">
+              <el-select v-model="ruleForm.unit_kind" placeholder="请选择资源类别">
+                <el-option v-for="item in BusinessUnit" :rules="rules" :key="item.values_code" :label="item.values_name" :value="item.values_code"/>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="商铺类型" prop="merchant_type_id">
+              <el-select v-model="ruleForm.merchant_type_id" clearable placeholder="请选择"
+                         @change="merchantTypeName($event)">
+                <el-option
+                  v-for="(item,key) in preData.merchant_type"
+                  :key="key"
+                  :label="item.values_name"
+                  :value="item.values_code">
+                </el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="商铺名称" prop="type_name">
+              <el-input v-model="ruleForm.type_name"/>
+            </el-form-item>
+            <el-form-item label="描述" prop="type_desc">
+              <el-input v-model="ruleForm.type_desc" type="textarea" autosize/>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="submitForm('ruleForm')">保 存</el-button>
+            </el-form-item>
+          </el-form>
+        </el-tabs>
+      </div>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+import { common } from '@/common/common';
+export default {
+  name: 'StoreType',
+  data() {
+    return {
+      loading: false,
+      batch: true,
+      preData: {},
+      batchData:[],
+      total: 0,
+      currentPage: 1, // 页码
+      height: window.innerHeight - 250 + 'px',
+      tableData: [], // 场地类型列表
+      BusinessUnit: [], // 场地类型
+      title: '', // 新增或者编辑的title
+      dialogVisible: false, // 新增或者编辑的弹窗
+      index: 1, // 控制是新增保存还是编辑保存
+      ruleForm: {}, // 表单
+      rules: {
+        unit_kind: [{ required: true, message: '请输入资源类别', trigger: 'blur' }],
+        merchant_type_id: [{ required: true, message: '请输入商铺类型', trigger: 'blur' }],
+        type_name: [{ required: true, message: '请输入名称', trigger: 'blur' }],
+        type_desc: [{ required: true, message: '请选择描述', trigger: 'change' }],
+      }
+    };
+  },
+  created() {
+    this.getPreData();
+    this.onSearch();
+  },
+
+  methods: {
+    getPreData() {//预渲染参数
+      let that = this;
+      that.http.post('table_util/getPreData',  {act: 'contract'}).then(res => {
+        that.preData = res.data.data
+      }).catch((err) => {
+        that.$message.error(err.response.data.msg);
+      });
+      common.lookup('L013', this).then((res) => {
+        this.BusinessUnit = res;
+      });
+    },
+    onSearch() {
+      this.http.post('merchantType/getMerchantTypeList').then(res => {
+        this.tableData = res.data.data;
+        this.total = res.data.count;
+      }).catch((err) => {
+        this.$message.error(err.response.data.msg);
+      });
+    },
+    clickRow(row){
+      this.$refs.multipleTable.toggleRowSelection(row);
+    },
+    changFun(row){
+      if(row.length != 0) {
+        this.batch = false;
+      }else {
+        this.batch = true;
+      }
+      this.batchData = row;
+    },
+    addStore() { // 新增
+      this.title = '新增场地类型信息';
+      this.dialogVisible = true;
+      this.index = 1;
+    },
+    batchDelete() { //删除-批量
+      let delet = '';
+      this.batchData.forEach(item => {
+        delet += item.merchant_type_id+',';
+      })
+    },
+    edit(row) { // 编辑
+      this.title = '编辑场地类型信息';
+      this.dialogVisible = true;
+      this.ruleForm = row;
+      this.index = 2;
+    },
+    deleteStore(row) { // 删除
+      this.ruleForm = row;
+      this.ruleForm.act = 'delete';
+      common.del('是否删除此数据', 'merchantType/operateMerchantType', this.ruleForm, 'merchantType/getMerchantTypeList', this);
+    },
+    handleClose() { // 关闭弹窗回调
+      this.ruleForm = {};
+      this.dialogVisible = false;
+    },
+    submitForm(formName) { // 新增编辑保存
+      let that = this;
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          let act = '',title='';
+          if (this.index == 1) {
+            this.ruleForm.act = 'insert';
+            title = '新增成功'
+          } else if (this.index == 2) {
+            this.ruleForm.act = 'edit';
+            title = '修改成功'
+          }
+          this.http.post('merchantType/operateMerchantType',this.ruleForm).then(res => {
+            this.$message.success(title)
+            setTimeout(function() {
+              that.handleClose()
+            }, 500)
+            this.onSearch();
+          }).catch((err) => {
+            this.$message.error(err.response.data.msg);
+          });
+        } else {
+          this.$message({
+            message: '请输入完整信息！！！',
+            type: 'warning'
+          })
+          return false;
+        }
+      });
+    },
+    pagination(val) { // 分页功能
+      const data = this.formInline;
+      data.page = val;
+      common.getPreData(data, 'ChargeNotice/getList', this, 'costList');
+      common.set('costList', { 'search': data });
+    },
+    handleSizeChange(val) {
+      const data = this.formInline;
+      data.limit = val;
+      common.getPreData(data, 'ChargeNotice/getList', this, 'costList');
+      common.set('costList', { 'search': data });
+    }
+  }
+};
+</script>
+
+<style scoped>
+  .storeType{line-height: 22px;font-size: 14px;color: #606266;margin: 10px;padding: 10px;background: #f8f8f8 !important;box-sizing: border-box;font-weight: bold;}
+</style>

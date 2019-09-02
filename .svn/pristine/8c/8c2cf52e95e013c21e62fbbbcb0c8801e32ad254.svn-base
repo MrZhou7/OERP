@@ -1,0 +1,308 @@
+<template>
+  <el-main>
+    <el-form :model="formInline" class="demo-form-inline" label-width="80px">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="门店名称">
+            <el-select v-model="formInline.mall_id" clearable placeholder="请选择项目名称">
+              <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name" :value="mall.mall_id"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商铺编码">
+            <el-input v-model="formInline.customer_name" clearable placeholder="请输入商户名称"/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商铺">
+            <el-input v-model="formInline.store_name" suffix-icon="el-icon-search" clearable ref="getPayWayChang" @focus="fieldClick"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="人员状态">
+            <el-select v-model="formInline.enabled" clearable placeholder="请选择人员状态">
+              <el-option value="" label="请选择"></el-option>
+              <el-option label="禁用" value="1"></el-option>
+              <el-option label="启用" value="0"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="人员类型">
+            <el-select v-model="formInline.person_type" clearable placeholder="请选择人员类型">
+              <el-option value="" label="请选择"></el-option>
+              <el-option label="店长" value="1"></el-option>
+              <el-option label="销售员" value="2"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="姓名">
+            <el-input v-model="formInline.name" clearable placeholder="请输入订单编号"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="手机号码">
+            <el-input v-model="formInline.mobile" clearable placeholder="请输入订单编号"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item>
+            <el-button type="primary" @click="onSearch()">搜索</el-button>
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+    <div class="btn_bottom">
+      <el-button type="primary" @click="addPersonnelManage">新增</el-button>
+    </div>
+    <div class="contract_table">
+      <el-table
+        ref="tableOne"
+        :height="tableHeight"
+        :data="tableData"
+        :show-overflow-tooltip="true"
+        border
+        tooltip-effect="dark"
+        style="width: 100%"
+        @selection-change="changFun"
+        @row-click="clickRow">
+        <el-table-column
+          type="selection"
+          min-width="55"/>
+        <el-table-column
+          fixed
+          prop="mall_name"
+          label="门店"
+          min-width="120"/>
+        <el-table-column
+          prop="store_code"
+          label="商铺编号"
+          min-width="120"/>
+        <el-table-column
+          prop="store_name"
+          label="商铺名称"
+          min-width="120"/>
+        <el-table-column
+          prop="name"
+          label="姓名"
+          min-width="120"/>
+        <el-table-column
+          prop="gender"
+          label="性别"
+          min-width="80">
+          <template slot-scope="scope">
+            <span v-if="scope.row.gender == 0">未知</span>
+            <span v-else-if="scope.row.gender == 1">男</span>
+            <span v-else="scope.row.gender == 1">女</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="mobile"
+          label="手机号"
+          min-width="150"/>
+        <el-table-column
+          prop="person_type"
+          label="人员类别"
+          min-width="120">
+          <template slot-scope="scope">
+            {{ scope.row.person_type == 1 ?"店长":"销售员" }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="enabled"
+          label="状态"
+          min-width="120">
+          <template slot-scope="scope">
+            {{ scope.row.enabled == 0 ?"禁用":"启用" }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          fixed="right"
+          label="操作"
+          width="310">
+          <template slot-scope="scope">
+            <el-button type="text" size="small" @click.native.prevent="viewRow(scope.row)">查看</el-button>
+            <el-button type="text" size="small" @click.native.prevent="editRow(scope.row)">编辑</el-button>
+            <el-button type="text" size="small" @click.native.prevent="deleteRow(scope.row)">删除</el-button>
+            <el-button v-if="scope.row.enabled == 0" type="text" size="small" @click.native.prevent="startRow(scope.row,1)">启用</el-button>
+            <el-button v-if="scope.row.enabled == 1" style="color:red" type="text" size="small" @click.native.prevent="startRow(scope.row,0)">禁用</el-button>
+            <el-button  type="text" size="small" @click.native.prevent="reset(scope.row)">重置密码</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        :page-sizes="[10, 20, 30, 40, 50]"
+        :page-size="pageSize"
+        :current-page.sync="currentPage"
+        :total="total"
+        background
+        layout="prev, pager, next, total, sizes"
+        @current-change="pagination"
+        @size-change="handleSizeChange"/>
+    </div>
+    <!--查看编辑弹窗-->
+    <el-dialog title="商铺选择" :visible.sync="fieldChoice"  v-if="fieldChoice" width="70%" height="70%"  top="3%" :close-on-click-modal="false">
+      <Shops v-on:fieldData="fieldData" :mall="formInline.mall_id"></Shops>
+    </el-dialog>
+    <!--新增-->
+    <el-dialog :title="name" :visible.sync="addPersonnel"  v-if="addPersonnel" width="70%" height="70%"  top="3%" :close-on-click-modal="false">
+      <addPersonnel v-on:addPersonnelData="addPersonnelData" :mall="formInline.mall_id" :personnelId="personnelId" :viewType="viewType"></addPersonnel>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+  import Shops from '@/components/order/shops.vue' //商铺
+  import addPersonnel from '@/components/sale/shops/addPersonnel.vue' //新增人员
+  import { common } from '@/common/common';
+  import building from '@/utils/building';
+  export default {
+    name: 'shopPersonnel',
+    components: { Shops, addPersonnel },
+    data() {
+      return {
+        mall_name: [], // 门店信息
+        total: 0, // 分页
+        currentPage: 1, // 页码
+        pageSize: 20,//当前页码
+        tableHeight: window.innerHeight - 297,
+        tableData: [], // 查询获取的数据
+        store_name: '',
+        personnelId: '',
+        viewType: '',
+        checkData:[],
+        fieldChoice:false,
+        addPersonnel:false,
+        name:'',
+        formInline: {},
+      };
+    },
+    created() {
+      let that = this;
+      building.Mall(this); // 先获取门店数据
+      const searchHistory = common.get('shopPersonnel');
+      if (searchHistory != null) {
+        this.formInline = searchHistory.search;
+        common.getPreData(this.formInline, 'StorePerson/getStorePersonLists', this, 'shopPersonnel');
+      }
+    },
+    methods: {
+      pagination(val) { // 分页
+        const data = this.formInline;
+        this.currentPage = val;
+        data.page = val;
+        data.limit = this.pageSize;
+        common.getPreData(data, 'StorePerson/getStorePersonLists', this, 'shopPersonnel');
+        common.set('shopPersonnel', { 'search': data });
+      },
+      handleSizeChange(val) {
+        const data = this.formInline;
+        this.pageSize = val;
+        data.limit = val;
+        data.page = this.currentPage;
+        common.getPreData(data, 'StorePerson/getStorePersonLists', this, 'shopPersonnel');
+        common.set('shopPersonnel', { 'search': data });
+      },
+      onSearch() {
+        const data = this.formInline;
+        data.limit = this.pageSize;
+        data.page = this.currentPage;
+        common.getPreData(data, 'StorePerson/getStorePersonLists', this, 'shopPersonnel');
+        common.set('shopPersonnel', { 'search': data });
+      },
+      clickRow(row) { // 点击table的row
+        this.$refs.tableOne.toggleRowSelection(row);
+        this.checkData = row
+      },
+      changFun(row) {//获取当前行数据
+        common.radioBtn(row, this.$refs.multipleTable, this, 2)
+      },
+      addPersonnelManage() { // 新增商户
+        this.personnelId = '';
+        this.name = '新增';
+        this.viewType = 1;
+        this.addPersonnel = true;
+      },
+      viewRow(row) {
+        this.personnelId = row.id;
+        this.name = '查看';
+        this.viewType = 2;
+        this.addPersonnel = true;
+      },
+      editRow(row) {
+        this.personnelId = row.id;
+        this.name = '编辑';
+        this.viewType = 3;
+        this.addPersonnel = true;
+      },
+      deleteRow(row) { // 删除
+        common.del('此操作将删除该人员信息是否继续', 'StorePerson/delStorePerson', { id: row.id }, 'StorePerson/getStorePersonLists', this,'shopPersonnel');
+      },
+      reset(row) { // 重置密码
+        common.del('此操作将重置密码是否继续', 'StorePerson/reSetPassWord', { id: row.id }, 'StorePerson/getStorePersonLists', this,'shopPersonnel');
+      },
+      startRow(row,type) { // 启用
+        let title = '';
+        if(type == 1) {
+          title = '是否启用该用户'
+        }else {
+          title = '是否禁用该用户'
+        }
+        common.del(title, 'StorePerson/modifiyStateStorePerson', {id: row.id,type:type }, 'StorePerson/getStorePersonLists', this,'shopPersonnel');
+      },
+
+      fieldClick() {
+        //场地点击
+        if (!this.formInline.mall_id) {
+          this.$message({
+            message: '请选择门店',
+            type: 'warning'
+          })
+        } else {
+          if(!this.formInline.store_id) {
+            this.fieldChoice = true;
+          }else {
+            this.formInline.store_id = '';
+            this.formInline.store_name = '';
+            this.$nextTick(() => {
+              this.$refs.getPayWayChang.blur();
+            })
+          }
+        }
+      },
+      fieldData(data) {//场地赋值
+        if (data.length == undefined) {
+          this.formInline.store_name = data.store_name;
+          this.formInline.store_id = data.store_id;
+        } else {
+          let store_id = '', store_name = '';
+          data.forEach((index, i) => {
+            if (i != data.length - 1) {
+              store_id += index.store_id + ',';
+              store_name += index.store_name + ',';
+            } else {
+              store_id += index.store_id;
+              store_name += index.store_name;
+            }
+            this.formInline.store_name = store_name;
+            this.formInline.store_id = store_id;
+          })
+        }
+        this.fieldChoice = false;
+      },
+      addPersonnelData(data) {
+        this.addPersonnel = data;
+        this.onSearch();
+      }
+    }
+  };
+</script>
+
+<style scoped lang="scss">
+  #businessWrap{padding: 15px;}
+  .el-form-item {margin-bottom: 5px;}
+</style>

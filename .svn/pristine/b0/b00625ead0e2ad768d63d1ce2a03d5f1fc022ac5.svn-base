@@ -1,0 +1,545 @@
+<template>
+  <el-main>
+    <el-form ref="form" :model="formInline" label-width="80px">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="门店选择">
+            <el-select v-model="formInline.mall_id" placeholder="请选择">
+              <el-option
+                v-for="(item,index) in preData.mall"
+                :key="index"
+                :label="item.mall_name"
+                :value="parseInt(item.mall_id)">
+              </el-option>
+            </el-select>
+
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商户名称">
+            <el-input v-model="formInline.customer_name" placeholder="请输入商户名称"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商户编号">
+            <el-input v-model="formInline.customer_code" placeholder="请输入商户编号"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="合同ID">
+            <el-input v-model="formInline.contract_main_id" placeholder="请输入合同ID"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="场地编号">
+            <el-input v-model="formInline.unit_code" placeholder="请输入场地编号"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="合同状态">
+            <el-select v-model="formInline.status" placeholder="请选择合同状态">
+              <el-option label="区域一" value="shanghai"></el-option>
+              <el-option label="区域二" value="beijing"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="品牌名称">
+            <el-input v-model="formInline.brand_name" placeholder="请选择品牌名称"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="结束日期">
+            <el-input v-model="formInline.end_date" placeholder="请选择合同结束日期"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="12">
+          <el-form-item label="录入日期">
+            <el-date-picker
+              v-model="formInline.date"
+              type="daterange"
+              SelectionMode="None"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              :default-time="['00:00:00', '23:59:59']"
+            ></el-date-picker>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6" align="center">
+          <el-button align="center" type="primary" @click="onSecher(formInline)">查询</el-button>
+        </el-col>
+      </el-row>
+    </el-form>
+    <div class="btn_bottom">
+      <el-button type="success" @click="addRow()">新增</el-button>
+      <el-button @click="change" :disabled="changes">变更</el-button>
+      <el-button @click="delay" :disabled="delays">延期</el-button>
+      <el-button @click="suspension" :disabled="suspensions">中止</el-button>
+      <!--<el-button disabled>批量通过</el-button>-->
+      <!--<el-button disabled>批量拒绝</el-button>-->
+      <el-button @click="inChecking" :disabled="inCheckings">提交审核</el-button>
+      <el-button @click="revokeInChecking" :disabled="revokeInCheckings">撤销审核中</el-button>
+      <el-button @click="checking" :disabled="checkings">审核</el-button>
+      <!--<el-button @click="revokeChecking" :disabled="revokeCheckings">撤销审核</el-button>-->
+    </div>
+    <div class="contract_table">
+      <el-table
+        :data="tableData"
+        style="width: 100%;"
+        border
+        ref="multipleTable"
+        highlight-current-row
+        tooltip-effect="dark"
+        @row-click="clickRow"
+        @selection-change="changFun"
+        align: center
+        :height="tableHeight">
+        <el-table-column
+          prop="contract_main_id"
+          type="selection"
+          width="55">
+        </el-table-column>
+        <el-table-column
+          fixed
+          prop="mall_name"
+          label="项目名称"
+          resizable: true
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="contract_code"
+          label="合同编号"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="customer_code"
+          label="商户编号"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="customer_name"
+          label="商户名称"
+          width="120">
+        </el-table-column>
+
+        <el-table-column
+          prop="status"
+          label="审批状态"
+          width="120">
+          <template slot-scope="scope">
+             <span v-for="(item, index) in contractStatus">
+               {{scope.row.status == item.values_code ? item.values_name : ''}}
+             </span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="start_date"
+          label="开始时间"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="end_date"
+          label="结束时间"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="store_code"
+          label="场地编号"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="store_name"
+          label="场地名称"
+          width="120">
+        </el-table-column>
+
+        <el-table-column
+          prop="data_source"
+          label="合同来源"
+          width="120">
+          <template slot-scope="scope">
+             <span v-for="(item, index) in contractSource">
+               {{scope.row.data_source == item.values_code ? item.values_name : ''}}
+             </span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="contract_code"
+          label="合同ID"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="store_name"
+          label="品牌名称"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="contract_area"
+          label="签约面积(平米)"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="avoid_lease"
+          label="免租期(天)"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="decorate_days"
+          label="装修期(天)"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="user_name"
+          label="招商人员"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          fixed="right"
+          algin="center"
+          label="操作"
+          width="300">
+          <template slot-scope="scope">
+            <el-button
+              @click.native.prevent="viewRow(scope.$index, tableData)"
+              type="text"
+              size="small">
+              查看
+            </el-button>
+            <el-button
+              @click.native.prevent="editRow(scope.$index, tableData)"
+              type="text"
+              size="small" v-if="scope.row.status == 0 || scope.row.status == 1">
+              编辑
+            </el-button>
+            <el-button
+              @click.native.prevent="deleteRow(scope.$index, tableData)"
+              type="text"
+              size="small">
+              作废
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        background
+        layout="prev, pager, next"
+        @current-change="pageinations"
+        :total="total">
+      </el-pagination>
+    </div>
+    <el-dialog
+      :title="name"
+      :visible.sync="editCloseVisible"
+      width="70%" height="70%">
+      <el-form label-width="80px" :model="editClose"  >
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="合同中止日期" class="label_required width_130" >
+              <el-input v-model="editClose.cut_date"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="16">
+            <el-form-item :label="name+'起始时间'" class="label_required width_160">
+              <el-date-picker
+                v-model="editClose.data"
+                type="daterange"
+                format="yyyy-MM-dd"
+                :picker-options="pickerOptions"
+                range-separator="至"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期"
+                align="right" >
+              </el-date-picker>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="delaySub()">提交审核</el-button>
+        <el-button @click="editCloseVisible = false">取 消</el-button>
+      </div>
+    </el-dialog>
+  </el-main>
+
+</template>
+
+<script>
+  var data = {}
+  import { common } from '../../common/common'
+
+  export default {
+    data() {
+      return {
+        formInline: {},
+        tableData: [],
+        type: '',
+        fieldChoice: false,
+        preData: {},
+        contractStatus: [],
+        contractSource: [],
+        total: 0,//分页
+        tableHeight: window.innerHeight - 395,
+        checkings: true, //审核
+        // revokeCheckings: true, // 撤销审核
+        inCheckings: true, // 提交审核
+        revokeInCheckings: true,//撤销审核中
+        changes: true, // 变更
+        delays: true, // 延期
+        suspensions: true,//中止
+        checkDatas: [], //选中数据
+        editClose: { //合同中止、延期、变更
+          cut_date: '', //中止入侵
+          date: [], //修改起始日期
+        },
+        name:'',
+        editCloseVisible: false,
+        pickerOptions: {
+          shortcuts: [ {
+            text: '最近一个月',
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+              picker.$emit('pick', [start, end]);
+            }
+          }, {
+            text: '最近一年',
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 365);
+              picker.$emit('pick', [start, end]);
+            }
+          }, {
+            text: '最近两年',
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * (365 * 2));
+              picker.$emit('pick', [start, end]);
+            }
+          }]
+        },
+      }
+    },
+    components: {},
+    created: function() {
+      this.getData();//预加载数据
+      const searchHistory = common.get('search');
+      if (searchHistory != null) {
+        this.formInline = searchHistory.search;
+        common.getPreData(searchHistory.search, 'contract_main/getcontractlist', this)
+      }
+    },
+    methods: {
+      getData() {//预渲染参数
+        let that = this
+        this.axios
+          .post(process.env.BASE_API + 'table_util/getPreData', { act: 'contract' })
+          .then(function(res) {
+            if (res.status == 200) {
+              that.preData = res.data.data
+            }
+          })
+          .catch(function(err) {
+            this.$message.error(err.response.data.msg)
+          })
+        common.lookup('L012', this).then((res) => {
+          this.contractStatus = res
+        })
+        common.lookup('L011', this).then((res) => {
+          this.contractSource = res
+        })
+      },
+      onSecher() {
+        data = this.formInline;
+        data.page = 1;
+        data.limit = 10;
+        common.getPreData(data, 'contract_main/getcontractlist', this);
+      },
+      clickRow(row) {//选择当前行
+        this.$refs.multipleTable.toggleRowSelection(row);
+        let that = this;
+        this.checkData = row;
+        switch (row.status) {
+          case 0:  //无效
+            that.checkings = true ;//审核
+            // that.revokeCheckings = true // 撤销审核
+            that.inCheckings = true ;// 提交审核
+            that.revokeInCheckings = true;//撤销审核中
+            that.delays = true ;// 延期
+            that.suspensions = true; // 中止
+            that.changes = true;// 变更
+            break
+          case 1:  //草稿
+            that.checkings = true; //审核
+            // that.revokeCheckings = true // 撤销审核
+            that.inCheckings = false; // 提交审核
+            that.revokeInCheckings = true;//撤销审核中
+            that.delays = true; // 延期
+            that.suspensions = false; // 中止
+            that.changes = true;// 变更
+            break
+          case 2: //审批中
+            that.checkings = false; //审核
+            // that.revokeInCheckings = false // 撤销审核
+            that.inCheckings = true; // 提交审核
+            that.revokeCheckings = true;//撤销审核中
+            that.delays = true; // 延期
+            that.suspensions = false; // 中止
+            that.changes = true;// 变更
+            break
+          case 3: //生效
+            that.checkings = true; //审核
+            // that.revokeCheckings = false // 撤销审核
+            that.inCheckings = true; // 提交审核
+            that.revokeInCheckings = true;//撤销审核中
+            that.delays = false; // 延期
+            that.suspensions = false; // 中止
+            that.changes = false;// 变更
+            break
+          default:
+        }
+      },
+      changFun(row) {//获取当前行数据
+        if (row.length > 1) { //去除多选
+          this.$refs.multipleTable.clearSelection();
+          this.$refs.multipleTable.toggleRowSelection(row.pop());
+        }
+
+      },
+      addRow() {
+        this.$router.push({
+          path: '/contract/create',
+          query: {
+            status: 'add'
+          }
+        });
+      },
+      viewRow(index, row) {
+        this.$router.push({
+          path: '/contract/create',
+          meta: { title: '查看租赁合同' },
+          query: {
+            status: 'view',
+            type: row[index]['contract_main_id']
+          }
+        });
+      },
+      editRow(index, row) {
+        this.$router.push({
+          path: '/contract/create',
+          meta: { title: '编辑租赁合同' },
+          query: {
+            status: 'edit',
+            type: row[index]['contract_main_id']
+          }
+        });
+      },
+      deleteRow(index, row) {//作废
+        common.del('此操作将作废合同是否继续?', 'contract_main/editStatus', {
+          contract_main_id: row[index].contract_main_id,
+          status: 0
+        }, 'contract_main/getcontractlist', this);
+
+      },
+      pageinations(val) {//分页
+        data = this.formInline
+        data.page = val
+        data.limit = 10
+        common.getPreData(data, 'contract_main/getcontractlist', this)
+      },
+
+      checking() { //审核
+        common.del('是否审核?', 'contract_main/editStatus', {
+          contract_main_id: this.checkData.contract_main_id,
+          status: 3
+        }, 'contract_main/getcontractlist', this);
+      },
+      inChecking() { //提交审核
+        common.del('是否提交审核?', 'contract_main/editStatus', {
+          contract_main_id: this.checkData.contract_main_id,
+          status: 2
+        }, 'contract_main/getcontractlist', this);
+      },
+      revokeInChecking() { //撤销审核中
+        common.del('是否撤销审核中信息?', 'contract_main/editStatus', {
+          contract_main_id: this.checkData.contract_main_id,
+          status: 1
+        }, 'contract_main/getcontractlist', this)
+      },
+      // revokeChecking() {
+      //   common.del('是否撤销审核信息?', 'contract_main/editStatus', {
+      //     contract_main_id: this.checkData[0].contract_main_id,
+      //     status: 2
+      //   }, 'contract_main/getcontractlist', this)
+      // },
+
+      change() { //变更
+        this.name = '合同变更';
+        this.editCloseVisible = true;
+        // common.del('是否变更合同?', 'contract_main/editCloseType', {
+        //   contract_main_id: this.checkData.contract_main_id,
+        //   status: 1
+        // }, 'contract_main/getcontractlist', this);
+      }
+      ,
+      delay() { //延期
+        this.name = '合同延期';
+        this.editCloseVisible = true;
+        // common.del('是否延期合同?', 'contract_main/editCloseType', {
+        //   contract_main_id: this.checkData.contract_main_id,
+        //   status: 2
+        // }, 'contract_main/getcontractlist', this);
+      }
+      ,
+      suspension() { //中止
+        this.name = '合同中止';
+        this.editCloseVisible = true;
+        // common.del('是否中止合同?', 'CutOff/cutOffAudit', {
+        //   contract_main_id: this.checkData.contract_main_id,
+        //   status: this.checkData.status,
+        // }, 'contract_main/getcontractlist', this);
+      },
+      delaySub(formName) {
+        if(this.editClose.date.length < 1) {
+          this.$message({
+            message: "请填写"+this.name+"日期",
+            type: 'warning'
+          });
+        }
+        // this.axios
+        //   .post(process.env.BASE_API + url, this.mall)
+        //   .then(function(res) {
+        //     if (res.data.errorCode == 0) {
+        //       data = that.formInline;
+        //       common.getPreData(data, 'mall_info/getMallInfoList', that);
+        //       that.$message({
+        //         message: title,
+        //         type: 'success'
+        //       });
+        //       that.dialogVisible = false;
+        //     }
+        //   })
+        //   .catch(function(err) {
+        //     that.$message.error(err.response.data.msg);
+        //   })
+
+      }
+    }
+  }
+</script>
+
+<style rel="stylesheet/scss" lang="scss">
+  thead {
+  .el-table-column--selection {
+  .cell {
+    display: none;
+  }
+  }
+  }
+</style>

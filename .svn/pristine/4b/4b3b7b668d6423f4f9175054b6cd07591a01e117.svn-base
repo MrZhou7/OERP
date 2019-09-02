@@ -1,0 +1,42 @@
+var common = {
+  del: function(text, url, data, that, dataRenlod) {//作废事件
+    console.log(data)
+    that.$confirm('此操作将作废' + text + '是否继续?', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+      center: true
+    }).then(() => {
+      that.axios
+        .post(url, data)
+        .then((res) => {
+          that.$message({
+            type: 'success',
+            message: '作废成功!'
+          })
+          that.getPreData(that.formInline) //重新请求数据
+        }).catch((err) => {
+        that.$message.error(err.response.data.msg)
+      })
+    }).catch(() => {
+      that.$message({
+        type: 'info',
+        message: '已取消删除'
+      })
+    })
+  },
+  lookup: function(data, itme) {//获取基础信息
+    let that = itme
+    return that.axios
+      .post(process.env.BASE_API + 'lookup/getLookupByCode', { lookup_code: data })
+      .then((res) => res.data.data)
+      .catch((err) => {
+      that.$message.error(err.response.data.msg)
+    })
+
+  }
+}
+
+export {
+  common
+}

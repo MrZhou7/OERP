@@ -1,0 +1,43 @@
+import Layout from '@/views/layout/Layout';
+
+const costRouter = {
+
+  path: '/cost',
+  component: Layout,
+  name: 'Cost',
+  meta: { title: '费用管理', icon: 'nested' },
+  children: [
+    {
+      path: '/cost/costTypeManagement',
+      name: 'costTypeManagement',
+      meta: { title: '费用类型管理' },
+      component: () => import('@/views/cost/costTypeManagement')
+    },
+    {
+      path: '/cost/billAdmin/index',
+      name: 'BillAdmin',
+      meta: { title: '账单管理' },
+      component: () => import('@/views/cost/billAdmin/index')
+    },
+    {
+      path: '/billAdmin/temporaryCostMange',
+      name: 'TemporaryCostMange',
+      meta: { title: '临时费用管理' },
+      component: () => import('@/views/cost/billAdmin/temporaryCostMange')
+    },
+    {
+      path: '/billAdmin/billRefundList',
+      name: 'billRefundList',
+      meta: { title: '账单退款管理' },
+      component: () => import('@/views/cost/billAdmin/billRefundList')
+    },
+    {
+      path: '/billAdmin/receivablesList',
+      name: 'receivablesList',
+      meta: { title: '账单收款管理' },
+      component: () => import('@/views/cost/billAdmin/receivablesList')
+    }
+  ]
+};
+
+export default costRouter;

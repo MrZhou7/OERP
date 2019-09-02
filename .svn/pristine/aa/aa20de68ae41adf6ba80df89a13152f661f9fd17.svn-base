@@ -1,0 +1,731 @@
+<template>
+  <el-main>
+    <el-form ref="formInline" :model="formInline" label-width="100px" class="demo-ruleForm">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="商户编号" v-for="">
+            <el-input v-model="formInline.code" @keydown.enter.native.prevent="gatheringDialog" clearable placeholder="请输入商户编号"/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item>
+            <el-button class="filter-item" type="primary" icon="el-icon-search" @click="gatheringDialog">查 询</el-button>
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+    <!--订单收款的弹窗-->
+    <el-dialog
+      :close-on-click-modal="false"
+      :visible.sync="dialogVisible"
+      title="订单收款"
+      top="5%"
+      width="80%"
+      height="80%">
+      <el-form :model="ruleForm" label-width="100px" class="demo-ruleForm"a>
+        <el-row>
+          <el-col :span="6">
+            <el-form-item label="订单编号">
+              <el-input v-model="ruleForm.code" :readonly="true" ref="mybox"/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="商铺编号">
+              <el-input v-model="ruleForm.store_code" :readonly="true"/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="商铺名称">
+              <el-input v-model="ruleForm.store_name" :readonly="true"/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="付款状态">
+              <el-select v-model="ruleForm.paid_status" :disabled="true">
+                <el-option :value="0" label="未付款"/>
+                <el-option :value="1" label="首付款完成"/>
+                <el-option :value="2" label="付款完成"/>
+                <el-option :value="3" label="部分收款完成"/>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="6">
+            <el-form-item label="订单日期">
+              <el-input v-model="ruleForm.order_date" :readonly="true"/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="配送日期">
+              <el-input v-model="ruleForm.deliver_date" :readonly="true"/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="订单金额">
+              <el-input v-model="ruleForm.total_amt" :readonly="true"/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="付款方式">
+              <el-select v-model="ruleForm.paying_type" :disabled="true">
+                <el-option v-for="item in getPayTypeList" :key="item.pay_type_id" :value="item.pay_type_id" :label="item.pay_type_name"/>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <el-table
+        ref="tableSecond"
+        :height="height"
+        :data="tableDataSecond"
+        :show-overflow-tooltip="true"
+        border
+        tooltip-effect="dark"
+        style="width: 100%"
+        @row-click="clickRowSecond">
+        <el-table-column
+          type="selection"
+          width="40"/>
+        <el-table-column
+          type="index"
+          label="序号"
+          width="55" color="red">
+          <template slot-scope="scope">
+            <span style="color:red">
+              {{ scope.$index + 1 }}
+            </span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="paying_amt"
+          min-width="100"
+          label="付款期数">
+          <template slot-scope="scope">
+            <span>
+              {{ scope.row.paying_amt == ruleForm.total_amt ? "全额付" : "分期付" }}
+            </span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="paying_amt"
+          min-width="100"
+          label="应付金额"/>
+        <el-table-column
+          prop="paid_amt"
+          min-width="100"
+          label="已付金额"/>
+        <el-table-column
+          prop="cash_discount"
+          min-width="100"
+          label="抹零金额"/>
+        <el-table-column
+          prop="status"
+          min-width="100"
+          label="收款状态">
+          <template slot-scope="scope">
+            <span v-if="scope.row.status == 0">未付款</span>
+            <span v-else-if="scope.row.status == 1">部分付款</span>
+            <span v-else-if="scope.row.status == 2">付款完成</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="paying_date"
+          min-width="150"
+          label="付款结束日期"/>
+        <el-table-column
+          fixed="right"
+          label="操作"
+          min-width="100">
+          <template slot-scope="scope">
+            <el-button :disabled="scope.row.status == 2 || scope.row.paying_amt == scope.row.paid_amt" type = "text" size="small" @click.native.prevent="gathering(scope.$index, tableDataSecond)">收 款</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <!--收款确认弹窗-->
+      <el-dialog
+        :visible.sync="innerVisible"
+        :close-on-click-modal="false"
+        top="5%"
+        width="80%"
+        title="收款确认"
+        append-to-body
+        @close="closeOrder">
+        <div class="innerWrap">
+          <blockquote class="elem_quote">付款信息</blockquote>
+          <el-form :model="getheringForm" label-width="100px" class="demo-ruleForm">
+            <el-row>
+              <el-col :span="6">
+                <el-form-item label="本次付款金额" tabindex="-1">
+                  <el-input v-model="getheringForm.paying_amt" :readonly="true"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="6">
+                <el-form-item label="商户">
+                  <el-input v-model="getheringForm.customer_name"  :readonly="true"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="6">
+                <el-form-item label="商铺">
+                  <el-input v-model="getheringForm.store_name" :readonly="true"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="6">
+                <el-form-item label="订单编号">
+                  <el-input v-model="getheringForm.code" :readonly="true"/>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="6">
+                <el-form-item label="会员名">
+                  <el-input v-model="getheringForm.full_name" :readonly="true"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="6">
+                <el-form-item label="积分">
+                  <el-input v-model="getheringForm.name" :readonly="true"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="6">
+                <el-form-item label="参与促销卡号">
+                  <el-input v-model="getheringForm.name" :readonly="true"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="6">
+                <el-form-item label="储值卡余额">
+                  <el-input v-model="getheringForm.name" :readonly="true"/>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="6">
+                <el-form-item label="参与促销金额">
+                  <el-input v-model="getheringForm.name" :readonly="true"/>
+                </el-form-item>
+              </el-col>
+            </el-row>
+          </el-form>
+          <blockquote class="elem_quote">会员账单礼券列表</blockquote>
+          <el-table
+            ref="tableThree"
+            :data="tableDataThree"
+            :show-overflow-tooltip="true"
+            border
+            tooltip-effect="dark"
+            style="width: 100%">
+            <el-table-column
+              type="index"
+              label="序号"
+              width="55"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop=" "
+              min-width="100"
+              label="礼券编号"/>
+            <el-table-column
+              prop=""
+              min-width="100"
+              label="礼券名称"/>
+            <el-table-column
+              prop=" "
+              min-width="100"
+              label="价值"/>
+            <el-table-column
+              prop=" "
+              min-width="100"
+              label="选择"/>
+          </el-table>
+          <blockquote class="elem_quote">可满足促销列表</blockquote>
+          <el-table
+            ref="tableFour"
+            :data="tableDataFour"
+            :show-overflow-tooltip="true"
+            border
+            tooltip-effect="dark"
+            style="width: 100%">
+            <el-table-column
+              type="index"
+              label="序号"
+              width="55"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop=" "
+              min-width="100"
+              label="促销编码"/>
+            <el-table-column
+              prop=" "
+              min-width="100"
+              label="触发类型"/>
+            <el-table-column
+              prop=" "
+              min-width="100"
+              label="名称"/>
+            <el-table-column
+              prop=" "
+              min-width="100"
+              label="价值"/>
+            <el-table-column
+              prop=" "
+              min-width="100"
+              label="活动描述"/>
+          </el-table>
+          <blockquote class="elem_quote">本次付款详情</blockquote>
+          <el-form :model="getheringForm" label-width="100px" class="demo-ruleForm">
+            <el-row>
+              <el-col :span="8">
+                <el-form-item label="付款批次号">
+                  <el-input v-model="getheringForm.role_name" :readonly="true"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="已付金额">
+                  <el-input v-model="pay_amt" :readonly="true"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="付款差额">
+                  <el-input v-model="paying_amt" :readonly="true"/>
+                </el-form-item>
+              </el-col>
+            </el-row>
+          </el-form>
+          <blockquote class="elem_quote">支付方式</blockquote>
+          <div class="btn_bottom">
+            <el-button :autofocus="true" type="primary" @click="addPayWay">新增支付方式（A）</el-button>
+            <el-button :disabled="paying_amt == 0 ? false : true" type="primary" @click="isPay">付款确认（S）</el-button>
+          </div>
+          <el-table
+            ref="tableFive"
+            :data="tableDataFive"
+            :show-overflow-tooltip="true"
+            border
+            tooltip-effect="dark"
+            style="width: 100%">
+            <el-table-column
+              type="index"
+              label="序号"
+              width="55"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="pay_name"
+              min-width="100"
+              label="支付方式"/>
+            <el-table-column
+              prop="money"
+              min-width="100"
+              label="付款金额"/>
+            <el-table-column
+              prop="fee_amt"
+              min-width="100"
+              label="手续费"/>
+            <el-table-column
+              prop=""
+              min-width="100"
+              label="终端号"/>
+            <el-table-column
+              prop=""
+              min-width="100"
+              label="流水号"/>
+            <el-table-column
+              prop=""
+              min-width="100"
+              label="批次号"/>
+            <el-table-column
+              prop=""
+              min-width="100"
+              label="储值卡号"/>
+            <el-table-column
+              prop=""
+              min-width="150"
+              label="是否参与促销"/>
+            <el-table-column
+              fixed="right"
+              label="操作"
+              min-width="120">
+              <template slot-scope="scope">
+                <el-button type = "text" size="small" @click.native.prevent="deletePayWay(scope.$index, tableDataFive)">删除支付方式</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          <!--新增支付方式弹窗-->
+          <el-dialog
+            :visible.sync="innerVisibleSecond"
+            :close-on-click-modal="false"
+            :close-on-press-escape="false"
+            top="5%"
+            width="40%"
+            title="新增支付方式"
+            append-to-body
+            @close="handleClose">
+            <el-form ref="payWayForm" :model="payWayForm" :rules="rules" label-width="100px" class="demo-ruleForm">
+              <el-form-item label="应付金额">
+                <el-input v-model="paying_amt" ref="getPayWayChang" readonly/>
+              </el-form-item>
+              <el-form-item label="支付大类">
+                <el-select v-model="payWayForm.pay_type_id"  @change="getPayWay">
+                  <el-option v-for="item in getPayTypeList" :key="item.pay_type_id" :label="item.pay_type_name" :value="item.pay_type_id"/>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="支付方式" prop="pay_id">
+                <el-select v-model="payWayForm.pay_id" @change="currentSel">
+                  <el-option v-for="item in getPayWayList" :key="item.pay_id" :label="item.pay_name" :value="item.pay_id"/>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="本次付款金额" class="label_required width_110">
+                <el-input v-model="money" type="number"/>
+              </el-form-item>
+              <el-form-item label="手续费" >
+                <el-input v-model="fee_amt" type="number"/>
+              </el-form-item>
+              <!--<el-form-item label="支付终端编号">
+                <el-input v-model="payWayForm.type_name	" readonly/>
+              </el-form-item>
+              <el-form-item label="交易流水号">
+                <el-input v-model="payWayForm.type_name	" readonly/>
+              </el-form-item>
+              <el-form-item label="批次号">
+                <el-input v-model="payWayForm.type_name	" readonly/>
+              </el-form-item>-->
+              <el-form-item>
+                <el-button type="primary" @click="savePayWay('payWayForm')">保 存</el-button>
+              </el-form-item>
+            </el-form>
+          </el-dialog>
+        </div>
+      </el-dialog>
+    </el-dialog>
+    <!--查看订单的弹窗-->
+    <el-dialog
+      v-if="dialogVisibleOrder"
+      :close-on-click-modal="false"
+      :visible.sync="dialogVisibleOrder"
+      title="查看订单详情"
+      top="5%"
+      width="80%"
+      height="90%">
+      <OrderAdmin :view="view" :type="type"/>
+    </el-dialog>
+    <el-dialog
+      title="提示"
+      width="300px"
+      :close-on-press-escape="false"
+      top="20%"
+      :visible.sync="esc">
+      <div>是否取消新增支付方式</div>
+      <div slot="footer">
+        <el-button @click="escSub('canle')">取 消</el-button>
+        <el-button type="primary" @click="escSub('config')">确 定</el-button>
+      </div>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+  var data = {};
+  var reg = /^\d{1,10}(\.\d{1,2})?$/;
+  import { common } from '@/common/common';
+  import building from '@/utils/building';
+  import Shops from '@/components/order/shops.vue'; // 场地
+  import OrderAdmin from '@/components/order/orderAdmin';
+
+  export default {
+    name: 'Gathering',
+    components: {
+      Shops, OrderAdmin
+    },
+    data() {
+      return {
+        formInline: {}, // 搜索条件信息
+        height: window.innerHeight - 300 + 'px',
+        loading: false,
+        total: 0,
+        currentPage: 1, // 页码
+        store_name: '', // 商铺名
+        tableData: [], // 订单table
+        tableDataSecond: [], // 订单收款table
+        tableDataThree: [], // 会员账单礼券列表
+        tableDataFour: [], // 可满足促销列表
+        tableDataFive: [], // 支付方式列表
+        dialogVisible: false, // 订单收款的弹窗
+        dialogVisibleOrder: false, // 查看订单的弹窗
+        innerVisible: false, // 收款确认的弹窗
+        innerVisibleSecond: false, // 新增支付方式弹窗
+        ruleForm: {}, // 弹窗收款信息
+        getheringForm: {}, // 付款信息表单
+        getPayTypeList: [], // 获取的支付大类信息
+        getPayWayList: [], // 获取支付方式的信息
+        payWayForm: {
+          pay_id: ''
+        }, // 新增支付方式表单
+        rules: {
+          pay_id: [{ required: true, message: '请选择支付方式', trigger: 'change' }],
+        },
+        charge_rate: '', // 手续费率
+        money: '', // 付款
+        order_id: '',
+        store_id: '',
+        order_paying_id: '', // 订单支付主条款ID
+        focus: true,
+        esc: false,
+      };
+    },
+    computed: {
+      fee_amt: function() { // 手续费
+        return (parseInt(this.money * this.charge_rate * 100)) / 100;
+      },
+      paying_amt: function() { // 应付金额
+        return (this.getheringForm.paying_amt - this.pay_amt) > 0 && (this.getheringForm.paying_amt - this.pay_amt) < 0.01 ? 0 : (this.getheringForm.paying_amt - this.pay_amt).toFixed(2);
+      },
+      pay_amt: function() { // 已付金额
+        let num = 0;
+        for (var i = 0; i < this.tableDataFive.length; i++) {
+          num = num + parseFloat(this.tableDataFive[i].money);
+        }
+        return (!num) ? 0 : num;
+      }
+    },
+    created() {
+      const that = this;
+      this.getPayType(); // 获取支付大类
+      document.onkeydown = function(e) {
+        const _key = e.keyCode - 49;
+        const _keys = e.keyCode - 97;
+        if (that.dialogVisible == true) {//判断是否以弹出订单详细
+          if (that.innerVisible == false) {//是否选择分期收款
+            that.tableDataSecond.forEach((item, i) => { // 选择分期
+              if (_key == i) { // 判断选择的是否存在打开收款页面
+                if (that.tableDataSecond[_key].status != 2) {
+                  that.gathering(_key, that.tableDataSecond);
+                }
+              }else if(_keys == i) {//小键盘输入
+                if (that.tableDataSecond[_keys].status != 2) {
+                  that.gathering(_keys, that.tableDataSecond);
+                }
+              }
+            })
+          } else {//没有打开弹出层时操作
+            if(that.innerVisibleSecond == true) {// 判断新增支付方式是否开启
+              if(e.keyCode == 13) {// 保存新增支付方式
+                if(that.esc == false) {// 取消新增支付方式是否罚款
+                  if( that.payWayForm.pay_type_id != '' && that.payWayForm.pay_id != '' && that.money != '') { // 判断支付类别及金额是否输入完成
+                    that.savePayWay('payWayForm');
+                  }
+                }else { //取消新增支付方式打开键盘回车关闭新增支付方式
+                  that.escSub('config')
+                }
+              }else if(e.keyCode == 27) {
+                if(that.esc == false) {
+                    that.esc = true;
+                }else {
+                  that.escSub('canle');
+                }
+              }
+            }else {
+              if (e.keyCode == 65) { // 打开新增方式
+                that.addPayWay();
+              }else if(e.keyCode == 83) {
+                if(that.paying_amt == 0) {
+                  that.isPay();
+                }
+              }
+            }
+          }
+        } else {
+          if (that.formInline.code != undefined && that.formInline.code != '') { //判断订单编号是否为空
+            if (e.keyCode == 13) { //不为空订单详情弹出
+              that.gatheringDialog();
+            }
+          } else {//为空返回错误
+            if (e.keyCode == 13) {
+              that.$message({
+                message: '订单编号为空',
+                type: 'error'
+              })
+            }
+          }
+        }
+      }
+    },
+    methods: {
+      escSub(val) {
+        if(val == 'canle') {
+          this.esc = false;
+        }else {
+          this.esc = false;
+          this.innerVisibleSecond = false;
+        }
+      },
+      gatheringDialog() { // 首页table点击收款弹窗
+        let that = this;
+        that.axios({
+          method: 'post',
+          url: process.env.BASE_API + 'OrderMain/orderPayManage',
+          data: { code: that.formInline.code }
+        }).then((res) => {
+          that.ruleForm = res.data.data;
+          that.tableDataSecond = res.data.data.list;
+          that.dialogVisible = true;
+          that.formInline.code ='';
+          that.$refs.mybox.focus();
+        }).catch((err) => {
+          that.$message.error(err.response.data.msg);
+        });
+      },
+      gathering(index, row) { // 订单收款
+        this.innerVisible = true;
+        this.axios({
+          method: 'post',
+          url: process.env.BASE_API + 'OrderPay/payDetail',
+          data: { id: row[index].id }
+        }).then((res) => {
+          this.getheringForm = res.data.data;
+          this.order_paying_id = res.data.data.order_paying_id;
+          this.store_id = res.data.data.store_id;
+          this.order_id = res.data.data.order_id;
+        }).catch((err) => {
+          this.$message.error(err.response.data.msg);
+        });
+      },
+      addPayWay() { // 点击新增支付方式
+        let that = this;
+        // this.money = this.paying_amt;
+        this.innerVisibleSecond = true;
+        this.$nextTick(() => {
+          this.$refs.getPayWayChang.focus();
+        })
+      },
+      deletePayWay(index, rows) { // 点击删除支付方式
+        rows.splice(index, 1);
+      },
+      getPayWay(index) { // 根据门店和支付大类获取支付方式
+        this.payWayForm.pay_id = '';
+        this.axios({
+          method: 'post',
+          data: { mall_id: this.getheringForm.mall_id, pay_type_id: index },
+          url: process.env.BASE_API + 'order_pay/getPayByStoreAndType'
+        }).then((res) => {
+          this.getPayWayList = res.data.data;
+        }).catch((err) => {
+          this.$message.error(err.response.data.msg);
+        });
+      },
+      savePayWay(formName) { // 新增支付方式保存
+        let that = this;
+        let list = {};
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            list.fee_amt = that.fee_amt; // 手续费
+            list.pay_amt = that.paying_amt; // 应付金额
+            list.money = that.money; // 付款金额
+            list.rate = that.charge_rate; // 手续费率
+            list.net_amt = parseFloat(that.money) - parseFloat(that.fee_amt); // 支付净额
+            list.pay_id = that.payWayForm.pay_id;
+            list.pay_type_id = that.payWayForm.pay_type_id;
+            for (var i in that.getPayWayList) {
+              if (that.getPayWayList[i].pay_id == that.payWayForm.pay_id) {
+                list.pay_name = that.getPayWayList[i].pay_name;
+              }
+            }
+            if (parseFloat(that.money) > parseFloat(that.paying_amt)) {
+              that.$message.error('请为 本次付款金额 提供有效值！');
+            } else if (parseFloat(that.paying_amt) <= 0) {
+              that.$message.error('付款金额已达上限！');
+            } else if (Object.keys(that.money).length == 0 || parseFloat(that.money) == 0 || !reg.test(that.money)) {
+              that.$message.error('请输入正确金额！');
+            } else {
+              that.tableDataFive.push(list);
+              that.innerVisibleSecond = false;
+              that.$message({ message: '保存成功！', type: 'success' });
+            }
+          } else {
+            that.$message({ message: '请填写完整！', type: 'error' });
+            return false;
+          }
+        });
+      },
+      handleClose() {
+        this.payWayForm.pay_type_id = '';
+        this.payWayForm.pay_id = '';
+        this.getPayWayList = [];
+      },
+      closeOrder() { // 收款确认框关闭
+        this.tableDataThree = []; // 会员账单礼券列表
+        this.tableDataFour = []; // 可满足促销列表
+        this.tableDataFive = []; // 支付方式列表
+      },
+      isPay() { // 付款确认
+        const that = this;
+        const commonDteail = {};
+        const detail = [];
+        commonDteail.order_id = this.order_id;
+        commonDteail.created_by = 1;
+        commonDteail.last_updated_by = 0;
+        for (var i = 0;i < this.tableDataFive.length; i++) {
+          detail.push({
+            data_source: this.tableDataFive[i].data_source ? this.tableDataFive[i].data_source : 1, // 数据来源，
+            store_id: this.store_id,
+            pay_trans_type: this.tableDataFive[i].pay_trans_type ? this.tableDataFive[i].pay_trans_type : 4, // 支付类型
+            trans_type: this.tableDataFive[i].trans_type ? this.tableDataFive[i].trans_type : 1, // 交易类型
+            card_num: this.tableDataFive[i].card_num ? this.tableDataFive[i].card_num : '', // 银行卡号
+            pay_id: this.tableDataFive[i].pay_id,
+            bank_no: this.tableDataFive[i].bank_no ? this.tableDataFive[i].bank_no : '', // 银行类型
+            handle_type: this.tableDataFive[i].handle_type ? this.tableDataFive[i].handle_type : 0, // 处理方式
+            pay_amt: this.tableDataFive[i].money,
+            paid_amt_by_store: 0,
+            rate: this.tableDataFive[i].rate,
+            net_amt: this.tableDataFive[i].net_amt,
+            fee_amt: this.tableDataFive[i].fee_amt
+          });
+        }
+        that.axios({
+          method: 'post',
+          url: process.env.BASE_API + 'order_pay/orderpay',
+          data: { order_paying_id: JSON.stringify(that.order_paying_id), common: JSON.stringify(commonDteail), detail: JSON.stringify(detail) }
+        }).then((res) => {
+          that.$message({ message: '付款成功！', type: 'success' });
+          that.dialogVisible = false; // 订单收款的弹窗
+          that.innerVisible = false; // 收款确认的弹窗
+        }).catch((err) => {
+          that.$message.error(err.response.data.msg);
+        });
+      },
+      currentSel(selVal) { // 获取手续费率
+        this.getPayWayList.forEach(v => {
+          if (v.pay_id == selVal) {
+            this.charge_rate = v.charge_rate;
+          }
+        });
+      },
+      getPayType() { // 获取支付大类
+        this.axios({
+          method: 'post',
+          url: process.env.BASE_API + 'order_pay/getPayType'
+        }).then((res) => {
+          this.getPayTypeList = res.data.data;
+        }).catch((err) => {
+          this.$message.error(err.response.data.msg);
+        });
+      },
+      clickRowSecond(row) { // 点击当前行勾选复选框
+        this.$refs.tableSecond.toggleRowSelection(row);
+      },
+      clickRowOne(row) { // 点击当前行勾选复选框
+        this.$refs.tableOne.toggleRowSelection(row);
+      },
+    }
+  };
+</script>
+
+<style scoped>
+  .btn_bottom{padding-left: 15px;}
+  .innerWrap{height: calc(100vh - 200px);overflow: auto;}
+  .el-tabs__content{height: calc(100vh - 30vh);}
+  .el-row > div > .el-form-item { margin-bottom: 5px !important; }
+  .el-select-dropdown__item.hover, .el-select-dropdown__item:hover {
+    background-color: #409EFF;
+    color:#fff
+  }
+</style>

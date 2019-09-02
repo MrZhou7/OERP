@@ -1,0 +1,302 @@
+<template>
+    <div id="editBrandWrap">
+      <div class="siteStyle">编辑品牌</div>
+      <blockquote class="topTitle">品牌信息</blockquote>
+      <el-form :model="editTableData" :rules="rules" ref="editTableData" label-width="100px" class="demo-ruleForm">
+        <el-form-item label="品牌名称" prop="brand_name">
+          <el-col :span="8">
+            <el-input v-model="editTableData.brand_name" placeholder="中英文、数字、限20字以内" disabled></el-input>
+          </el-col>
+        </el-form-item>
+        <el-form-item label="品牌编号" prop="brand_code">
+          <el-col :span="8">
+            <el-input v-model="editTableData.brand_code" placeholder="品牌信息保存后自动生成" disabled></el-input>
+          </el-col>
+        </el-form-item>
+        <el-form-item label="品类选择" prop="operation_type">
+          <el-col :span="8" class="getPointer">
+            <el-input placeholder="请选择品类" @click.native="getOperation" suffix-icon="el-icon-search" v-model="editTableData.type_name"></el-input>
+          </el-col>
+        </el-form-item>
+        <el-form-item label="品牌等级" prop="brand_rank">
+          <el-col :span="8">
+            <el-select v-model="editTableData.brand_rank">
+              <el-option v-for="(item,index) in brandRank" :key="index" :label="item.values_name" :value="item.values_code"></el-option>
+            </el-select>
+          </el-col>
+        </el-form-item>
+        <el-form-item label="品牌类型" prop="brand_type">
+          <el-col :span="8">
+            <el-select v-model="editTableData.brand_type">
+              <el-option v-for="(item,index) in brandType" :key="index" :label="item.values_name" :value="item.values_code"></el-option>
+            </el-select>
+          </el-col>
+        </el-form-item>
+        <el-form-item label="品牌logo" prop="logo">
+          <el-col :span="3">
+            <el-upload
+              class="avatar-uploader"
+              action="11"
+              :show-file-list="false"
+              :on-change="getFile"
+              :auto-upload="false"
+              :before-upload="beforeAvatarUpload">
+              <img v-if="imageUrl" :src="imageUrl" class="avatar"/>
+              <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+            </el-upload>
+          </el-col>
+        </el-form-item>
+        <el-form-item> <el-col :span="20"><span style="color:lightslategrey">建议尺寸:100*100像素, 格式为jpg、png、jpeg图片, 不大于500kb</span></el-col></el-form-item>
+        <el-form-item label="品牌说明" placeholder="请输入品牌说明，300字以内" prop="brand_desc">
+          <el-col :span="8">
+            <el-input type="textarea" v-model="editTableData.brand_desc"></el-input>
+          </el-col>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="submitForm('editTableData')">保存</el-button>
+          <el-button @click="cancle('editTableData')">取消</el-button>
+        </el-form-item>
+      </el-form>
+      <el-dialog
+        title="选择品类"
+        :visible.sync="dialogVisible"
+        :close-on-click-modal="false"
+        :modal-append-to-body='false'
+        width="30%">
+        <el-input
+          placeholder="输入关键字进行品类搜索"
+          v-model="filterText">
+        </el-input>
+        <el-tree
+          ref="tree2"
+          :data="dataTree"
+          :props="defaultProps"
+          default-expand-all
+          class="filter-tree"
+          :filter-node-method="filterNode"
+          @node-click="handleNodeClick"
+        />
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="dialogVisible = false">取 消</el-button>
+          <el-button type="primary" @click="passDate">确 定</el-button>
+        </span>
+      </el-dialog>
+    </div>
+</template>
+
+<script>
+  import {common} from '@/common/common'
+    export default {
+        name: "edit",
+        data() {
+          return {
+            filterText:"",//品类搜索字段
+            dialogVisible:false,//品类列表的显示
+            dataTree:[],//获取的品类信息树
+            operationData:'',//品类选择的内容
+            brandRank:[],//品牌等级基础数据
+            brandType:[],//品牌狀態基礎數據
+            defaultProps: {
+              children: 'children',
+              label: 'text'
+            },
+            editTableData: {
+              brand_name: '',
+              brand_code:"",
+              operation_type:"",
+              brand_rank:"",
+              brand_desc:"",
+              brand_type:"",
+              operation_type_id:'',
+              logo:"",
+              brand_id:''
+            },
+            imageUrl: '',
+            rules: {
+              brand_name: [
+                { required: true, message: '中英文、数字、限20字符', trigger: 'blur' },
+                { min: 0, max: 20, message: '长度在20字符以内', trigger: 'blur' }
+              ],
+              operation_type:[
+                { required: true, message: '请选择品类', trigger: 'change' }
+              ],
+              brand_rank: [
+                { required: true, message: '请选择品牌等级', trigger: 'change' }
+              ],
+              brand_type: [
+                { required: true, message: '请选择品牌类型', trigger: 'change' }
+              ],
+              brand_desc: [
+                { required: true, message: '请填写说明', trigger: 'change' }
+              ]
+            }
+          };
+        },
+        watch: {
+          filterText(val) {
+            this.$refs.tree2.filter(val);
+          }
+        },
+        methods: {
+          filterNode(value, data) {
+            if (!value) return true;
+            return data.text.indexOf(value) !== -1;
+          },
+          //点击弹出树状图，并获取品类信息
+          getOperation(){
+            this.dialogVisible = true;
+            this.axios({
+              method: "post",
+              url: process.env.BASE_API + 'Operation_Type/cateList'
+            })
+              .then((res)=>{
+                if (res.status == 200) {
+                  this.dataTree = res.data.data
+                }
+              }).catch(function(err) {
+              this.$message.error(err.response.data.msg)
+            })
+          },
+          //点击树状图节点，获取信息
+          handleNodeClick(node,data){
+            this.operationData = data.data.data.type_name;
+            this.editTableData.operation_type_id = data.data.data.operation_type_id;
+          },
+          //弹框确定按钮
+          passDate(){
+            this.dialogVisible = false;
+            this.editTableData.operation_type = this.operationData
+          },
+          //保存
+          submitForm(editTableData) {
+            this.$refs[editTableData].validate((valid) => {
+              if (valid) {
+                let brandData = {
+                  brand_type:1,
+                  brand_desc:this.editTableData.brand_desc,
+                  brand_name:this.editTableData.brand_name,
+                  logo: this.editTableData.logo?this.editTableData.logo:"",
+                  operation_type:this.editTableData.operation_type_id,
+                  brand_rank:this.editTableData.brand_rank,
+                  brand_id:this.editTableData.brand_id
+                };
+                this.axios({
+                  method: "post",
+                  data:brandData,
+                  url:process.env.BASE_API + 'brand_info/editBrand'
+                })
+                  .then((res)=>{
+                    if (res.status == 200) {
+                      this.$router.push({ path: '/brand/brand' });
+                      this.$message({
+                        message: '提交修改成功',
+                        type: 'success'
+                      })
+                    }
+                  }).catch(function(err) {
+                  this.$message.error(err.response.data.msg)
+                })
+              } else {
+                console.log('error submit!!');
+                return false;
+              }
+            });
+          },
+          //取消
+          cancle(){
+            this.$router.go(-1);
+          },
+          //上传图片文件
+          getFile(file, fileList){
+            let formData = new FormData();
+            formData.append('logo',file.raw)
+            this.axios({
+              method:'post',
+              data:formData,
+              url:process.env.BASE_API + 'brand_info/uploadsLogo'
+            }).then((res)=>{
+              if (res.status == 200) {
+                this.editTableData.logo = res.data.data;
+                if(this.editTableData.logo){
+                  this.imageUrl = 'http://10.1.200.85/' + res.data.data;
+                }else{
+                  this.imageUrl = ''
+                }
+              }
+            }).catch(function(err) {
+              this.$message.error(err.response.data.msg)
+            })
+          },
+          //文件上传之前调用做一些拦截限制
+          beforeAvatarUpload(file) {
+            const isJPG = file.type === 'image/jpeg';
+            const isLt2M = file.size / 1024 / 1024 < 2;
+
+            if (!isJPG) {
+              this.$message.error('上传头像图片只能是 JPG 格式!');
+            }
+            if (!isLt2M) {
+              this.$message.error('上传头像图片大小不能超过 2MB!');
+            }
+            return isJPG && isLt2M;
+          },
+          //获取编辑品牌的信息
+          getEditBrand() {
+            let EditId = {brand_id:this.$route.query.editBrandId};
+            this.axios({
+              method:'post',
+              data:EditId,
+              url:process.env.BASE_API + 'brand_info/getBrandInfo'
+            }).then((res)=>{
+              if (res.status == 200) {
+                this.editTableData = res.data.data;
+                this.imageUrl = 'http://10.1.200.85/' + res.data.data.logo;
+              }
+            }).catch(function(err) {
+              this.$message.error(err.response.data.msg)
+            })
+            common.lookup('L016', this).then((res) => {
+              this.brandRank = res
+            })
+            common.lookup('L017', this).then((res) => {
+              this.brandType = res
+            })
+          }
+        },
+        created() {
+          this.getEditBrand();
+        }
+    }
+</script>
+
+<style scoped>
+  #editBrandWrap{
+    padding:15px;
+  }
+  .siteStyle{
+    position: relative;
+    height: 42px;
+    line-height: 42px;
+    padding: 0 15px;
+    border-bottom: 1px solid #f6f6f6;
+    color: #333;
+    border-radius: 2px 2px 0 0;
+    font-size: 14px;
+  }
+  .topTitle{
+    margin-bottom: 10px;
+    padding: 10px 15px;
+    line-height: 22px;
+    border-left: 5px solid #009688;
+    border-radius: 0 2px 2px 0;
+    background-color: #f2f2f2;
+  }
+  .getPointer{
+    cursor: pointer;
+  }
+
+  .el-dialog .filter-tree{
+    height:600px;
+    overflow: auto;
+  }
+</style>

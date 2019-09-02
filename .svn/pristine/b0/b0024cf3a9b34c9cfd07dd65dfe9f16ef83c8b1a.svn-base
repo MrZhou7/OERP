@@ -1,0 +1,123 @@
+<template>
+    <div id="businessTableWrap">
+      <el-table
+        :data="tableData"
+        style="width: 100%"
+        max-height="400">
+        <el-table-column
+          fixed
+          prop="customer_code"
+          label="商户编号"
+          width="150">
+        </el-table-column>
+        <el-table-column
+          prop="customer_name"
+          label="商户名称"
+          width="150">
+        </el-table-column>
+        <el-table-column
+          prop="cust_short_name"
+          label="商户简称"
+          width="150">
+        </el-table-column>
+        <el-table-column
+          prop="company_phone"
+          label="公司电话"
+          width="150">
+        </el-table-column>
+        <el-table-column
+          prop="legal"
+          label="法人"
+          width="300">
+        </el-table-column>
+        <el-table-column
+          prop="address"
+          label="商户地址"
+          width="300">
+        </el-table-column>
+        <el-table-column
+          fixed="right"
+          label="操作"
+          width="400">
+          <template slot-scope="scope">
+            <el-button @click.native.prevent="checkBrand(scope.$index, tableData)" type="text" size="small">查看</el-button>
+            <el-button type="text" size="small" @click.native.prevent="editClick(scope.$index, tableData)">编辑</el-button>
+            <el-button
+              @click.native.prevent="deleteRow(scope.$index, tableData)"
+              type="text"
+              size="small">
+              移除
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-dialog
+        title="查看商户信息"
+        :visible.sync="dialogVisible"
+        width="90%">
+        <CheckBusiness :checkData="checkData"></CheckBusiness>
+        <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
+      </span>
+      </el-dialog>
+      <el-dialog
+        title="编辑商户信息"
+        :visible.sync="dialogVisibleToo"
+        width="90%">
+        <EditBusiness :editData="editData"></EditBusiness>
+        <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisibleToo = false">取 消</el-button>
+      </span>
+      </el-dialog>
+    </div>
+</template>
+
+<script>
+  import CheckBusiness from '@/components/business/checkBusiness'
+  import EditBusiness from '@/components/business/editBusiness'
+    export default {
+        name: "businessTable",
+        components:{
+          CheckBusiness,EditBusiness
+        },
+        data() {
+            return{
+              dialogVisible:false,//查看弹窗隐藏
+              dialogVisibleToo:false,//编辑弹窗隐藏
+              checkData:{},//获取的当前查看商户信息
+              editData:{}//获取当前笔记的商户信息
+            }
+        },
+        props:{
+          tableData:{
+            type: Array,
+            default: []
+          }
+        },
+        watch: {
+          tableData(n, o) {
+            //console.log(n)
+          }
+        },
+        methods: {
+          //编辑
+          editClick(index,table){
+            this.editData= table[index];
+            this.dialogVisibleToo = true;
+          },
+          //移除table
+          deleteRow(index, rows) {
+            rows.splice(index, 1);
+          },
+          //查看品牌信息
+          checkBrand(index,table){
+            this.checkData = table[index];
+            this.dialogVisible = true;
+          }
+        }
+    }
+</script>
+
+<style scoped>
+
+</style>

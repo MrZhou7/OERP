@@ -1,0 +1,111 @@
+<template>
+    <div id="brandWrap">
+      <el-table
+        :data="tableData"
+        style="width: 100%"
+        max-height="400">
+        <el-table-column
+          type="selection"
+          width="55">
+        </el-table-column>
+        <el-table-column
+          fixed
+          prop="brand_code"
+          label="品牌编码"
+          width="150">
+        </el-table-column>
+        <el-table-column
+          prop="brand_name"
+          label="品牌名称"
+          width="150">
+        </el-table-column>
+        <el-table-column
+          prop="brand_rank"
+          label="品牌等级"
+          width="150">
+        </el-table-column>
+        <el-table-column
+          prop="operation_type"
+          label="品类"
+          width="150">
+        </el-table-column>
+        <el-table-column
+          prop="brand_desc"
+          label="品牌简介"
+          width="300">
+        </el-table-column>
+        <el-table-column
+          fixed="right"
+          label="操作"
+          width="400">
+          <template slot-scope="scope">
+            <el-button @click.native.prevent="checkBrand(scope.$index, tableData)" type="text" size="small">查看</el-button>
+            <el-button type="text" size="small" @click.native.prevent="editClick(scope.$index, tableData)">编辑</el-button>
+            <el-button
+              @click.native.prevent="deleteRow(scope.$index, tableData)"
+              type="text"
+              size="small">
+              移除
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        background
+        layout="prev, pager, next"
+        :total="total">
+      </el-pagination>
+    </div>
+</template>
+
+<script>
+    export default {
+        name: "brandTable",
+      props:{
+        tableData:{
+          type: Array,
+          default: []
+        }
+      },
+      watch: {
+        tableData(n, o) {
+          console.log(n)
+        }
+      },
+      data() {
+        return {
+          total:0
+        }
+      },
+      methods: {
+        //编辑
+        editClick(index,table){
+          let editId= table[index].brand_id;
+          this.$router.push({
+            path:'/brand/editBrand',
+            query:{
+              editBrandId:editId
+            }
+          })
+        },
+        //移除table
+        deleteRow(index, rows) {
+          rows.splice(index, 1);
+        },
+        //查看品牌信息
+        checkBrand(index,table){
+          let brandId= table[index].brand_id;
+          this.$router.push({
+            path:'/brand/checkBrand',
+            query:{
+              checkBrandId:brandId
+            }
+          })
+        }
+      }
+    }
+</script>
+
+<style scoped>
+
+</style>

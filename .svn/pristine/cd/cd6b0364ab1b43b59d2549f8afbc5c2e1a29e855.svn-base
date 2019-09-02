@@ -1,0 +1,33 @@
+<template>
+  <el-main>
+    <el-row>
+      <el-col :span="8">
+        <div>
+          <blockquote class="topTitle">数据项类型(系统固定数据不能修改)</blockquote>
+        </div>
+      </el-col>
+      <el-col :span="16">
+        <div>
+          <blockquote class="topTitle">数据项值</blockquote>
+        </div>
+      </el-col>
+    </el-row>
+  </el-main>
+</template>
+
+<script>
+export default {
+  name: 'Index'
+};
+</script>
+
+<style scoped>
+  .topTitle{
+    margin-bottom: 10px;
+    padding: 10px 15px;
+    line-height: 22px;
+    border-left: 5px solid #009688;
+    border-radius: 0 2px 2px 0;
+    background-color: #f2f2f2;
+  }
+</style>

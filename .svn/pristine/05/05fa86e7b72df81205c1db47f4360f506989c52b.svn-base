@@ -1,0 +1,556 @@
+<template>
+  <el-main :style="height">
+    <el-tabs value="orderInfo" type="border-card">
+      <el-tab-pane label="基本信息" name="orderInfo">
+        <el-card class="box-card" shadow="always">
+          <div class="content">
+            <p class="category-text" v-if="!view">商铺信息
+              <span class="addCategory" @click="cancle">取消</span>
+              <span class="addCategory" @click="savePayWay('rentDetailRules')">确定</span>
+            </p>
+            <el-form ref="rentDetailRules" :rules="rentDetailRules" :model="formInline" label-width="100px">
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="门店" prop="mall_id">
+                    <el-select v-model="formInline.mall_id" placeholder="请选择项目名称" :disabled="view">
+                      <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name"
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="合同Id" prop="contract_main_id">
+                    <el-input v-model="formInline.contract_main_id" :disabled="view"></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="合同编号">
+                    <el-input v-model="formInline.contract_code" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="经营方式">
+                    <el-input v-model="formInline.do_type" disabled></el-input>
+
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="商户简称">
+                    <el-input v-model="formInline.cust_short_name" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="场地编号" prop="unit_code">
+                    <el-input v-model="formInline.unit_code" suffix-icon="el-icon-search" :disabled="view"
+                              @focus="fieldClick"></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="计租面积">
+                    <el-input v-model="formInline.area" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="开始日期">
+                    <el-input v-model="formInline.valid_from" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="结束日期">
+                    <el-input v-model="formInline.valid_to" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="终止日期">
+                    <el-input v-model="formInline.terminated_on" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="资本类型" prop="capital_type">
+                    <el-select v-model="formInline.capital_type" :disabled="view" placeholder="请选择">
+                      <el-option
+                        v-for="item in preData.capital_type"
+                        :key="item.values_code"
+                        :label="item.values_name"
+                        :value="parseInt(item.values_code)" >
+                      </el-option>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="数据收集方式">
+                    <el-select v-model="formInline.sales_data_collection_type" :disabled="view" placeholder="请选择">
+                      <el-option :label="" :value=""></el-option>
+                    </el-select>
+                    <el-input v-model="formInline.sales_data_collection_type" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="商铺编码"  prop="merchant_type_code">
+                    <el-input v-model="formInline.merchant_type_code" :disabled="view"></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="商铺名称"  prop="merchant_type_name">
+                    <el-input v-model="formInline.merchant_type_name" :disabled="view"></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="商铺类型"  prop="merchant_type_id">
+                    <el-select v-model="formInline.merchant_type_id" :disabled="view">
+                      <el-option
+                        v-for="(item,key) in preData.merchant_type"
+                        :key="key"
+                        :label="item.values_name"
+                        :value="parseInt(item.values_code)">
+                      </el-option>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="楼栋">
+                    <el-input v-model="formInline.address_info" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="楼层">
+                    <el-input v-model="formInline.remark" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="经营区域" prop="nusinessArea">
+                    <el-select v-model="formInline.nusinessArea" placeholder="请选择经营区域"
+                               :disabled='view'>
+                      <el-option :value='1' label="A区"></el-option>
+                      <el-option :value='0' label="B区"></el-option>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="品类" suffix-icon="el-icon-search" class="label_required"
+                                prop="operation_type_name">
+                    <el-input v-model="formInline.operation_type_name" @focus="entry.categoryChoice = true"
+                              :disabled="view"
+                              suffix-icon="el-icon-search"></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="主营品牌" class="label_required" prop="brand_name">
+                    <el-input v-model="formInline.brand_name" :disabled="view" @focus="brandChoiceData"
+                              suffix-icon="el-icon-search">
+                    </el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="销售税率" prop="sales_tax_rate">
+                    <el-input v-model="formInline.sales_tax_rate" type="number" :disabled="view"></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="统一手续费率(%)" class="width_130" prop="service_charge">
+                    <el-input v-model="formInline.service_charge" type="number" :disabled="view"></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="商铺电话" prop="contact_number">
+                    <el-input v-model="formInline.contact_number" :disabled="view"></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="计划开业时间" class="width_110" prop="practice_date">
+                    <el-date-picker
+                      v-model="formInline.start"
+                      type="date"
+                      :disabled="view"
+                      placeholder="选择计划开业时间">
+                    </el-date-picker>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="兼营品牌" prop="sideline_brand">
+                    <el-input v-model="formInline.sideline_brand" :disabled="view"></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="商铺地址" prop="shop_address">
+                    <el-input v-model="formInline.shop_address" :disabled="view"></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="门牌号" prop="door_number">
+                    <el-input v-model="formInline.door_number" :disabled="view"></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="12">
+                  <el-form-item label="小票尾1">
+                    <el-input v-model="formInline.address_info" :disabled="view"></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="小票尾2">
+                    <el-input v-model="formInline.remark" :disabled="view"></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="12">
+                  <el-form-item label="小票尾3">
+                    <el-input v-model="formInline.address_info" :disabled="view"></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="小票尾4">
+                    <el-input v-model="formInline.remark" :disabled="view"></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="12">
+                  <el-form-item label="小票尾5">
+                    <el-input v-model="formInline.address_info" :disabled="view"></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="小票尾6">
+                    <el-input v-model="formInline.remark" :disabled="view"></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </el-form>
+
+          </div>
+        </el-card>
+      </el-tab-pane>
+      <el-tab-pane label="证件参数" name="pay">
+        <el-card class="box-card">
+          <div class="content">
+            <div class="contract_table" style="margin-top: 10px;">
+              <p class="category-text"  v-if="!view">支付方式
+                <span class="addCategory" @click="addCertificates">新增</span>
+                <span class="addCategory" @click="keepCertificates">保存</span>
+              </p>
+              <el-table
+                ref="tableFour"
+                :data="costDetailTable"
+                border
+                tooltip-effect="dark"
+                style="width: 100%;">
+                <el-table-column
+                  prop="charge_type_id"
+                  :show-overflow-tooltip="true"
+                  width="120"
+                  label="证件信息">
+                  <template slot-scope="scope">
+                    <el-select v-model="scope.row.information" placeholder="请选择人员状态">
+                      <el-option label="营业执照" value="1"></el-option>
+                      <el-option label="税务登记" value="2"></el-option>
+                      <el-option label="组织机构代码证" value="3"></el-option>
+                    </el-select>
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  fixed="right"
+                  prop="name"
+                  min-width="120"
+                  :label="'证件名称'">
+                  <template slot-scope="scope">
+                    <el-input size="small" v-model="scope.row.name" placeholder="请输入证件名称"></el-input>
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  fixed="right"
+                  prop="legal_person"
+                  min-width="120"
+                  :label="'法人'">
+                  <template slot-scope="scope">
+                    <el-input size="small" v-model="scope.row.legal_person" placeholder="请输入法人"></el-input>
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  fixed="right"
+                  prop="start"
+                  min-width="120"
+                  :label="'有效开始日期'">
+                  <template slot-scope="scope">
+                    <el-date-picker
+                      v-model="scope.row.start"
+                      type="date"
+                      placeholder="选择有效开始日期">
+                    </el-date-picker>
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  fixed="right"
+                  prop="end"
+                  min-width="120"
+                  :label="'有效结束日期'">
+                  <template slot-scope="scope">
+                    <el-date-picker
+                      v-model="scope.row.end"
+                      type="date"
+                      placeholder="选择有效结束日期">
+                    </el-date-picker>
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  fixed="right"
+                  prop="register"
+                  min-width="150"
+                  :label="'是否注册在本商铺'">
+                  <template slot-scope="scope">
+                    <el-select v-model="scope.row.register" placeholder="请选择是否注册在本商铺">
+                      <el-option label="是" value="1"></el-option>
+                      <el-option label="否" value="0"></el-option>
+                    </el-select>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </div>
+        </el-card>
+      </el-tab-pane>
+      <el-tab-pane label="付款方式" name="retrunVisit">
+        <el-card class="box-card">
+        </el-card>
+      </el-tab-pane>
+    </el-tabs>
+    <el-dialog title="品类选择" :visible.sync="entry.categoryChoice" width="70%" height="70%" :close-on-click-modal="false"
+               :append-to-body="true">
+      <category v-on:categoryData="categoryData" :operationTypeId="formInline.operation_type_id"></category>
+      <span slot="footer">
+        <el-button @click="entry.categoryChoice = false">取 消</el-button>
+        <el-button type="primary" @click="categoryDataList">确 定</el-button>
+      </span>
+    </el-dialog>
+    <el-dialog title="品牌选择" :visible.sync="entry.brandChoice" width="70%" height="70%" :close-on-click-modal="false"
+               :append-to-body="true">
+      <brand v-on:brandData="brandData" :operationTypeId="formInline.operation_type_id"></brand>
+    </el-dialog>
+    <el-dialog title="场地选择" :visible.sync="entry.fieldChoice" width="70%" height="70%" :close-on-click-modal="false"
+               :append-to-body="true">
+      <Filed v-on:fieldData="fieldData" :mall="formInline.mall_id" :startData="formInline.start_date"
+             :endData="formInline.end_date"></Filed>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+  import building from '@/utils/building'
+  import Filed from '@/components/contract/field.vue' //场地
+  import category from '@/components/contract/category.vue' //品类
+  import brand from '@/components/contract/brand.vue' //品牌
+
+  export default {
+    name: 'addShop',
+    components: {
+      Filed,
+      category,
+      brand
+    },
+    data() {
+      return {
+        mall_name: [], // 门店信息
+        costDetailTable: [],
+        formInline: {},
+        height: {
+          height: window.innerHeight * 0.8 + 'px',
+          padding:0
+        },
+        preData: {},
+        entry: {
+          fieldChoice: false,
+          categoryChoice: false,
+          brandChoice: false
+        },
+        view: false,
+        rentDetailRules: {
+          'mall_id': [{ required: true, message: '请选择门店', trigger: 'change' }],
+          'contract_id': [{ required: true, message: '请选择合同Id', trigger: 'change' }],
+          'unit_code': [{ required: true, message: '请选择场地编号', trigger: 'change' }],
+          'capital_type': [{ required: true, message: '请选择场地编号', trigger: 'change' }],
+          'merchant_type_code': [{ required: true, message: '请输入商铺编码', trigger: 'blur' }],
+          'merchant_type_name': [{ required: true, message: '请输入商铺名称', trigger: 'blur' }],
+          'merchant_type_id': [{ required: true, message: '请选择商铺类型', trigger: 'change' }],
+          'nusinessArea': [{ required: true, message: '请选择经营区域', trigger: 'change' }],
+          'service_charge': [{ required: true, message: '请输入统一手续费率', trigger: 'blur' }],
+          'contact_number': [{ required: true, message: '请输入商铺电话', trigger: 'blur' }],
+          'practice_date': [{ required: true, message: '请选择计划开业时间', trigger: 'change' }],
+          'shop_address': [{ required: true, message: '请输入商铺地址', trigger: 'blur' }],
+          'door_number': [{ required: true, message: '请输入门牌号', trigger: 'blur' }],
+        }
+      }
+    },
+    props: ['addShopId', 'addShopType'],
+    watch: {
+      addShopId(newVal, oldVal) {
+        if (newVal != '') {
+          const data = {
+            store_id: newVal
+          }
+          this.getPreData(data)
+        }
+      },
+      addShopType(newVal, oldVal) {
+        if (newVal == 2) {
+          this.view = true
+        } else {
+          this.view = false
+        }
+      }
+    },
+    created() {
+      this.getData();
+      building.Mall(this) // 先获取门店数据
+      console.log(this.addShopType)
+      if (this.addShopId != '') {
+        const data = {
+          store_id: this.addShopId
+        }
+        this.getPreData(data)
+      }
+      if (this.addShopType == 2) {
+        this.view = true
+      } else {
+        this.view = false
+      }
+    },
+    methods: {
+      getData() {//预渲染参数
+        let that = this;
+        this.http.post('table_util/getPreData', { act: 'contract' }).then(function (res) {
+              that.preData = res.data.data;
+          });
+      },
+      getPreData(data) {
+        this.http.post('StoreSynthesize/getStoreInfo', data).then((res) => {
+            this.formInline = res.data.data
+        })
+      },
+      fieldClick() {
+        //场地点击
+        if (!this.formInline.mall_id) {
+          this.$message({
+            message: '请选择门店',
+            type: 'warning'
+          })
+        } else {
+          this.entry.fieldChoice = false
+          this.$nextTick(() => {
+            this.entry.fieldChoice = true
+          })
+        }
+      },
+      brandChoiceData() {
+        if (this.formInline.operation_type_id == '') {
+          this.$message({
+            message: '请选择品类',
+            type: 'warning'
+          })
+        } else {
+          this.entry.brandChoice = true
+        }
+      },
+      fieldData(data) {//场地赋值
+      },
+      categoryData(data) {//品类赋值
+        this.formInline.operation_type_id = data.id
+        this.formInline.operation_type_name = data.text
+        this.formInline.operation_type_id = data.id
+      },
+      brandData(data) {//品牌赋值
+        this.entry.brandChoice = false
+        this.formInline.brand_name = data.brand_name
+        this.formInline.brand_id = data.brand_id
+      },
+      categoryDataList() { //品类确定
+        this.entry.categoryChoice = false
+      },
+      savePayWay(formName) {
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+
+          } else {
+            this.$message({
+              message: '请输入完整信息！！！',
+              type: 'warning'
+            })
+          }
+        })
+      },
+      cancle() {
+      },
+      keepCertificates() {
+      },
+      addCertificates() {
+        const addCertificatesObj = {
+          information:'',
+          name:'',
+          start:'',
+          end:'',
+          register:'',
+        }
+        this.costDetailTable.push(addCertificatesObj)
+
+      }
+    }
+  }
+</script>
+
+<style lang="scss" scoped>
+  .el-input.is-disabled .el-input__inner {
+    color: #000;
+  }
+
+  .search > .el-row > div > .el-form-item {
+    margin-bottom: 22px !important;
+  }
+
+  .category-text {
+    background: #f7f7f7;
+    line-height: 40px;
+    font-size: 14px;
+    color: #606266;
+    padding: 0 15px;
+    box-sizing: border-box;
+    font-weight: bold;
+  }
+
+  .addCategory {
+    color: #38f;
+    float: right;
+    cursor: pointer;
+    padding: 0 25px;
+  }
+
+</style>
+<style lang="scss">
+  .el-tabs--border-card>.el-tabs__content {
+    padding: 0 !important;
+  }
+  .el-card__body {
+    padding: 0 !important;
+  }
+  .el-form-item__error {
+     display: none;
+  }
+  .el-form-item {
+    margin-bottom: 5px;
+  }
+</style>

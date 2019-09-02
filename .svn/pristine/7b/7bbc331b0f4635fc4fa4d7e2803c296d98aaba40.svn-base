@@ -1,0 +1,104 @@
+import Layout from '@/views/layout/Layout';
+
+const costRouter = {
+
+  path: '/cost',
+  component: Layout,
+  name: 'Cost',
+  redirect: '/cost/costTypeManagement',
+  meta: { title: '费用管理', icon: 'nested' },
+  children: [
+    {
+      path: '/cost/costTypeManagement',
+      name: 'costTypeManagement',
+      meta: { title: '费用类型管理' },
+      component: () => import('@/views/cost/costTypeManagement')
+    },
+    {
+      path: '/cost/billAdmin/index',
+      name: 'BillAdmin',
+      meta: { title: '账单管理' },
+      component: () => import('@/views/cost/billAdmin/index')
+    },
+    {
+      path: '/billAdmin/billRefundList',
+      name: 'billRefundList',
+      meta: { title: '账单退款管理' },
+      component: () => import('@/views/cost/billAdmin/billRefundList')
+    },
+    {
+      path: '/billAdmin/receivablesList',
+      name: 'receivablesList',
+      meta: { title: '账单收款管理' },
+      component: () => import('@/views/cost/billAdmin/receivablesList')
+    },
+    {
+      path: '/billAdmin/rentManage',
+      name: 'RentManage',
+      meta: { title: '租金优惠管理' },
+      component: () => import('@/views/cost/billAdmin/rentManage')
+    },
+    {
+      path: '/cost/deposit',
+      name: 'Deposit',
+      meta: { title: '押金处理' },
+      component: () => import('@/views/cost/deposit')
+    },
+    {
+      path: '/cost/businessDeposit',
+      name: 'BusinessDeposit',
+      meta: { title: '商户押金管理' },
+      component: () => import('@/views/cost/businessDeposit')
+    },
+    {
+      path: '/cost/agencyCost/bus',
+      name: 'Bus',
+      meta: { title: '代收款管理' },
+      redirect: '/cost/agencyCost/agencyDetail',
+      component: () => import('@/views/cost/agencyCost/bus'),
+      children: [
+        {
+          path: '/cost/agencyCost/agencyDetail',
+          name: 'AgencyDetail',
+          meta: { title: '代收款交易明细' },
+          component: () => import('@/views/cost/agencyCost/agencyDetail')
+        },
+        {
+          path: '/cost/agencyCost/agencyTable',
+          name: 'AgencyTable',
+          meta: { title: '代收款列表' },
+          component: () => import('@/views/cost/agencyCost/agencyTable')
+        },
+        {
+          path: '/cost/agencyCost/cashier',
+          name: 'Cashier',
+          meta: { title: '收银员缴款' },
+          component: () => import('@/views/cost/agencyCost/cashier')
+        }
+      ]
+    },
+    {
+      path: '/cost/refundsSlip/refundsSlipBus',
+      name: 'refundsSlipBus',
+      meta: { title: '返款管理' },
+      redirect: '/cost/refundsSlip/refundsSlipBus',
+      component: () => import('@/views/cost/refundsSlip/refundsSlipBus'),
+      children: [
+        {
+          path: '/cost/refundsSlip/refundsSlipManagement',
+          name: 'RefundsSlipManagement',
+          component: () => import('@/views/cost/refundsSlip/refundsSlipManagement'),
+          meta: { title: '返款单管理' }
+        },
+        {
+          path: '/cost/refundsSlip/collectionRefund',
+          name: 'CollectionRefund',
+          meta: { title: '代收款返款确认单' },
+          component: () => import('@/views/cost/refundsSlip/collectionRefund')
+        }
+      ]
+    },
+  ]
+};
+
+export default costRouter;

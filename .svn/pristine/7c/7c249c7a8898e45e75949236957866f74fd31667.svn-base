@@ -1,0 +1,272 @@
+<template>
+  <div>
+    <el-row>
+      <el-col :span="8">
+        <div class="category-tree-content">
+          <el-input
+            v-model="filterText"
+            placeholder="输入关键字进行品类搜索">
+          </el-input>
+          <el-tree
+            v-loading="loading"
+            ref="tree2"
+            :highlight-current="true"
+            :data="dataTree"
+            :props="defaultProps"
+            :filter-node-method="filterNode"
+            class="filter-tree"
+            @node-click="handleNodeClick">
+            <span class="slot-t-node" slot-scope="{ node, data }">
+              <i class="iconfont icon-renyuan" style="color: #009688;" />
+              <span>{{ node.label }}</span>
+            </span>
+          </el-tree>
+        </div>
+      </el-col>
+      <el-col :span="16">
+        <div class="category-tree-content grid-content bg-purple-light">
+          <p class="category-text">支付方式
+            <span v-if="addCate" class="addCategory" @click="addCategory">添加子类</span>
+          </p>
+          <el-table
+            ref="multipleTable"
+            :height="tableHeight"
+            :data="tableData"
+            :show-overflow-tooltip="true"
+            border
+            tooltip-effect="dark"
+            style="width: 100%"
+            @row-click="clickRow"
+            @selection-change="changFun">
+            <el-table-column
+              prop="invoice_code"
+              :show-overflow-tooltip="true"
+              label="支付方式编号"
+              width="110">
+            </el-table-column>
+            <el-table-column
+              prop="invoice_code"
+              :show-overflow-tooltip="true"
+              label="支付方式名称" width="120">
+            </el-table-column>
+            <el-table-column
+              prop="customer_code"
+              :show-overflow-tooltip="true"
+              label="支付大类" width="120">
+            </el-table-column>
+            <el-table-column
+              prop="contract_code"
+              :show-overflow-tooltip="true"
+              label="是否允许退货"
+              width="150">
+            </el-table-column>
+            <el-table-column
+              prop="store_code"
+              :show-overflow-tooltip="true"
+              label="是否允许找零"
+              width="150">
+            </el-table-column>
+            <el-table-column
+              prop="store_name"
+              :show-overflow-tooltip="true"
+              label="是否参与抽成" width="150">
+            </el-table-column>
+            <el-table-column
+              prop="paid_status"
+              :show-overflow-tooltip="true"
+              label="是否需要验证" width="120">
+            </el-table-column>
+            <el-table-column
+              prop="invoiced_amount"
+              :show-overflow-tooltip="true"
+              label="手续费" width="100">
+            </el-table-column>
+            <el-table-column
+              prop="net_amount"
+              :show-overflow-tooltip="true"
+              label="单据状态" width="100">
+            </el-table-column>
+            <el-table-column
+              fixed="right"
+              algin="center"
+              label="操作"
+              width="80">
+              <template slot-scope="scope">
+                <el-button
+                  @click.native.prevent="viewRow(scope.row)"
+                  type="text"
+                  size="small">
+                  查看
+                </el-button>
+                <el-button
+                @click.native.prevent="editRow(scope.row)"
+                type="text"
+                size="small">
+                  编辑
+                </el-button>
+                <el-button
+                  @click.native.prevent="deleteRow(scope.row)"
+                  type="text"
+                  size="small">
+                  {{scope.row == 1 }} 启动
+                  {{scope.row == 2 }} 停用
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          <el-pagination
+            :page-sizes="[10, 20, 30, 40, 50]"
+            :page-size="pageSize"
+            :current-page.sync="currentPage"
+            :total="total"
+            background
+            layout="prev, pager, next, total, sizes"
+            @current-change="pagination"
+            @size-change="handleSizeChange"/>
+        </div>
+      </el-col>
+    </el-row>
+    <el-dialog :title="payModeName"  v-if="building" :visible.sync="building" width="80%" height="60%" top="3%"
+               :close-on-click-modal="false">
+      <PayMode v-on:payMode="payMode" :payModeId="payModeId" :payModeType="payModeType"></PayMode>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+  import { common } from '@/common/common';
+  import PayMode from '@/components/sale/pay/payMode.vue' //商铺
+
+  export default {
+    name: 'paymentMethod',
+    components: {
+      PayMode
+    },
+    data() {
+      return {
+        filterText: '',
+        isShow: false, // 品类信息是否显示
+        dataTree: [], // 树状图显示数据
+        defaultProps: {
+          children: 'children',
+          label: 'text'
+        },
+        tableHeight: window.innerHeight - 136,//表格高度
+        tableData: [],
+        total: 0,//分页总数据
+        currentPage: 1,//当前页码
+        pageSize: 10,//当前页码
+        checkData: [],
+        addCate:false,
+        building: false,
+        payModeId:'',//弹出层 新增-查看-编辑支付方式
+        payModeType:'',
+        payModeName:'',
+        loading: false,
+        dialogVisible: false, // 添加子组件是否显示
+        currentIndex: 0,
+        parent_id: '', // 上级类别显示
+        subparentid: [] // 添加子类上级类别显示
+      };
+    },
+    watch: {
+      filterText(val) {
+        this.$refs.tree2.filter(val);
+      }
+    },
+    created() {
+      this.loading = true;
+      const list = common.get('List');
+      if (list != null) {
+        this.dataTree = list;
+        this.loading = false;
+      } else {
+        this.getCategoryTree(); // 获取树状图数据
+      }
+    },
+    methods: {
+      pagination(val) {// 列表分页
+        data = this.formInline;
+        data.page = val;
+        common.getPreData(data, 'InvoiceHeader/getList', this, 'billAdminIndexSearch');
+        common.set('billAdminIndexSearch', { 'search': {mall_id:this.formInline.mall_id,page: val} });
+      },
+      handleSizeChange(val) {// 列表分页
+        data = this.formInline;
+        data.limit = val;
+        common.getPreData(data, 'InvoiceHeader/getList', this, 'billAdminIndexSearch');
+        common.set('billAdminIndexSearch', { 'search': {mall_id:this.formInline.mall_id,limit: val} });
+      },
+      clickRow(row) {//选择当前行
+        this.$refs.multipleTable.toggleRowSelection(row);
+        this.checkData = row;
+      },
+      changFun(row) {//获取当前行数据
+        if (row.length > 1) { //去除多选
+          this.$refs.multipleTable.clearSelection();
+          this.$refs.multipleTable.toggleRowSelection(row.pop());
+        }else if(row.length == 0) {
+          this.checkData = [];
+        }
+      },
+      filterNode(value, data) {
+        if (!value) return true;
+        return data.text.indexOf(value) !== -1;
+      },
+      handleNodeClick(node, data) { // 点击传参给品类信息子组件，并显示品类信息
+        this.addCate = true;
+        console.log(node)
+        console.log(data)
+        // this.axios({
+        //   method: 'post',
+        //   url: process.env.BASE_API + 'Operation_Type/getName',
+        //   data: parentId
+        // }).then((res) => {
+        //   if (res.status == 200) {
+        //     this.parent_id = res.data.data;
+        //   }
+        // }).catch(function(err) {
+        //   this.$message.error(err.response.data.msg);
+        // });
+      },
+      getCategoryTree() { // 获取树状图数据
+        common.getTree('Operation_Type/cateList', this, 'List');
+      },
+      viewRow(row) {
+        this.payType(1, 1, '查看支付方式')
+      },
+      editRow(row) {
+        this.payType(1, 2, '编辑支付方式')
+      },
+      addCategory() { // 点击添加子类
+        this.payType('', 3, '新增支付方式')
+      },
+      payType(id, type, name) {
+
+        this.building = true;
+        this.payModeId = id;
+        this.payModeType = type; // 1查看 2编辑 3新增
+        this.payModeName = name; // 1查看 2编辑 3新增
+      },
+      payMode(data) {
+        this.building = data;
+      }
+    }
+  };
+</script>
+<style rel="stylesheet/scss" lang="scss" scoped>
+  @import "../../../font/iconfont.css";
+  #app {
+    font-family: 'Avenir', Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-align: center;
+    color: #666;
+  }
+  .category-tree-content{margin:10px;border: 1px solid #e2e2e2;height: calc(100vh - 10vh);
+  .category-text{background: #f7f7f7;line-height: 40px;font-size: 14px;color: #606266;padding: 0 15px;box-sizing: border-box;font-weight: bold;}
+  }
+  .filter-tree{overflow: auto;height:calc(100vh - 15vh);}
+  .addCategory{color: #38f;float:right;cursor:pointer;}
+</style>
+

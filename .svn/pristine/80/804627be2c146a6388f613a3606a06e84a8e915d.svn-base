@@ -1,0 +1,379 @@
+<template>
+  <!--订单收款的弹窗-->
+  <div class="innerWrap">
+    <blockquote class="elem_quote">本次退款信息</blockquote>
+    <el-form :model="costRefund" label-width="100px" class="demo-ruleForm">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="商户名称" tabindex="-1">
+            <el-input v-model="costRefund.paying_amt" :readonly="true"/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="可用金额">
+            <el-input v-model="costRefund.money" :readonly="true"/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item :label="implementStatus">
+            <el-input v-model="costRefund.store_name" :readonly="true"/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="余额处理方式">
+            <el-input v-model="costRefund.code" :readonly="true"/>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="录入日期">
+            <el-input v-model="costRefund.full_name" :readonly="true"/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="退款人">
+            <el-input v-model="costRefund.name" :readonly="true"/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="立账日期">
+            <el-date-picker
+              v-model="costRefund.accounts_date"
+              type="date"
+              placeholder="选择日期">
+            </el-date-picker>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="录入人">
+            <el-input v-model="costRefund.name" :readonly="true"/>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="退款总额">
+            <el-input v-model="refundMoney" :readonly="true"/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="备注">
+            <el-input v-model="costRefund.name"/>
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+    <blockquote class="elem_quote">账单明细</blockquote>
+    <div class="tableRefund">
+      <el-table
+        ref="tableFour"
+        :data="costDetailTable"
+        :show-overflow-tooltip="true"
+        border
+        tooltip-effect="dark"
+        @cell-dblclick="dbEdit"
+        style="width: 100%;">
+        <el-table-column
+          type="index"
+          label="序号"
+          width="55"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop=" "
+          min-width="100"
+          label="明细号"/>
+        <el-table-column
+          prop=" "
+          min-width="100"
+          label="会计期"/>
+        <el-table-column
+          prop=" "
+          min-width="150"
+          label="合同编号"/>
+        <el-table-column
+          prop=" "
+          min-width="150"
+          label="费用类型"/>
+        <el-table-column
+          prop=" "
+          min-width="100"
+          label="退款金额"/>
+        <el-table-column
+          prop=" "
+          min-width="100"
+          label="已退金额"/>
+        <el-table-column
+          prop="net_amount"
+          min-width="100"
+          label="本次退款金额">
+          <template slot-scope="scope">
+            <span v-if="!inputEdit">{{ scope.row.net_amount }}</span>
+            <span v-if="inputEdit" class="cell-edit-input">
+            <el-input type="number" ref="editFcous" v-model="inputColumn1" @change="editFcous"></el-input>
+          </span>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+    <blockquote class="elem_quote">支付方式</blockquote>
+    <div class="btn_bottom">
+      <el-button :autofocus="true" type="primary" :disabled="refundMoneyDisabled" @click="addPayWay">
+        新增支付方式
+      </el-button>
+      <el-button :disabled="paymentConfi" type="primary" @click="isPay">付款确认</el-button>
+    </div>
+    <div class="tableRefund">
+      <el-table
+        ref="tableFive"
+        :data="tableDataFive"
+        :show-overflow-tooltip="true"
+        border
+        tooltip-effect="dark"
+        style="width: 100%">
+        <el-table-column
+          type="index"
+          label="序号"
+          width="55"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="pay_name"
+          min-width="100"
+          label="支付方式"/>
+        <el-table-column
+          prop="money"
+          min-width="100"
+          label="付款金额"/>
+        <el-table-column
+          prop="fee_amt"
+          min-width="100"
+          label="手续费"/>
+        <el-table-column
+          fixed="right"
+          label="操作"
+          min-width="120">
+          <template slot-scope="scope">
+            <el-button type="text" size="small" @click.native.prevent="deletePayWay(scope.$index, tableDataFive)">
+              删除支付方式
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+    <!--新增支付方式弹窗-->
+    <el-dialog
+      :visible.sync="innerVisibleSecond"
+      top="5%"
+      width="40%"
+      title="新增支付方式"
+      append-to-body
+      @close="handleClose">
+      <el-form ref="payWayForm" :model="payWayForm" :rules="rules" label-width="100px" class="demo-ruleForm">
+        <el-form-item label="应付金额">
+          <el-input v-model="payWayForm.paying_amt" ref="getPayWayChang" readonly/>
+        </el-form-item>
+        <el-form-item label="支付大类">
+          <el-select v-model="payWayForm.pay_type_id" @change="getPayWay">
+            <el-option v-for="item in getPayTypeList" :key="item.pay_type_id" :label="item.pay_type_name"
+                       :value="item.pay_type_id"/>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="支付方式" prop="pay_id">
+          <el-select v-model="payWayForm.pay_id" @change="currentSel">
+            <el-option v-for="item in getPayWayList" :key="item.pay_id" :label="item.pay_name" :value="item.pay_id"/>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="本次付款金额" class="label_required width_110">
+          <el-input v-model="payWayForm.money" type="number" @input="payWayFormMoney"/>
+        </el-form-item>
+        <el-form-item label="手续费">
+          <el-input v-model="payWayForm.fee_amt" type="number"/>
+        </el-form-item>
+        <!--<el-form-item label="支付终端编号">
+          <el-input v-model="payWayForm.type_name	" readonly/>
+        </el-form-item>
+        <el-form-item label="交易流水号">
+          <el-input v-model="payWayForm.type_name	" readonly/>
+        </el-form-item>
+        <el-form-item label="批次号">
+          <el-input v-model="payWayForm.type_name	" readonly/>
+        </el-form-item>-->
+        <el-form-item>
+          <el-button type="primary" @click="savePayWay('payWayForm')">保 存</el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+  export default {
+    name: 'costRefund',
+    props: ['checkData', 'costName'],
+    watch: {
+      costName: function(newVal, oldVal) {
+        if(newVal == '账单退款') {
+          this.implementStatus = "退款来源";
+        }else {
+          this.implementStatus = "收款来源";
+        }
+      },
+    },
+    data() {
+      return {
+        costRefund: {},
+        inputEdit: false,
+        inputColumn1: '',
+        tableDataFive: [], // 新增支付方式表格
+        costDetailTable: [],// 账单明细表格
+        innerVisibleSecond: false,// 新增支付方式
+        paymentConfi: true,// 付款确认
+        refundMoneyDisabled: true, // 新增付款方式
+        payWayForm: {},// 新增付款表单
+        getPayTypeList: [], // 获取的支付大类信息
+        getPayWayList: [], // 获取支付方式的信息
+        money: '',
+        rules: {
+          pay_id: [{ required: true, message: '请选择支付方式', trigger: 'change' }]
+        },
+        pay_name: '', // 支付name
+        charge_rate: 0, // 手续费
+        refundMoney: 0, // 退款金额
+        totalMoney: 0, // 新增金额总数
+        implementStatus:'',
+      }
+    },
+    created() {
+      this.getPayType();
+      let costDetailTable = [];
+      costDetailTable.push(this.checkData);
+      this.costDetailTable = costDetailTable;
+      if(this.costName == '账单退款') {
+        this.implementStatus = "退款来源";
+      }else {
+        this.implementStatus = "收款来源";
+      }
+    },
+    methods: {
+      // 双击表格编辑
+      dbEdit(row, column, event, cell) {
+        this.inputEdit = true
+        this.$nextTick(() => {
+          this.$refs.editFcous.focus()
+        })
+      },
+      // 编辑框失去焦点
+      editFcous(val) {
+        this.inputEdit = false
+        if (val != 0) {
+          this.refundMoneyDisabled = false
+          this.costDetailTable[0].net_amount = val
+        }
+      },
+      // 新增支付方式
+      addPayWay() {
+        this.payWayForm.paying_amt = parseFloat(this.costDetailTable[0].net_amount) - parseFloat(this.refundMoney)
+        this.innerVisibleSecond = true
+      },
+      // 删除支付方式
+      deletePayWay(index, rows) {
+        rows.splice(index, 1)
+      },
+
+      // 关闭新增支付方式
+      handleClose() {
+        this.payWayForm.pay_type_id = ''
+        this.payWayForm.pay_id = ''
+        this.money = ''
+        this.getPayWayList = []
+      },
+      // 获取支付大类
+      getPayType() {
+        this.axios({
+          method: 'post',
+          url: process.env.BASE_API + 'order_pay/getPayType'
+        }).then((res) => {
+          this.getPayTypeList = res.data.data
+        }).catch((err) => {
+          this.$message.error(err.response.data.msg)
+        })
+      },
+      getPayWay(index) { // 根据门店和支付大类获取支付方式
+        this.axios({
+          method: 'post',
+          data: { mall_id: 1, pay_type_id: index },
+          url: process.env.BASE_API + 'order_pay/getPayByStoreAndType'
+        }).then((res) => {
+          this.getPayWayList = res.data.data
+        }).catch((err) => {
+          this.$message.error(err.response.data.msg)
+        })
+      },
+      // 本次付款金额
+      payWayFormMoney(val) {
+        if (parseFloat(val) > parseFloat(this.payWayForm.paying_amt)) {
+          this.$message({ message: '请输入正确金额！', type: 'error' })
+        }
+        this.payWayForm.fee_amt = parseFloat(val * this.charge_rate).toFixed(2)
+      },
+      // 获取手续费率
+      currentSel(selVal) {
+        this.getPayWayList.forEach(v => {
+          if (v.pay_id == selVal) {
+            this.pay_name = v.pay_name
+            this.charge_rate = v.charge_rate
+            if (this.payWayForm.money != undefined && this.payWayForm.money != '') {
+              this.payWayForm.fee_amt = parseFloat(this.payWayForm.money * v.charge_rate).toFixed(2)
+            }
+          }
+        })
+      },
+      //保存新增支付方式
+      savePayWay(formName) { // 新增支付方式保存
+        this.refundMoney = 0
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            if (parseFloat(this.payWayForm.money) > parseFloat(this.payWayForm.paying_amt)) {
+              this.$message({ message: '金额不能大于退款金额！', type: 'error' })
+            } else {
+              this.payWayForm.pay_name = this.pay_name
+              this.tableDataFive.push(JSON.parse(JSON.stringify(this.payWayForm)))
+              this.tableDataFive.forEach((index, i) => {
+                this.refundMoney += parseFloat(index.money)
+              })
+              this.payWayForm.paying_amt = parseFloat(this.totalMoney) - parseFloat(this.refundMoney)
+              this.handleClose()
+              this.innerVisibleSecond = false;
+              this.addPayList();
+            }
+          } else {
+            this.$message({ message: '请填写完整！', type: 'error' })
+          }
+        })
+      },
+      // 判断本次退款金额和支付金额
+      addPayList() {
+        if (parseFloat(this.refundMoney) == parseFloat(this.costDetailTable[0].net_amount)) {
+          this.refundMoneyDisabled = true;
+          this.paymentConfi = false;
+        }else {
+          this.refundMoneyDisabled = false;
+          this.paymentConfi = true;
+        }
+      },
+      // 付款确认
+      isPay() {
+      }
+    }
+  }
+</script>
+
+<style scoped>
+  .el-row > div > .el-form-item {
+    margin-bottom: 5px !important;
+  }
+
+  .tableRefund {
+    margin: 5px 10px;
+  }
+</style>

@@ -1,0 +1,136 @@
+<template>
+  <div>
+    <el-form :model="ruleForm" label-width="100px" class="demo-ruleForm">
+      <blockquote class="elem_quote">订单收款查看</blockquote>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="订单编号">
+            <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商铺编号">
+            <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商铺名称">
+            <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="订单日期">
+            <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <blockquote class="elem_quote">本次付款信息</blockquote>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="付款编号">
+            <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="收款人">
+            <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="收款日期">
+            <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="订单状态">
+            <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="支付金额">
+            <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="手续费">
+            <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="抹零金额">
+            <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="收款总额">
+            <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="付款方式">
+            <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="终端编号">
+            <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="批次号">
+            <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="流水号">
+            <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <blockquote class="elem_quote">代收款信息</blockquote>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="待收款状态">
+            <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="代收款编号">
+            <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="代收款日期">
+            <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="处理状态">
+            <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'CheckGathering',
+  data() {
+    return {
+      ruleForm: {
+        role_name: ''
+      }
+    };
+  }
+};
+</script>
+
+<style scoped>
+
+</style>

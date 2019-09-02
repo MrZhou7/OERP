@@ -1,0 +1,25 @@
+{
+  "name": "autoprefixer",
+  "version": "8.5.0",
+  "description": "Parse CSS and add vendor prefixes to CSS rules using values from the Can I Use website",
+  "keywords": ["autoprefixer", "css", "prefix", "postcss", "postcss-plugin"],
+  "author": "Andrey Sitnik <andrey@sitnik.ru>",
+  "license": "MIT",
+  "repository": "postcss/autoprefixer",
+  "dependencies": {
+    "browserslist": "^3.2.7",
+    "caniuse-lite": "^1.0.30000839",
+    "normalize-range": "^0.1.2",
+    "num2fraction": "^1.2.2",
+    "postcss": "^6.0.22",
+    "postcss-value-parser": "^3.2.3"
+  },
+  "bin": {
+    "autoprefixer": "./bin/autoprefixer"
+  },
+  "main": "lib/autoprefixer"
+
+,"_resolved": "https://registry.npmjs.org/autoprefixer/-/autoprefixer-8.5.0.tgz"
+,"_integrity": "sha512-buY1XxFoBrXvLsoFb0jP+niSu1tCj2RwMwHj96+RfQ8DJTgb0vUhh0dg6wjJT3JzsFYBrkSj8/sGtarNdlxTFw=="
+,"_from": "autoprefixer@8.5.0"
+}

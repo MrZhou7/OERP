@@ -1,0 +1,332 @@
+<template>
+  <el-main>
+    <el-form ref="form" :model="formInline" label-width="80px">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="门店选择">
+
+            <el-select v-model="formInline.mall_id" placeholder="请选择"  >
+              <el-option
+                v-for="(item,index) in preData.mall"
+                :key="index"
+                :label="item.mall_name"
+                :value="parseInt(item.mall_id)">
+              </el-option>
+            </el-select>
+
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商户名称">
+            <el-input v-model="formInline.customer_name" placeholder="请输入商户名称"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商户编号">
+            <el-input v-model="formInline.customer_code" placeholder="请输入商户编号"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="合同ID">
+            <el-input v-model="formInline.contract_main_id" placeholder="请输入合同ID"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="场地编号">
+            <el-input v-model="formInline.unit_code" placeholder="请输入场地编号"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="合同状态">
+            <el-select v-model="formInline.status" placeholder="请选择合同状态">
+              <el-option label="区域一" value="shanghai"></el-option>
+              <el-option label="区域二" value="beijing"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="品牌名称">
+            <el-input v-model="formInline.brand_name" placeholder="请选择品牌名称"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="结束日期">
+            <el-input v-model="formInline.end_date" placeholder="请选择合同结束日期"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+
+      <el-row>
+        <el-col :span="12">
+          <el-form-item label="录入日期">
+            <el-date-picker
+              v-model="formInline.date"
+              type="daterange"
+              SelectionMode="None"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              :default-time="['00:00:00', '23:59:59']"
+            ></el-date-picker>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6" align="center">
+          <el-button align="center" type="primary" @click="onSecher(formInline)">查询</el-button>
+        </el-col>
+      </el-row>
+    </el-form>
+    <div class="btn_bottom">
+      <el-button type="success" @click="addRow()">新增</el-button>
+      <el-button disabled>延期</el-button>
+      <el-button disabled>中止</el-button>
+      <el-button disabled>批量通过</el-button>
+      <el-button disabled>批量拒绝</el-button>
+    </div>
+    <div class="contract_table">
+       <el-table
+        :data="tableData"
+        style="width: 100%;text-align: center"
+        border
+        show-overflow-tooltip: true
+        align: center
+        min-height="450">
+        <el-table-column
+          prop="contract_main_id"
+          type="selection"
+          width="55">
+        </el-table-column>
+        <el-table-column
+          fixed
+          prop="mall_name"
+          label="项目名称"
+          resizable: true
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="contract_code"
+          label="合同编号"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="customer_code"
+          label="商户编号"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="customer_name"
+          label="商户名称"
+          width="120">
+        </el-table-column>
+
+         <el-table-column
+           prop="status"
+           label="审批状态"
+           width="120">
+           <template slot-scope="scope" >
+             <span v-for="(item, index) in contractStatus" >
+               {{scope.row.status == item.values_code ? item.values_name : ''}}
+             </span>
+           </template>
+         </el-table-column>
+         <el-table-column
+           prop="start_date"
+           label="开始时间"
+           width="120">
+         </el-table-column>
+         <el-table-column
+           prop="end_date"
+           label="结束时间"
+           width="120">
+         </el-table-column>
+        <el-table-column
+          prop="store_code"
+          label="场地编号"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="store_name"
+          label="场地名称"
+          width="120">
+        </el-table-column>
+
+        <el-table-column
+          prop="data_source"
+          label="合同来源"
+          width="120">
+          <template slot-scope="scope" >
+             <span v-for="(item, index) in contractSource" >
+               {{scope.row.data_source == item.values_code ? item.values_name : ''}}
+             </span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="contract_code"
+          label="合同ID"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="store_name"
+          label="品牌名称"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="contract_area"
+          label="签约面积(平米)"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="avoid_lease"
+          label="免租期(天)"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="decorate_days"
+          label="装修期(天)"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="user_name"
+          label="招商人员"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          fixed="right"
+          algin="center"
+          label="操作"
+          width="300">
+          <template slot-scope="scope">
+            <el-button
+              @click.native.prevent="viewRow(scope.$index, tableData)"
+              type="text"
+              size="small">
+              查看
+            </el-button>
+            <el-button
+              @click.native.prevent="editRow(scope.$index, tableData)"
+              type="text"
+              size="small">
+              编辑
+            </el-button>
+            <el-button
+              @click.native.prevent="deleteRow(scope.$index, tableData)"
+              type="text"
+              size="small">
+              作废
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+
+  </el-main>
+
+
+</template>
+
+<script>
+  import {common} from '../../common/common'
+export default {
+  data() {
+    return {
+      formInline:{},
+      tableData:[],
+      type:'',
+      fieldChoice: false,
+      preData:{},
+      contractStatus:[],
+      contractSource:[],
+    };
+  },
+  components: {
+  },
+  created: function() {
+    const that = this;
+    this.axios
+      .post(process.env.BASE_API + "contract_main/getcontractlist", {
+        mall_id: 1
+      })
+      .then(function(res) {
+        if (res.data.code == 0) {
+          that.tableData = res.data.data;
+        }
+      })
+      .catch(function(err) {
+        that.$message.error(err.responseJSON.msg);
+      });
+    this.getPreData()
+  },
+  methods: {
+    getPreData() {//预渲染参数
+      let that = this;
+      this.axios
+        .post(process.env.BASE_API + "table_util/getPreData", {act: 'contract'})
+        .then(function (res) {
+          if (res.status == 200) {
+            that.preData = res.data.data
+          }
+        })
+        .catch(function (err) {
+          this.$message.error(err.response.data.msg);
+        });
+      common.lookup('L012', this).then((res) => {
+        this.contractStatus = res;
+      })
+      common.lookup('L011', this).then((res) => {
+        this.contractSource = res;
+      })
+    },
+    onSecher() {
+
+      const that = this;
+      this.axios
+        .post(process.env.BASE_API + "contract_main/getcontractlist", {
+          mall_id: this.formInline.mall_id
+        })
+        .then(function(res) {
+          if (res.data.code == 0) {
+            that.tableData = res.data.data;
+          }
+        })
+        .catch(function(err) {
+        });
+    },
+    addRow() {
+      this.$router.push({
+        path: '/contract/create',
+        query: {
+          status: 'add'
+        }
+      })
+    },
+    viewRow(index, row) {
+      this.$router.push({
+        path: '/contract/create',
+        meta: { title: '查看租赁合同' },
+        query: {
+          status: 'view',
+          type: row[index]["contract_main_id"]
+        }
+      })
+    },
+    editRow(index, row) {
+      this.$router.push({
+        path: '/contract/create',
+        meta: { title: '编辑租赁合同' },
+        query: {
+          status: 'edit',
+          type: row[index]["contract_main_id"]
+        }
+      })
+    },
+    deleteRow(index, row) {
+      common.del('合同',process.env.BASE_API + "contract_main/getcontractlist",{contract_main_id: row[index].contract_main_id}, this)
+    },
+
+  }
+};
+</script>
+
+<style rel="stylesheet/scss" lang="scss">
+
+</style>

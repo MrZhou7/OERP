@@ -1,0 +1,465 @@
+<template>
+  <el-main>
+    <el-form ref="formInline" :model="formInline" label-width="100px" class="demo-ruleForm">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="门店">
+            <el-select v-model="formInline.mall_id" placeholder="请选择门店名称">
+              <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name" :value="mall.mall_id"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="合同ID">
+            <el-input v-model="formInline.code" clearable placeholder="请输入订单编号"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="合同编号">
+            <el-input v-model="formInline.code" clearable placeholder="请输入订单编号"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="费用批次号">
+            <el-input v-model="formInline.code" type="number" clearable placeholder="请输入订单编号"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="商铺编号">
+            <el-input v-model="formInline.store_code" clearable placeholder="请输入商铺编号"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商铺名称">
+            <el-input v-model="store_name" clearable @click.native="shopName">
+              <el-button slot="append" icon="el-icon-search"></el-button>
+            </el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="开始日期">
+            <el-date-picker
+              v-model="formInline.start"
+              type="date"
+              placeholder="选择日期">
+            </el-date-picker>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="结束日期">
+            <el-date-picker
+              v-model="formInline.end"
+              type="date"
+              placeholder="选择日期">
+            </el-date-picker>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="审核状态">
+            <el-select v-model="formInline.paid_status" placeholder="请选择">
+              <el-option value="" label="全部"></el-option>
+              <el-option label="草稿" value="1"></el-option>
+              <el-option label="审批通过" value="2"></el-option>
+              <el-option label="审批中" value="3"></el-option>
+              <el-option label="作废" value="4"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商户名称">
+            <el-input v-model="formInline.customer_name" clearable placeholder="请输入商户名称"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商户编号">
+            <el-input v-model="formInline.customer_code" clearable placeholder="请输入商户编号"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="临时费用单号">
+            <el-input v-model="formInline.customer_code" clearable placeholder="请输入商户编号"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="费用类型">
+            <el-input v-model="formInline.customer_name" clearable placeholder="请输入商户名称"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="账单生成标记">
+            <el-select v-model="formInline.paid_status" placeholder="请选择">
+              <el-option value="" label="全部"></el-option>
+              <el-option label="未生成" value="0"></el-option>
+              <el-option label="已生成" value="1"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item>
+            <el-button type="primary" @click="submitForm('formInline')">查 询</el-button>
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+    <div class="btn_bottom">
+      <!--<el-button @click="inChecking" :disabled="statusClick.inCheckings">新增</el-button>
+      <el-button @click="inChecking" :disabled="statusClick.inCheckings">提交审核</el-button>
+      <el-button @click="checking" :disabled="statusClick.checkings">审核</el-button>
+      <el-button @click="cancel" :disabled="statusClick.cancel">撤销审核</el-button>
+      <el-button @click="receivables" :disabled="statusClick.receivables">作废</el-button>-->
+    </div>
+    <div class="contract_table">
+      <el-table
+        ref="table"
+        :height="height"
+        :data="tableData"
+        :show-overflow-tooltip="true"
+        border
+        tooltip-effect="dark"
+        style="width: 100%"
+        @row-click="clickRow">
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="code"
+          min-width="180"
+          label="审核状态">
+        </el-table-column>
+        <el-table-column
+          prop="customer_name"
+          min-width="120"
+          label="临时费用单号">
+        </el-table-column>
+        <el-table-column
+          prop="customer_code"
+          min-width="100"
+          label="合同编号">
+        </el-table-column>
+        <el-table-column
+          prop="store_code"
+          min-width="100"
+          label="合同ID">
+        </el-table-column>
+        <el-table-column
+          prop="total_amt"
+          min-width="100"
+          label="项目名称">
+        </el-table-column>
+        <el-table-column
+          prop="paid_amt"
+          min-width="100"
+          label="商铺">
+        </el-table-column>
+        <el-table-column
+          prop="order_date"
+          min-width="100"
+          label="商铺编号">
+        </el-table-column>
+        <el-table-column
+          prop="paid_status"
+          min-width="100"
+          label="商户名称">
+        </el-table-column>
+        <el-table-column
+          prop="paid_status"
+          min-width="100"
+          label="商户编号">
+        </el-table-column>
+        <el-table-column
+          prop="paid_status"
+          min-width="120"
+          label="临时费用类型">
+        </el-table-column>
+        <el-table-column
+          prop="paid_status"
+          min-width="100"
+          label="收费总额">
+        </el-table-column>
+        <el-table-column
+          prop="paid_status"
+          min-width="120"
+          label="账单生成标记">
+        </el-table-column>
+        <el-table-column
+          prop="paid_status"
+          min-width="100"
+          label="费用批次号">
+        </el-table-column>
+        <el-table-column
+          prop="paid_status"
+          min-width="100"
+          label="账单批次号">
+        </el-table-column>
+        <el-table-column
+          fixed="right"
+          label="操作"
+          min-width="180">
+          <template slot-scope="scope">
+            <el-button type = "text" size="small" @click.native.prevent="checkRol(scope.$index, tableData)">查 看</el-button>
+            <el-button type = "text" size="small" @click.native.prevent="gatheringDialog(scope.$index, tableData)">收 款</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        :page-sizes="[10, 20, 30, 40]"
+        :page-size="10"
+        :current-page.sync="currentPage"
+        :total="total"
+        background
+        layout="prev, pager, next, total, sizes"
+        @current-change="pagination">
+      </el-pagination>
+    </div>
+    <!--订单收款的弹窗-->
+    <el-dialog
+      title="订单收款"
+      :close-on-click-modal="false"
+      :visible.sync="dialogVisible"
+      top="5%"
+      width="80%"
+      height="80%">
+      <el-form :model="ruleForm" label-width="100px" class="demo-ruleForm">
+        <el-row>
+          <el-col :span="6">
+            <el-form-item label="角色名称">
+              <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="商铺编号">
+              <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="商铺名称">
+              <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="付款状态">
+              <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="6">
+            <el-form-item label="订单日期">
+              <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="配送日期">
+              <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="订单金额">
+              <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="付款方式">
+              <el-input v-model="ruleForm.role_name" :readonly="true"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div class="btn_bottom">
+        <el-button type="primary" @click="gathering()">收款</el-button>
+      </div>
+      <el-table
+        ref="table"
+        :height="height"
+        :data="tableDataSecond"
+        :show-overflow-tooltip="true"
+        border
+        tooltip-effect="dark"
+        style="width: 100%"
+        @row-click="clickRow">
+        <el-table-column
+          type="selection"
+          width="40">
+        </el-table-column>
+        <el-table-column
+          type="index"
+          label="序号"
+          width="55">
+        </el-table-column>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="dept_code"
+          min-width="180"
+          label="付款期数">
+        </el-table-column>
+        <el-table-column
+          prop="role_name"
+          min-width="100"
+          label="应付金额">
+        </el-table-column>
+        <el-table-column
+          prop="subject_code"
+          min-width="100"
+          label="已付金额">
+        </el-table-column>
+        <el-table-column
+          prop="subject_code"
+          min-width="100"
+          label="手续费">
+        </el-table-column>
+        <el-table-column
+          prop="subject_code"
+          min-width="100"
+          label="收款状态">
+        </el-table-column>
+        <el-table-column
+          prop="subject_code"
+          min-width="100"
+          label="收款人">
+        </el-table-column>
+        <el-table-column
+          prop="subject_code"
+          min-width="100"
+          label="收款日期">
+        </el-table-column>
+        <el-table-column
+          prop="subject_code"
+          min-width="100"
+          label="付款结束日期">
+        </el-table-column>
+      </el-table>
+    </el-dialog>
+    <!--多选商铺的弹窗-->
+    <el-dialog
+      :visible.sync="dialogVisibleShop"
+      :close-on-click-modal="false"
+      title="多选商铺"
+      top="5%"
+      width="80%"
+      height="90%">
+      <Shops :mall="formInline.mall_id" @fieldData="fieldData"></Shops>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+var data = {};
+import { common } from '@/common/common';
+import Shops from '@/components/order/shops.vue'; // 场地
+import building from '@/utils/building';
+export default {
+  name: 'TemporaryCostMange',
+  components: {
+    Shops
+  },
+  data() {
+    return {
+      formInline: { // 搜索条件信息
+        mall_id: '',
+        building_id: '',
+        floor_id: '',
+        code: '', // 订单编号
+        store_code: '', // 商铺编号
+        store_name: '', // 商铺名称
+        paid_status: '', // 付款状态
+        customer_name: '', // 商户名称
+        customer_code: '', // 商户编号
+        start: '', // 开始日期
+        end: '' // 结束日期
+      },
+      store_name: '', // 商铺名
+      height: window.innerHeight - 350 + 'px',
+      loading: false,
+      total: 0,
+      currentPage: 1, // 页码
+      mall_name: [], // 门店信息
+      building_name: [], // 楼栋信息
+      floor_name: [], // 楼层信息
+      tableData: [], // 订单table
+      tableDataSecond: [], // 订单收款table
+      dialogVisible: false, // 订单收款的弹窗
+      dialogVisibleShop: false, // 多选商铺的弹窗
+      ruleForm: { // 弹窗收款信息
+        role_name: ''
+      }
+    };
+  },
+  created() {
+    this.getMall(); // 先获取数据
+  },
+  methods: {
+    submitForm() { // 查询
+      //common.getPreData(this.formInline, 'OrderMain/getOrderList', this);
+      this.axios.post('http://10.1.2.168/index.php/V1/OrderMain/getOrderList', this.formInline).then((res) => {
+        this.tableData = res.data.data;
+      });
+    },
+    clickRow() { // 点击table的row
+    },
+    gatheringDialog() { // 收款弹窗
+      this.dialogVisible = true;
+    },
+    checkRol() {
+
+    },
+    gathering() { // 收款
+      if (this.tableDataSecond) {
+        this.$message({ message: '请选择要收款的订单！', type: 'warning' });
+      }
+    },
+    pagination(val) { // 分页功能
+      /*data = this.form;
+      data.page = val;
+      data.limit = 10;
+      common.getPreData(data, 'Role/roleList', this, 'roalSearch');
+      common.set('roalSearch', data);*/
+    },
+    shopName() { // 弹框商铺名称
+      if (this.formInline.mall_id == undefined || this.formInline.mall_id == '') {
+        this.$message({
+          message: '请选择门店',
+          type: 'warning'
+        });
+      } else {
+        this.dialogVisibleShop = false;
+        this.$nextTick(() => {
+          this.dialogVisibleShop = true;
+        });
+      }
+    },
+    fieldData(data) { // 场地赋值
+      if (data.length == undefined) {
+        this.store_name = data.store_name;
+        this.formInline.store_id = data.store_id;
+      } else {
+        let store_id = '', store_name = '';
+        data.forEach((index, i) => {
+          if (i != data.length - 1) {
+            store_id += index.store_id + ',';
+            store_name += index.store_name + ',';
+          } else {
+            store_id += index.store_id;
+            store_name += index.store_name;
+          }
+          this.store_name = store_name;
+          this.formInline.store_id = store_id;
+        });
+      }
+      this.dialogVisibleShop = false;
+    },
+    getMall() { // 获取项目名称信息
+      building.Mall(this);
+    }
+  }
+};
+</script>
+
+<style scoped>
+  .el-form-item {
+    margin-bottom: 5px;
+  }
+</style>

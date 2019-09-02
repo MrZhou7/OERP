@@ -1,0 +1,142 @@
+<template>
+  <el-main>
+    <el-form :model="formInline" class="demo-form-inline" label-width="80px">
+      <el-row>
+
+        <el-col :span="8">
+          <el-form-item label="原商铺">
+            <el-input v-model="old_store_name" suffix-icon="el-icon-search" clearable @focus="fieldClick(1)"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="目标商铺">
+            <el-input v-model="new_store_name" suffix-icon="el-icon-search" clearable @focus="fieldClick(2)"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item>
+            <el-button type="primary" @click="implement">执行</el-button>
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+    <!--查看编辑弹窗-->
+    <el-dialog title="商铺选择" :visible.sync="fieldChoice"  width="70%" height="70%"  top="3%" :close-on-click-modal="false">
+      <Shops v-on:fieldData="fieldData" :mall="formInline.mall_id"></Shops>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+  import Shops from '@/components/order/shops.vue' //商铺
+  import building from '@/utils/building'
+
+  export default {
+    name: 'shopTransfer',
+    components: { Shops },
+    data() {
+      return {
+        formInline: {},
+        old_store_name:'',
+        new_store_name:'',
+        mall_name: [], // 门店信息
+        fieldChoice:false,
+        fieldVal: '',
+      };
+    },
+    created() {
+
+    },
+    methods: {
+      fieldClick(val) {
+        this.fieldVal = val;
+        //场地点击
+        if(this.fieldVal == 1) {
+          if(!this.formInline.old_store_id && this.old_store_name == '') {
+            this.fieldChoice = true;
+          }else {
+            this.formInline.old_store_id = '';
+            this.old_store_name = '';
+          }
+        }else {
+          if(!this.formInline.new_store_id && this.new_store_name == '') {
+            this.fieldChoice = true;
+          }else {
+            this.formInline.new_store_id = '';
+            this.new_store_name = '';
+          }
+        }
+      },
+      fieldData(data) {//场地赋值
+        if(this.fieldVal == 1) {
+          if (data.length == undefined) {
+            this.old_store_name = data.store_name;
+            this.formInline.old_store_id = data.store_id;
+          } else {
+            let store_id = '', store_name = '';
+            data.forEach((index, i) => {
+              if (i != data.length - 1) {
+                store_id += index.store_id + ',';
+                store_name += index.store_name + ',';
+              } else {
+                store_id += index.store_id;
+                store_name += index.store_name;
+              }
+              this.old_store_name = store_name;
+              this.formInline.old_store_id = store_id;
+            })
+          }
+        }else {
+          if (data.length == undefined) {
+            this.new_store_name = data.store_name;
+            this.formInline.new_store_id = data.store_id;
+            this.formInline.product_name = data.store_code;
+          } else {
+            let store_id = '', store_name = '',store_code = '';
+            data.forEach((index, i) => {
+              if (i != data.length - 1) {
+                store_id += index.store_id + ',';
+                store_name += index.store_name + ',';
+                store_code += index.store_code + ',';
+              } else {
+                store_id += index.store_id;
+                store_name += index.store_name;
+                store_code += index.store_code;
+              }
+              this.new_store_name = store_name;
+              this.formInline.new_store_id = store_id;
+              this.formInline.product_name = store_id;
+            })
+          }
+        }
+        this.fieldChoice = false;
+      },
+      implement(data) {
+        this.addPersonnel = data;
+        if(!this.new_store_name) {
+          this.$message.error('目标商铺不能为空');
+          return false;
+        }else if(!this.old_store_name) {
+          this.$message.error('原商铺不能为空');
+          return false;
+        }else{
+          this.http.post('StoreSynthesize/transferStore',this.formInline).then(res => {
+            console.log(res)
+            if(res.data.code == 0) {
+              this.$message.success('执行成功')
+            }else {
+              this.$message.error(res.data.msg)
+            }
+          }).catch((err) => {
+            this.$message.error(err.response.data.msg);
+          });
+        }
+      }
+    }
+  };
+</script>
+
+<style scoped lang="scss">
+  #businessWrap{padding: 15px;}
+  .el-form-item {margin-bottom: 5px;}
+</style>

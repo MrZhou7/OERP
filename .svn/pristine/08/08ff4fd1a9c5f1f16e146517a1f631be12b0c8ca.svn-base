@@ -1,0 +1,56 @@
+<template>
+  <el-scrollbar wrap-class="scrollbar-wrapper">
+    <el-menu
+      :default-active="$route.path"
+      :collapse="isCollapse"
+      :background-color="variables.menuBg"
+      :text-color="variables.menuText"
+      :active-text-color="variables.menuActiveText"
+      :collapse-transition="false"
+      mode="vertical"
+    >
+      <sidebar-item v-for="route in routes" :key="route.path" :item="route" :base-path="route.path"/>
+    </el-menu>
+  </el-scrollbar>
+</template>
+
+<script>
+import { mapGetters } from 'vuex'
+import variables from '@/styles/variables.scss'
+import SidebarItem from './SidebarItem'
+export default {
+  components: { SidebarItem },
+  data() {
+    return {
+      navList: []
+    };
+  },
+  computed: {
+    ...mapGetters([
+      'sidebar'
+    ]),
+    routes() {
+      //return JSON.parse(sessionStorage.getItem('userUrl'));
+      //console.log(this.$router.options.routes)
+      return this.$router.options.routes
+    },
+    variables() {
+      return variables;
+    },
+    isCollapse() {
+      return !this.sidebar.opened
+    }
+  },
+  created() {
+    const routeTable = JSON.parse(sessionStorage.getItem('userUrl'));
+    if (!routeTable) {
+      this.$store.dispatch('LogOut').then(() => {
+        location.reload() // 为了重新实例化vue-router对象 避免bug
+      });
+    } else {
+      this.navList = routeTable;
+      //console.log(this.navList)
+    }
+  }
+};
+</script>

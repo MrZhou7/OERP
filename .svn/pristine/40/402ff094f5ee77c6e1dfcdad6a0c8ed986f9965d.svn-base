@@ -1,0 +1,281 @@
+import Vue from 'vue'
+import Router from 'vue-router'
+/* Layout */
+import Layout from '../views/layout/Layout'
+
+// in development-env not use lazy-loading, because lazy-loading too many pages will cause webpack hot update too slow. so only in production use lazy-loading;
+// detail: https://panjiachen.github.io/vue-element-admin-site/#/lazy-loading
+
+Vue.use(Router)
+
+/**
+ * hidden: true                   if `hidden:true` will not show in the sidebar(default is false)
+ * alwaysShow: true               if set true, will always show the root menu, whatever its child routes length
+ *                                if not set alwaysShow, only more than one route under the children
+ *                                it will becomes nested mode, otherwise not show the root menu
+ * redirect: noredirect           if `redirect:noredirect` will no redirect in the breadcrumb
+ * name:'router-name'             the name is used by <keep-alive> (must set!!!)
+ * meta : {
+    title: 'title'               the name show in subMenu and breadcrumb (recommend set)
+    icon: 'svg-name'             the icon show in the sidebar
+    breadcrumb: false            if false, the item will hidden in breadcrumb(default is true)
+  }
+ **/
+export const constantRouterMap = [
+  { path: '/login', component: () => import('@/views/login/index'), hidden: true },
+  { path: '/404', component: () => import('@/views/404'), hidden: true },
+
+  {
+    path: '/',
+    component: Layout,
+    redirect: '/OERP',
+    name: 'OERP',
+    hidden: true,
+    children: [{
+      path: 'OERP',
+      component: () => import('@/views/dashboard/index')
+    }]
+  },
+  {
+    path:'/system',
+    component: Layout,
+    name: 'System',
+    meta: {
+      title: '系统管理',
+      icon: 'nested'
+    },
+    children:[
+      {
+        path:'/system/user',
+        component: () => import('@/views/system/user/index'), // Parent router-view
+        name:'User',
+        meta: { title: '用户维护' }
+      },
+      {
+        path:'/system/role',
+        component: () => import('@/views/system/role/index'), // Parent router-view
+        name:'Role',
+        meta: { title: '角色维护' }
+      }
+    ]
+  },
+  {
+    path: '/contract',
+    component: Layout,
+    redirect: '/contract/index',
+    name: 'contract',
+    meta: {
+      title: '合同管理',
+      icon: 'nested'
+    },
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/contract/index'), // Parent router-view
+        name: '租赁合同管理',
+        meta: { title: '租赁合同管理' }
+      },
+      {
+        path: 'create',
+        component: () => import('@/views/contract/create'), // Parent router-view
+        name: '新增租赁合同',
+        meta: { title: '新增租赁合同' },
+        hidden:true
+      },
+      {
+        path: 'suspension',
+        component: () => import('@/views/contract/suspension'), // Parent router-view
+        name: '合同终止',
+        meta: { title: '合同终止' },
+      }
+    ]
+  },
+  {
+    path: '/basic',
+    component: Layout,
+    meta: { title: '基础管理', icon: 'nested' },
+    children: [
+      {
+        path: 'category',
+        name: 'Category',
+        component: () => import('@/views/business/categoryManage'),
+        meta: { title: '品类管理', icon: 'form' }
+      },
+      {
+        path: 'siteManage',
+        name: 'SiteManage',
+        component: () => import('@/views/business/siteManage'),
+        meta: { title: '场地管理', icon: 'form' }
+      },
+      {
+        path: 'businessManage',
+        name: 'BusinessManage',
+        component: () => import('@/views/business/businessManage'),
+        meta: { title: '商戶管理', icon: 'form' }
+      },
+      {
+        path: 'brand',
+        name: 'Brand',
+        component: () => import('@/views/brand/index'),
+        meta: { title: '品牌管理', icon: 'form' }
+      },
+      {
+        path: 'addBrand',
+        name: 'AddBrand',
+        component: () => import('@/views/brand/addBrand'),
+        meta: { title: '新增品牌', icon: 'form' }, hidden: true
+      },
+      {
+        path: 'checkBrand',
+        name: 'CheckBrand',
+        component: () => import('@/views/brand/checkBrand'),
+        meta: { title: '查看品牌', icon: 'form' }, hidden: true
+      },
+      {
+        path: 'editBrand',
+        name: 'EditBrand',
+        component: () => import('@/views/brand/editBrand'),
+        meta: { title: '编辑品牌', icon: 'form' }, hidden: true
+      },
+      {
+        path: 'commercialManage',
+        name: 'commercialManage',
+        component: () => import('@/views/mall/index'),
+        meta: { title: '商管公司维护', icon: 'form' }
+      },
+      {
+        path: 'mall',
+        name: 'mall',
+        component: () => import('@/views/mall/mall'),
+        meta: { title: '商业项目维护', icon: 'form' }
+
+      }
+    ]
+  },
+
+  {
+    path:'/market',
+    component: Layout,
+    name: 'Market',
+    meta: {title: '销售管理',icon: 'nested'},
+    children:[
+      {
+        path:'/market/index',
+        name:'index',
+        meta: { title: '销售管理' },
+        component:() => import('@/views/market/index')
+      }
+    ]
+  },
+  {
+    path:'/promotion',
+    component: Layout,
+    name: 'Promotion',
+    meta: {title: '促销管理',icon: 'nested'},
+    children:[
+      {
+        path:'/promotion/index',
+        name:'index',
+        meta: { title: '促销管理' },
+        component:() => import('@/views/promotion/index')
+      }
+    ]
+  },
+  {
+    path:'/real',
+    component: Layout,
+    name: 'Real',
+    meta: {title: '物业管理',icon: 'nested'},
+    children:[
+      {
+        path:'/real/index',
+        name:'index',
+        meta: { title: '物业管理' },
+        component:() => import('@/views/real/index')
+      }
+    ]
+  },
+  {
+    path:'/cost',
+    component: Layout,
+    name: 'Cost',
+    meta: {title: '费用管理',icon: 'nested'},
+    children:[
+      {
+        path:'/cost/costTypeManagement',
+        name:'costTypeManagement',
+        meta: { title: '费用类型管理' },
+        component:() => import('@/views/cost/costTypeManagement')
+      },
+      {
+        path:'/cost/billAdmin/index',
+        name:'index',
+        meta: { title: '账单管理' },
+        component:() => import('@/views/cost/billAdmin/index')
+      }
+    ]
+  },
+  {
+    path:'/order',
+    component: Layout,
+    name: 'Order',
+    meta: {title: '订单管理',icon: 'nested'},
+    children:[
+      {
+        path:'/order/index',
+        name:'index',
+        meta: { title: '订单管理' },
+        component:() => import('@/views/order/index')
+      },
+      {
+        path:'/order/refund',
+        name:'refund',
+        meta: { title: '订单退货管理' },
+        component:() => import('@/views/order/refund')
+      },
+      {
+        path:'/order/addRefund',
+        name:'addRefund',
+        meta: { title: '订单退货管理1' },
+        component:() => import('@/views/order/addRefund')
+      }
+    ]
+  },
+  {
+    path:'/distribution',
+    component: Layout,
+    name: 'Distribution',
+    meta: {title: '配送管理',icon: 'nested'},
+    children:[
+      {
+        path:'/distribution/index',
+        name:'index',
+        meta: { title: '配送管理' },
+        component:() => import('@/views/distribution/index')
+      }
+    ]
+  },
+  {
+    path:'/statement',
+    component: Layout,
+    name: 'Statement',
+    meta: {title: '报表管理',icon: 'nested'},
+    children:[
+      {
+        path:'/statement/index',
+        name:'index',
+        meta: { title: '报表管理' },
+        component:() => import('@/views/statement/index')
+      }
+    ]
+  },
+
+  { path: '*', redirect: '/404', hidden: true }
+]
+
+export default new Router({
+  mode: 'history', //后端支持可开
+  base: '/main/',
+  scrollBehavior: () => ({ y: 0 }),
+  routes: constantRouterMap
+})

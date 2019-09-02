@@ -1,0 +1,252 @@
+<template>
+  <div class="app-container">
+    <div class="categoryWrap">费用类型管理</div>
+    <el-row>
+      <el-col :span="8">
+        <div class="category-tree-content">
+          <el-input
+            placeholder="输入关键字进行费用类型搜索"
+            v-model="filterText">
+          </el-input>
+          <el-tree
+            ref="tree2"
+            :highlight-current="true"
+            :data="dataTree"
+            :props="defaultProps"
+            default-expand-all
+            :filter-node-method="filterNode"
+            class="filter-tree"
+            @node-click="handleNodeClick"
+            :style="{height: treeHeight+'px'}"
+          />
+        </div>
+      </el-col>
+      <el-col :span="16" >
+        <div class="category-tree-content grid-content bg-purple-light" v-if="contentIsShow" >
+          <p class="category-text">费用类型 <span class="addCategory" @click="addCategory" style="font-size: 12px;" >添加子类</span></p>
+          <div class="addSubclass">
+            <el-form :model="newLists" :rules="rules" ref="ruleForm" label-width="110px" class="demo-ruleForm">
+              <el-form-item label="费用编码" >
+                <el-input v-model="newLists.charge_code" :disabled="true"></el-input>
+              </el-form-item>
+              <el-form-item label="费用名称" prop="type_name">
+                <el-input v-model="newLists.type_name" ></el-input>
+              </el-form-item>
+              <el-form-item label="记账科目号" prop="account_code">
+                <el-input v-model="newLists.account_code"></el-input>
+              </el-form-item>
+
+              <el-form-item label="控制标记"  prop="tags">
+                <el-select v-model="newLists.tags" >
+                  <el-option label="默认 " :value="0"></el-option>
+                  <el-option label="租金 " :value="1"></el-option>
+                  <el-option label="费用 " :value="2"></el-option>
+                  <el-option label="押金 " :value="3"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="所属模块" prop="module">
+                <el-select v-model="newLists.module" >
+                  <el-option label="财务 " :value="1"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="收费性质"  prop="charge_reason_type">
+                <el-select v-model="newLists.charge_reason_type" >
+                  <el-option label="固定费用" :value="1"></el-option>
+                  <el-option label="临时费用" :value="2"></el-option>
+                  <el-option label="代收费用" :value="3"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="发票类型" prop="invoice_type">
+                <el-select v-model="newLists.invoice_type"  >
+                  <el-option label="服务发票" :value="1"></el-option>
+                  <el-option label="租金发票" :value="2"></el-option>
+                  <el-option label="代开发票" :value="3"></el-option>
+                  <el-option label="收据" :value="4"></el-option>
+                </el-select>
+              </el-form-item>
+
+              <el-form-item label="是否有效" prop="enabled">
+                <el-radio-group v-model="newLists.enabled">
+                  <el-radio :label="0">否</el-radio>
+                  <el-radio :label="1">是</el-radio>
+                </el-radio-group>
+              </el-form-item>
+              <el-form-item label="添加人">
+                <el-input v-model="newLists.added_by" :disabled="true"></el-input>
+              </el-form-item>
+              <el-form-item label="说明">
+                <el-input type="textarea" v-model="newLists.type_desc"></el-input>
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" @click="saveList('ruleForm')">保存</el-button>
+                <el-button @click="delateList('ruleForm')">删除</el-button>
+              </el-form-item>
+            </el-form>
+          </div>
+        </div>
+      </el-col>
+    </el-row>
+    <el-dialog
+      title="添加子类"
+      :visible.sync="dialogVisible"
+      :close-on-click-modal="false"
+      width="40%" top="5%">
+      <AddCostType v-show="isShow"
+                   v-on:listenDialog="showDialog"
+                   :parent_id="subparentid"
+                   :operation_type_id = "newLists.operation_type_id"
+                   :type_level="newLists.type_level">
+      </AddCostType>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+  import AddCostType from '@/components/costComponent/addCostType.vue'
+  export default {
+    components:{
+      AddCostType
+    },
+    data() {
+      return {
+        filterText: '',
+        contentIsShow:false,//品类内容是否显示
+        isShow:false, //品类信息是否显示
+        dataTree: [], //树状图显示数据
+        defaultProps: {
+          children: 'children',
+          label: 'text'
+        },
+        treeHeight: window.innerHeight - 200,//表格高度
+        newLists:{}, //父组件给子组建的传值
+        dialogVisible: false,//添加子组件是否显示
+        currentIndex:0,
+        parent_id:"",//上级类别显示
+        subparentid:[],//添加子类上级类别显示
+        rules: {
+          type_name: [
+            { required: true, message: '请输入品类名称', trigger: 'blur' },
+            { min: 1, max: 20, message: '长度在20 个字符以内', trigger: 'blur' }
+          ],
+          enabled: [ { required: true, message: '请选择是否有效', trigger: 'blur' } ],
+          tags: [ { required: true, message: '请选择控制编标记', trigger: 'blur' } ],
+          charge_type: [ { required: true, message: '请填写收支类型', trigger: 'blur' } ],
+          account_code: [ { required: true, message: '请选择记账科目号', trigger: 'blur' } ],
+          invoice_type: [ { required: true, message: '请选择发票类型', trigger: 'blur' } ],
+          charge_reason_type: [ { required: true, message: '请选择收费类型', trigger: 'blur' } ],
+        }
+      }
+    },
+    watch: {
+      filterText(val) {
+        this.$refs.tree2.filter(val);
+      }
+    },
+    methods: {
+      filterNode(value, data) {
+        if (!value) return true
+        return data.text.indexOf(value) !== -1
+      },
+      //点击传参给品类信息子组件，并显示品类信息
+      handleNodeClick(node,data){
+        console.log(node)
+        console.log(data)
+        this.isShow = true;
+        this.contentIsShow=true;
+        this.newLists = data.data.data;
+        let parentId = {parent_id:this.newLists.parent_id};
+        this.axios({
+          method:'post',
+          url:process.env.BASE_API + 'Operation_Type/getName',
+          data:parentId
+        }).then((res)=>{
+          if (res.status == 200) {
+            this.parent_id = res.data.data
+          }
+        }).catch(function(err) {
+          this.$message.error(err.response.data.msg)
+        })
+      },
+      //获取树状图数据
+      getCategoryTree(){
+        this.axios({
+          method: "post",
+          url: process.env.BASE_API + 'ChargeType/getTypeTree'
+        })
+          .then((res)=>{
+            console.log(res)
+            if (res.status == 200) {
+              this.dataTree = res.data.data
+            }
+          })
+          .catch(function(err) {
+            // this.$message.error(err.response.data.msg)
+          })
+      },
+      //点击添加子类
+      addCategory(){
+        if(this.newLists.parent_id < 0){
+          return false
+        }
+        this.dialogVisible = true
+
+        let id = {parent_id:this.newLists.parent_id};
+        this.axios({
+          method:'post',
+          url:process.env.BASE_API + 'Operation_Type/equality',
+          data:id
+        }).then((res)=>{
+          if (res.status == 200) {
+            this.subparentid = res.data.data;
+          }
+        }).catch(function(err) {
+          this.$message.error(err.response.data.msg)
+        })
+      },
+      //接受子组件传值
+      showDialog:function(data) {
+        this.dialogVisible = data
+      },
+    },
+    created() {
+      //获取树状图数据
+      this.getCategoryTree()
+    }
+  }
+</script>
+<style rel="stylesheet/scss" lang="scss" scoped>
+  .categoryWrap{
+    position: relative;
+    height: 42px;
+    line-height: 42px;
+    padding: 0 15px;
+    border-bottom: 1px solid #f6f6f6;
+    color: #333;
+    border-radius: 2px 2px 0 0;
+    font-size: 14px;
+  }
+
+  .category-tree-content{
+    margin:10px;
+    border: 1px solid #e2e2e2;
+  .category-text{
+    background: #f7f7f7;
+    line-height: 40px;
+    padding-left: 15px;
+  }
+  }
+  .filter-tree{
+    overflow: auto;height: 750px;
+  }
+  .addCategory{
+    color: #38f;
+    float:right;
+    padding-right:5px;
+    cursor:pointer;
+  }
+  .addSubclass {
+    padding: 10px;
+
+  }
+</style>
+

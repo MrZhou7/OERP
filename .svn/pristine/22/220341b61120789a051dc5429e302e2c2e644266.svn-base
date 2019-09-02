@@ -1,0 +1,793 @@
+<template>
+  <el-main>
+    <el-form ref="formInline" :model="formInline" label-width="100px" class="demo-ruleForm">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="门店">
+            <el-select v-model="formInline.mall_id" placeholder="请选择门店名称">
+              <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name" :value="mall.mall_id"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="合同编号">
+            <el-input v-model="formInline.store_name"/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="合同状态">
+            <el-select v-model="formInline.status" placeholder="请选择">
+              <el-option value="" label="全部"/>
+              <el-option label="草稿" value="1"/>
+              <el-option label="审批中" value="2"/>
+              <el-option label="审批通过" value="3"/>
+              <el-option label="作废" value="4"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="是否作废">
+            <el-select v-model="formInline.status" placeholder="请选择">
+              <el-option label="有效合同" value="1"/>
+              <el-option label="已作废" value="2"/>
+              <el-option label="全部合同" value="3"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="商户名称">
+            <el-input v-model="formInline.notice_code"/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item>
+            <el-button type="primary" @click="searchForm('formInline')">查 询</el-button>
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+    <div class="btn_bottom">
+      <el-button type="primary" @click="addCont">新增</el-button>
+      <el-button :disabled="btn.submitCost" @click="submitList">提交审核</el-button>
+      <el-button :disabled="btn.auditCost" @click="auditList">审核</el-button>
+      <el-button :disabled="btn.cancleCost" @click="cancleList">撤销审核</el-button>
+      <el-button :disabled="btn.cancellationCost" @click="cancellation">作废</el-button>
+      <el-button :disabled="btn.signing" @click="signing">转签约</el-button>
+      <el-button :disabled="btn.temporary" @click="temporary">临时费用</el-button>
+    </div>
+    <div class="contract_table">
+      <el-table
+        ref="table"
+        :height="height"
+        :data="tableData"
+        :highlight-current-row="true"
+        border
+        tooltip-effect="dark"
+        style="width: 100%"
+        @selection-change="getRadio"
+        @row-click="clickRow">
+        <el-table-column
+          type="selection"
+          width="55"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="status"
+          min-width="100"
+          label="合同状态">
+          <template slot-scope="scope">
+            <span v-if="scope.row.status == 1">草稿</span>
+            <span v-else-if="scope.row.status == 2">审核中</span>
+            <span v-else-if="scope.row.status == 3">审核通过</span>
+            <span v-else-if="scope.row.status == 4">驳回</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="notice_code"
+          min-width="120"
+          label="是否有效">
+          <template slot-scope="scope">
+            <span v-if="scope.row.status == 1">有效</span>
+            <span v-else-if="scope.row.status == 2">无效</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="contract_code"
+          min-width="100"
+          label="合同来源"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="contract_main_id"
+          min-width="100"
+          label="门店"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="mall_name"
+          min-width="100"
+          label="合同类型"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="store_name"
+          min-width="100"
+          label="合同ID"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="store_code"
+          min-width="100"
+          label="合同编号"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="customer_name"
+          min-width="100"
+          label="原合同ID"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="customer_code"
+          min-width="100"
+          label="商户名称"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="notice_type"
+          min-width="120"
+          label="商户编号"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="charge_amount"
+          min-width="120"
+          label="签约面积(平米)"/>
+        <el-table-column
+          prop="invoiced_status"
+          min-width="120"
+          label="免租期(日)"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="notice_batch_id"
+          min-width="120"
+          label="合同开始日期"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="batch_id"
+          min-width="120"
+          label="合同结束日期"/>
+        <el-table-column
+          fixed="right"
+          label="操作"
+          min-width="150">
+          <template slot-scope="scope">
+            <el-button type = "text" size="small" @click.native.prevent="checkCont(scope.$index, tableData)">查 看</el-button>
+            <el-button type = "text" size="small" @click.native.prevent="editCont(scope.$index, tableData)">编 辑</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        :page-sizes="[20, 30, 40, 50]"
+        :page-size="20"
+        :current-page.sync="currentPage"
+        :total="total"
+        background
+        layout="prev, pager, next, total, sizes"
+        @size-change="handleSizeChange"
+        @current-change="pagination"/>
+    </div>
+    <!--新增、查看、编辑合同弹窗-->
+    <el-dialog
+      :close-on-click-modal="false"
+      :visible.sync="dialogVisible"
+      :title="title"
+      top="3%"
+      width="80%">
+      <div class="height">
+        <el-tabs type="border-card">
+          <el-form  ref="contForm" :model="contForm" :rules="rules" label-width="110px" class="demo-ruleForm">
+            <blockquote class="elem_quote">合同主条款</blockquote>
+            <el-row>
+              <el-col :span="8">
+                <el-form-item label="门店" prop="main.mall_id">
+                  <el-select v-model="contForm.main.mall_id" placeholder="请选择门店名称" @change="mallList($event)">
+                    <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name" :value="mall.mall_id"/>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="8">
+                <el-form-item label="甲方">
+                  <el-input v-model="contForm.mall_add.first_party"  disabled/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="法人代表">
+                  <el-input v-model="contForm.mall_add.legal_person" disabled/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="注册地址">
+                  <el-input v-model="contForm.mall_add.j_address"  disabled/>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="8">
+                <el-form-item label="物业管理公司">
+                  <el-input v-model="contForm.mall_add.first_party" disabled/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="法人代表">
+                  <el-input v-model="contForm.mall_add.legal_person"  disabled/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="注册地址">
+                  <el-input v-model="contForm.mall_add.j_address"  disabled/>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="8">
+                <el-form-item label="乙方"  prop="mall_add.second_party">
+                  <el-input v-model="contForm.mall_add.second_party" suffix-icon="el-icon-search" clearable @focus="dialogVisibleTwo = true"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="法人代表">
+                  <el-input v-model="contForm.mall_add.legal" disabled/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="注册地址">
+                  <el-input v-model="contForm.mall_add.y_address" disabled/>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="8">
+                <el-form-item label="商户编号">
+                  <el-input v-model="contForm.main.customer_code" disabled/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="合同ID">
+                  <el-input v-model="contForm.main.contract_code" disabled/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="合同编号">
+                  <el-input v-model="contForm.main.contract_code" disabled/>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="8">
+                <el-form-item label="合同状态">
+                  <el-input v-model="contForm.main.status" disabled/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                  <el-form-item label="合同类型">
+                    <el-select v-model="contForm.main.contract_type"  disabled>
+                      <el-option
+                        v-for="item in preData.contract_type"
+                        :key="item.values_code"
+                        :label="item.values_name"
+                        :value="item.values_code">
+                      </el-option>
+                    </el-select>
+                  </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="运营方式"  prop="main.operation_model">
+                  <el-select v-model="contForm.main.operation_model" clearable placeholder="请选择" :disabled="entry.viewNo">
+                    <el-option
+                      v-for="(item,key) in preData.operation_model"
+                      :key="key"
+                      :label="item.values_name"
+                      :value="item.values_code">
+                    </el-option>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="16">
+                <el-form-item label="意向有效日期">
+                  <el-date-picker
+                    v-model="start_date"
+                    :picker-options="pickerOptions"
+                    type="daterange"
+                    value-format="yyyy-MM-dd"
+                    align="right"
+                    range-separator="至"
+                    start-placeholder="开始日期"
+                    end-placeholder="结束日期"
+                    @change="startDate($event,1)"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="审批通过日期" prop="main.approval_start">
+                  <el-date-picker
+                    v-model="contForm.main.approval_start"
+                    type="date"
+                    value-format="yyyy-MM-dd"
+                    @change="startDate($event,2)"/>
+                  </el-date-picker>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="8">
+                <el-form-item label="场地编号">
+                  <el-input v-model="contForm.mall_add.unit_code" clearable suffix-icon="el-icon-search" @focus="fieldClick"
+                            :disabled="entry.dateNull"></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="签约面积">
+                  <el-input v-model="contForm.main.contract_area" disabled>
+                    <template slot="append">平米</template>
+                  </el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="测量面积">
+                  <el-input v-model="contForm.main.area" disabled>
+                    <template slot="append">平米</template>
+                  </el-input>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="8">
+                <el-form-item label="合同来源">
+                  <el-input v-model="contForm.mall_add.data_source"  :disabled="true"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="原合同ID">
+                  <el-input v-model="contForm.main.from_contract_main_id" disabled/>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="8">
+                <el-form-item label="合同录入日期">
+                  <el-input v-model="contForm.main.contract_create_date" :disabled="true"
+                            :value="contForm.main.contract_create_date"></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="合同管理员">
+                  <el-select v-model="contForm.main.paid_status" placeholder="请选择">
+                    <el-option :value="1" label="联营"/>
+                    <el-option :value="2" label="租赁"/>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                  <el-form-item label="招商人员" class="label_required">
+                    <el-input v-model="contForm.mall_add.managers" clearable @focus="entry.attractChoice = true" :disabled="entry.viewNo"
+                              suffix-icon="el-icon-search"></el-input>
+                  </el-form-item>
+              </el-col>
+            </el-row>
+            <blockquote class="elem_quote">押金保证金条款
+              <el-button type="primary" v-if="entry.view_add" icon="el-icon-plus" @click="addDepositList" size="mini"
+                         style="float:right"></el-button>
+            </blockquote>
+            <div v-for="(item,index) in contForm.depositList" :key="index" class="addDeposit">
+              <el-row>
+                <el-col :span="7">
+                  <el-form-item label="押金类型" prop="depositList.deposit_guarantee_type">
+                    <el-select v-model="item.deposit_guarantee_type" placeholder="请选择">
+                      <el-option :value="1" label="联营"/>
+                      <el-option :value="2" label="租赁"/>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="7">
+                  <el-form-item label="收取周期" prop="depositList.total_cycle">
+                    <el-select v-model="item.total_cycle" placeholder="请选择">
+                      <el-option :value="1" label="一次性"/>
+                      <el-option :value="2" label="按季度"/>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="7">
+                  <el-form-item label="金额"  prop="depositList.money">
+                    <el-input v-model="item.money"/>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="3">
+                  <el-button v-if="contForm.depositList.length > 1" class="searchBtn" type="danger" size="medium" @click="removeRow(index)">
+                    删除
+                  </el-button>
+                </el-col>
+              </el-row>
+            </div>
+          </el-form>
+        </el-tabs>
+        <!--商户选择-->
+        <el-dialog
+          :close-on-click-modal="false"
+          :visible.sync="dialogVisibleTwo"
+          :append-to-body="true"
+          title="商户选择"
+          top="5%"
+          width="80%">
+          <Custome @choiceData="choiceData"/>
+        </el-dialog>
+        <!--场地选择-->
+        <el-dialog title="场地选择" :visible.sync="entry.fieldChoice" :append-to-body="true" width="70%" height="70%" :close-on-click-modal="false">
+          <Filed v-on:fieldData="fieldData" :mall="contForm.main.mall_id" :startData="contForm.main.start" :endData="contForm.main.end"></Filed>
+        </el-dialog>
+        <el-dialog title="招商人员选择" :visible.sync="entry.attractChoice" width="70%" height="70%"
+                   :close-on-click-modal="false" :append-to-body="true">
+          <attract v-on:attractData="attractData"></attract>
+        </el-dialog>
+      </div>
+      <span slot="footer">
+        <el-button type="primary" @click="submitAudit('contForm', '1')">提交审核</el-button>
+        <el-button type="primary" @click="submitAudit('contForm', '2')">保存</el-button>
+         <el-button @click="dialogVisible = false">取 消</el-button>
+      </span>
+    </el-dialog>
+    <el-dialog
+      :close-on-click-modal="false"
+      :visible.sync="temporaryVisible"
+      title="临时费用"
+      top="3%"
+      width="80%">
+      <blockquote class="elem_quote">合同主条款</blockquote>
+      <el-form>
+        <el-col :span="8">
+          <el-form-item label="合同编号" class="width_110">
+            <el-input v-model="temporaryList.contract_code" disabled></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="商户名称" class="width_110">
+            <el-input v-model="temporaryList.customer_name" disabled></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="铺位编号" class="width_110">
+            <el-input v-model="temporaryList.field" disabled></el-input>
+          </el-form-item>
+        </el-col>
+      </el-form>
+        <blockquote class="elem_quote">临时费用列表
+          <el-button type="primary" icon="el-icon-plus" @click="temporaryAdd" size="mini"
+                     style="float:right"></el-button>
+        </blockquote>
+      <el-table
+        ref="temporaryTable"
+        :data="temporaryTable"
+        :highlight-current-row="true"
+        border
+        tooltip-effect="dark"
+        style="width: 100%">
+        <el-table-column
+          prop="store_code"
+          :show-overflow-tooltip="true"
+          label="费用单号"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="store_code"
+          :show-overflow-tooltip="true"
+          label="审核状态"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="store_code"
+          :show-overflow-tooltip="true"
+          label="临时费用类型"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="store_code"
+          :show-overflow-tooltip="true"
+          label="费用金额"
+          width="120">
+        </el-table-column>
+        <el-table-column
+          prop="store_code"
+          :show-overflow-tooltip="true"
+          label="记账日期"
+          width="120">
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        :page-sizes="[20, 30, 40, 50]"
+        :page-size="20"
+        :current-page.sync="temporaryCurrentPage"
+        :total="temporaryRotal"
+        background
+        layout="prev, pager, next, total, sizes"
+        @size-change="temporaryHandleSizeChange"
+        @current-change="temporaryPagination"/>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+import Custome from '@/components/contract/custome.vue'; // 乙方
+import Filed from '@/components/contract/field.vue'; // 场地
+import attract  from '@/components/contract/attract.vue'; // 招商人员选择
+import { common } from '@/common/common';
+import building from '@/utils/building';
+export default {
+  name: 'IntentionCont',
+  components: { Custome, Filed,attract },
+  data() {
+    return {
+      formInline: {}, // 搜索条件表单
+      temporaryList: {}, // 临时费用表单
+      temporaryTable: [], // 临时费用表格
+      contForm: {
+        depositList: [{}],
+        main: {
+          contract_type: '1',
+          data_source: '1',
+          contract_area: 0,
+          status: '草稿'
+        },
+        mall_add: {},
+      }, // 新增合同表单
+      entry: {
+        viewNo: false,
+        attractChoice: false,
+        dateNull: true,
+        fieldChoice: false,
+        view_add: true,
+      },
+      height: window.innerHeight - 300 + 'px',
+      currentPage: 1, // 当前页
+      total: 0,
+      temporaryCurrentPage:1,
+      temporaryRotal:0,
+      start_date: '', // 意向有效日期
+      pickerOptions: building.publicTime(),
+      mall_name: [], // 门店信息
+      tableData: [], // 合同列表
+      dialogVisible: false, // 弹窗
+      temporaryVisible: false, // 弹窗
+      dialogVisibleTwo: false, // 选择乙方弹窗
+      dialogVisibleThree: false, // 选择场地弹窗
+      isShow: true, // 场地编号是否显示
+      title: '', // 弹框title
+      preData: {}, // 获取的参数
+      btn: {
+        submitCost: true, // 提交审核
+        auditCost: true, // 审核
+        cancleCost: true, // 撤销审核
+        cancellationCost: true, // 作废
+        signing: true, // 转签约
+        temporary: false // 临时费用
+      },
+      status: 'add',
+      rules: {
+        'main.mall_id': [{ required: true, message: '门店不能为空', trigger: 'change' }],
+        'main.operation_model': [{ required: true, message: '请选择运营方式', trigger: 'change' }],
+        'main.approval_start': [{ required: true, message: '请选择审批通过日期', trigger: 'change' }],
+        'depositList.deposit_guarantee_type': [{ required: true, message: '请选择押金类型', trigger: 'change' }],
+        'depositList.total_cycle': [{ required: true, message: '请选择收取周期', trigger: 'change' }],
+        'depositList.money': [{ required: true, message: '请选择金额', trigger: 'blur' }],
+      }
+    };
+  },
+  watch: {
+    start_date: function(r) {
+      r ? this.isShow = false : this.isShow = true;
+    }
+  },
+  created() {
+    building.Mall(this); // 先获取门店数据
+    this.getPreData();
+    this.currentDate();
+    if(this.status == 'add') {
+      common.lookup('L011', this).then((res) => {
+        res.forEach((index, i) => {
+          if(this.contForm.main.data_source == res[i].values_code) {
+            this.contForm.main.data_source = res[i].values_code;
+            this.contForm.mall_add.data_source = res[i].values_name;
+          }
+        })
+      })
+    }
+  },
+  methods: {
+
+    clickRow(row) { // 点击table的row获取当前行数据
+
+    },
+    getRadio(row) { // 去除多选
+      building.radioBtn(row, this.$refs.table);
+    },
+    searchForm() { // 表单搜索
+
+    },
+    checkCont() { // 查看
+      this.title = '查看合同';
+      this.dialogVisible = true;
+    },
+    editCont() { // 编辑
+      this.title = '编辑合同';
+      this.dialogVisible = true;
+    },
+    submitList() { // 提交审核
+
+    },
+    auditList() { // 审核
+
+    },
+    cancleList() { // 撤销审核
+
+    },
+    cancellation() { // 作废
+
+    },
+    signing() { // 转签约
+
+    },
+    temporary() { // 临时费用
+      this.temporaryVisible = true;
+    },
+    addCont() { // 新增合同
+      this.title = '新增合同';
+      this.dialogVisible = true;
+    },
+    pagination(val) { // 分页功能
+      const data = this.formInline;
+      data.page = val;
+      common.getPreData(data, 'PayTrans/getList', this, 'intentionContSearch');
+      common.set('intentionContSearch', { 'search': data });
+    },
+    handleSizeChange(val) {
+      const data = this.formInline;
+      data.limit = val;
+      common.getPreData(data, 'PayTrans/getList', this, 'intentionContSearch');
+      common.set('intentionContSearch', { 'search': data });
+    },
+    currentDate() {//获取当前日期
+      this.contForm.main.contract_create_date = common.currentDate();
+    },
+    temporaryPagination(val) {
+
+    },
+    temporaryHandleSizeChange(val) {
+
+    },
+    mallList(e) {
+      for (var j = 0; j < this.preData.mall.length; j++) {
+        if (this.preData.mall[j].mall_id == e) {
+          this.contForm.main.first_party = this.preData.mall[j].corp_id;
+          this.contForm.mall_add.first_party = this.preData.mall[j].corp_name
+          this.contForm.mall_add.legal_person = this.preData.mall[j].legal_person
+          this.contForm.mall_add.j_address = this.preData.mall[j].address
+        }
+      }
+    },
+    fieldClick() {
+      //场地点击
+      if (!this.contForm.main.mall_id) {
+        this.$message({
+          message: '请选择门店',
+          type: 'warning'
+        });
+      } else {
+        this.entry.fieldChoice = false;
+        this.$nextTick(() => {
+          this.entry.fieldChoice = true;
+        })
+      }
+    },
+    fieldData(data) {
+      console.log(data)
+      let that = this;
+      let area = 0,rent_area = 0;
+      if (data.length == undefined) {
+        this.residentialPool(data.property_unit_id).then((res) => { //计算签约面积 公摊系数 * 测量面积
+          area = parseFloat(data.building_area) * res;
+          rent_area += parseFloat(area);
+          that.contForm.main.contract_area = rent_area.toFixed(2);//签约
+        });
+        this.contForm.mall_add.unit_code = data.unit_code;
+        this.contForm.main.unit_code = data.unit_code;
+        this.contForm.main.area = data.building_area;
+      } else {
+        let store_id = '', store_name = '',clarea = 0;
+        data.forEach((index, i) => {
+          if (i != data.length - 1) {
+            store_id += index.unit_code + ',';
+            store_name += index.unit_code + ',';
+          } else {
+            store_id += index.unit_code;
+            store_name += index.unit_code;
+          }
+          clarea += parseFloat(index.building_area) ;
+          this.residentialPool(index.property_unit_id).then((res) => { //计算签约面积 公摊系数 * 测量面积
+            area = parseFloat(index.building_area) * res;
+            rent_area += parseFloat(area);
+            this.contForm.main.contract_area = rent_area.toFixed(2);//签约
+          });
+        })
+        this.contForm.mall_add.unit_code = store_name;
+        this.contForm.main.unit_code = store_id;
+        this.contForm.main.area = clarea;
+      }
+      this.entry.fieldChoice = false
+    },
+    //获取公摊系数
+    residentialPool(data){
+      let that = this;
+      return that.http.post('property_unit/getCoefficient', { property_unit_id: data }).then((res) => res.data)
+        .catch((err) => {
+          that.$message.error(err.response.data.msg);
+        });
+    },
+    attractData(data) {//招商人员赋值
+      this.entry.attractChoice = false;
+      this.contForm.main.manager = data.manager_id;
+      this.contForm.mall_add.managers = data.name;
+    },
+    removeRow(index) { // 删除属性列
+      this.contForm.depositList.splice(index, 1);
+    },
+    addDepositList() { // 新增押金保证金
+      this.contForm.depositList.push({ });
+    },
+    startDate(e,type) { // 搜索日期赋值
+      if(type == 1) {
+        this.entry.dateNull = false;
+        e ? this.contForm.main.start = e[0] : this.contForm.main.start = '';
+        e ? this.contForm.main.end = e[1] : this.contForm.main.end = '';
+      }else {
+        e ? this.contForm.main.approval_start = e : this.contForm.main.approval_start = '';
+        console.log(this.contForm.main.approval_start)
+      }
+
+    },
+    choiceData(data) { // 乙方赋值
+      this.contForm.main.second_party = data.customer_id;
+      this.contForm.main.customer_code = data.customer_code;
+      this.contForm.mall_add.second_party = data.customer_name;
+      this.contForm.mall_add.legal = data.legal;
+      this.contForm.mall_add.y_address = data.address;
+      this.dialogVisibleTwo = false;
+    },
+    submitAudit(formName,type) { // 合同保存
+      let that = this;
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+        } else {
+          this.$message({
+            message: '您有信息尚未填写完，请咨询查询',
+            type: 'warning'
+          });
+        }
+      })
+    },
+    getPreData() { // 预渲染参数
+      this.http.post('table_util/getPreData', { act: 'contract' }).then(res => {
+        this.preData = res.data.data;
+        console.log(this.preData);
+      });
+    }
+  }
+};
+</script>
+<style lang="scss">
+  .el-form-item__error {
+    display: none;
+  }
+</style>
+<style scoped>
+  .height{ height: calc(100vh - 25vh);overflow: auto; }
+  .el-form-item {margin-bottom: 5px;}
+  .searchBtn{ margin-left: 10px; }
+  .addDeposit{ border: 1px solid #e2e2e2;border-radius: 5px;padding: 10px;margin-bottom: 10px; }
+</style>

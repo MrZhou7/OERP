@@ -1,0 +1,124 @@
+<template>
+  <div id="checkBrandWrap">
+    <el-tabs v-model="activeName" @tab-click="handleClick">
+      <el-tab-pane label="基本信息" name="first">
+        <div class="brandStyle">品牌信息</div>
+        <el-form :model="checkTableData" ref="editTableData" label-width="100px" class="demo-ruleForm">
+          <el-form-item label="品牌名称" prop="brand_name">
+            <el-col :span="8">
+              <el-input v-model="checkTableData.brand_name" placeholder="中英文、数字、限20字以内" disabled></el-input>
+            </el-col>
+          </el-form-item>
+          <el-form-item label="品牌编号" prop="brand_code">
+            <el-col :span="8">
+              <el-input v-model="checkTableData.brand_code" placeholder="品牌信息保存后自动生成" disabled></el-input>
+            </el-col>
+          </el-form-item>
+          <el-form-item label="品类选择" prop="operation_type">
+            <el-col :span="8" class="getPointer">
+              <el-input placeholder="请选择品类" @click.native="gttOperation" suffix-icon="el-icon-search" v-model="checkTableData.type_name" disabled></el-input>
+            </el-col>
+          </el-form-item>
+          <el-form-item label="品牌等级" prop="brand_rank">
+            <el-col :span="8">
+              <el-select v-model="checkTableData.brand_rank" placeholder="请选择品牌等级" disabled>
+                <el-option label="A" value="A"></el-option>
+                <el-option label="B" value="B"></el-option>
+                <el-option label="C" value="C"></el-option>
+              </el-select>
+            </el-col>
+          </el-form-item>
+          <el-form-item label="品牌logo" prop="logo">
+            <el-col :span="3">
+              <div v-if="checkTableData.logo" class="logoStyle">
+                <img :src="'http://10.1.200.85/' + checkTableData.logo" alt="">
+              </div>
+              <div v-else="!checkTableData.logo">
+                暂无
+              </div>
+            </el-col>
+          </el-form-item>
+          <el-form-item label="品牌说明" placeholder="请输入品牌说明，300字以内" prop="brand_desc">
+            <el-col :span="8">
+              <el-input type="textarea" v-model="checkTableData.brand_desc" disabled></el-input>
+            </el-col>
+          </el-form-item>
+        </el-form>
+      </el-tab-pane>
+      <el-tab-pane label="品牌商户" name="second">品牌商户</el-tab-pane>
+      <el-tab-pane label="角色管理" name="third">操作记录</el-tab-pane>
+      <el-tab-pane label="审核记录" name="fourth">审核记录</el-tab-pane>
+    </el-tabs>
+  </div>
+</template>
+
+<script>
+  export default {
+    name: "checkBrand",
+    props:['tableBrandMess'],
+    data() {
+      return {
+        activeName: 'first',
+        checkTableData:{}//接受点击传过来的品牌信息
+      };
+    },
+    methods: {
+      handleClick(tab, event) {
+        //console.log(tab, event);
+      },
+      //获取当前品牌信息
+      getCheckBrand() {
+        let BrandId = {brand_id:this.$route.query.checkBrandId};
+        this.axios({
+          method:'post',
+          data:BrandId,
+          url:process.env.BASE_API + 'brand_info/getBrandInfo'
+        }).then((res)=>{
+          this.checkTableData = res.data.data;
+          console.log(this.checkTableData)
+        });
+      }
+    },
+    created() {
+      this.getCheckBrand();
+    }
+  }
+</script>
+
+<style scoped lang="scss">
+  #checkBrandWrap{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 999;
+    background-color: white;
+  }
+  .brandStyle{
+    margin-bottom: 10px;
+    padding: 10px 15px;
+    line-height: 22px;
+    border-left: 5px solid #009688;
+    border-radius: 0 2px 2px 0;
+    background-color: #f2f2f2;
+  }
+  .grid-content {
+    border-radius: 4px;
+    min-height: 36px;
+    line-height:36px;
+  }
+  .el-row{
+    padding: 9px 15px;
+    font-weight: 400;
+    line-height: 20px;
+    margin-bottom: 15px;
+  }
+  .logoStyle{
+    width:100%;
+    border-radius:5px;
+    img{
+      width:100%;border-radius:5px;
+    }
+  }
+</style>

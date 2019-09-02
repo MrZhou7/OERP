@@ -1,0 +1,330 @@
+<template>
+  <el-main :style="height">
+    <el-tabs type="border-card">
+      <el-tab-pane label="账单查看">
+        <el-card class="box-card">
+          <div class="content">
+            <el-form ref="form" :model="costView" label-width="90px" class="search">
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="批次号">
+                    <el-input v-model="costView.batch_id" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="计算人">
+                    <el-input v-model="costView.created_by" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="计算日期前">
+                    <el-input v-model="costView.created_time" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="账单编号">
+                    <el-input v-model="costView.invoice_code" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="审核状态">
+                    <el-select v-model="costView.status" disabled>
+                      <el-option :value='1' label="草稿"></el-option>
+                      <el-option :value='2' label="审批中"></el-option>
+                      <el-option :value='3' label="审核通过"></el-option>
+                      <el-option :value='4' label="作废"></el-option>
+                      <el-option :value='5' label="取消"></el-option>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="账单类型">
+                    <el-select v-model="costView.invoice_type" disabled>
+                      <el-option :value='1' label="合同首期账单"></el-option>
+                      <el-option :value='2' label="合同周期性账单"></el-option>
+                      <el-option :value='3' label="合同清算账单"></el-option>
+                      <el-option :value='4' label="临时收费账单"></el-option>
+                      <el-option :value='5' label="滞纳金账单"></el-option>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="商管公司">
+                    <el-input v-model="costView.corp_name" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="商业广场">
+                    <el-input v-model="costView.mall_name" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="要求付款日期" class="width_100">
+                    <el-input v-model="costView.required_paying_date" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="合同编号">
+                    <el-input v-model="costView.contract_code" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="商户名称">
+                    <el-input v-model="costView.customer_name" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="	商户编号">
+                    <el-input v-model="costView.customer_code" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="会计期">
+                    <el-input v-model="costView.account_month" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="账单金额">
+                    <el-input v-model="costView.invoiced_amount" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="应付金额">
+                    <el-input v-model="costView.net_amount" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="调整金额">
+                    <el-input v-model="costView.adjust_amount" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="商铺编号">
+                    <el-input v-model="costView.store_code" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="商铺名称">
+                    <el-input v-model="costView.store_name" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="	付款状态">
+                    <el-select v-model="costView.paid_status" disabled>
+                      <el-option :value='0' label="未收款"></el-option>
+                      <el-option :value='1' label=" 部分收款"></el-option>
+                      <el-option :value='2' label="全部收款"></el-option>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </el-form>
+            <div class="contract_table">
+              <el-table
+                :data="costViewTable"
+                style="width: 100%;"
+                height="245px"
+                border>
+                <el-table-column
+                  prop="invoice_detail_code"
+                  :show-overflow-tooltip="true"
+                  fixed
+                  label="编号"
+                  width="110">
+                </el-table-column>
+                <el-table-column
+                  prop="charge_type_id"
+                  :show-overflow-tooltip="true"
+                  width="120"
+                  label="费用类型">
+                </el-table-column>
+                <el-table-column
+                  prop="charge_from"
+                  :show-overflow-tooltip="true"
+                  width="120"
+                  label="费用开始日期">
+                </el-table-column>
+                <el-table-column
+                  prop="charge_to"
+                  :show-overflow-tooltip="true"
+                  width="120"
+                  label="费用结束日期">
+                </el-table-column>
+                <el-table-column
+                  prop="charge_description"
+                  :show-overflow-tooltip="true"
+                  width="120"
+                  label="摘要">
+                </el-table-column>
+                <el-table-column
+                  prop="charge_base"
+                  :show-overflow-tooltip="true"
+                  width="120"
+                  label="费用依据">
+                  <template slot-scope="scope")>
+                    <span v-if="scope.row.charge_base == 1"> 租金条款明细</span>
+                    <span v-else-if="scope.row.charge_base == 2"> 费用标准条款 </span>
+                    <span v-else-if="scope.row.charge_base == 3"> 押金保证金</span>
+                    <span v-else-if="scope.row.charge_base == 4"> 收费通知单</span>
+                    <span v-else-if="scope.row.charge_base == 5"> 滞纳金通知单</span>
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="invoiced_amount"
+                  :show-overflow-tooltip="true"
+                  width="100"
+                  label="账单金额">
+                </el-table-column>
+                <el-table-column
+                  prop="adjust_amount"
+                  :show-overflow-tooltip="true"
+                  width="100"
+                  label="调整金额">
+                </el-table-column>
+                <el-table-column
+                  prop="net_charge_amount"
+                  :show-overflow-tooltip="true"
+                  width="100"
+                  label="应收金额">
+                </el-table-column>
+                <el-table-column
+                  prop="charged_amount"
+                  :show-overflow-tooltip="true"
+                  width="100"
+                  label="已收金额">
+                </el-table-column>
+                <el-table-column
+                  prop="no_pay"
+                  :show-overflow-tooltip="true"
+                  width="100"
+                  label="未收金额">
+                </el-table-column>
+                <el-table-column
+                  prop="charge_status"
+                  :show-overflow-tooltip="true"
+                  width="100"
+                  label="收款状态">
+                  <template slot-scope="scope")>
+                    <span v-if="scope.row.charge_status == 0"> 未收款</span>
+                    <span v-else-if="scope.row.charge_status == 1"> 部分收款 </span>
+                    <span v-else-if="scope.row.charge_status == 2"> 全部收款</span>
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="month_name"
+                  :show-overflow-tooltip="true"
+                  width="80"
+                  label="立账日期">
+                </el-table-column>
+                <el-table-column
+                  fixed="right"
+                  algin="center"
+                  label="操作"
+                  width="100">
+                  <template slot-scope="scope">
+                    <el-button
+                      @click.native.prevent="viewRow(scope.$index, costViewTable)"
+                      type="text"
+                      size="small">
+                      修改立账日期
+                    </el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+              <el-pagination
+                background
+                layout="prev, pager, next"
+                @current-change="pageinations"
+                :current-page.sync="currentPage"
+                :total="total">
+              </el-pagination>
+            </div>
+          </div>
+        </el-card>
+      </el-tab-pane>
+      <el-tab-pane label="审批记录">
+
+      </el-tab-pane>
+    </el-tabs>
+  </el-main>
+</template>
+
+<script>
+  export default {
+    name: 'costView',
+    data() {
+      return {
+        costView: {},// 账单查看
+        costViewTable: [],
+        total: 0,//分页总数据
+        currentPage: 1,//当前页码
+        height: {
+          height: window.innerHeight * 0.7 + 'px'
+        }
+      }
+    },
+    props: ['costId','detailId'],
+    watch: {
+      costId: function(newVal, oldVal) {
+        let data = {};
+        data.invoice_header_id= newVal
+        console.log(data)
+        this.costViews(data);
+      },
+      detailId: function(newVal, oldVal) {
+        console.log(newVal)
+        // this.costViews(newVal)
+      }
+    },
+    created() {
+      let data = {};
+      data.invoice_header_id= this.costId
+      console.log(data)
+      this.costViews(data);
+    },
+    methods: {
+      pageinations(val) {//分页
+        console.log(val)
+        let data = {};
+        data.page = val;
+        data.limit = 10;
+        data.invoice_header_id = this.costId;
+       this.costViews(data)
+      },
+      costViews(data) {
+        let that = this
+        that.axios
+          .post('http://10.1.2.168/index.php/v1/Bill/getBillDetail', data)
+          .then(function(res) {
+            console.log(res)
+            if (res.data.error_code === 0) {
+              that.costView = res.data.data.main
+              that.costViewTable = res.data.data.list// 订单信息
+            }
+          })
+          .catch(function(err) {
+            that.$message.error(err.responseJSON.msg)
+          })
+      },
+      viewRow(index, row) {
+        this.$emit('costEditTiem', row[index].invoice_detail_id)
+      }
+    }
+  }
+</script>
+
+<style scoped>
+
+</style>

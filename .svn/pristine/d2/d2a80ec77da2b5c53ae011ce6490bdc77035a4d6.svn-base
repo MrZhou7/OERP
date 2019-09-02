@@ -1,0 +1,46 @@
+import { common } from '@/common/common';
+
+export default {
+  Mall(that) { // 获取项目名称信息
+    const mallData = common.get('mallList');
+    if (mallData != null) {
+      that.mall_name = mallData;
+    } else {
+      that.axios.post(process.env.BASE_API + 'mall_info/getAllMall')
+        .then((res) => {
+          that.mall_name = res.data.data;
+          common.set('mallList', res.data.data);
+        }).catch((err) => {
+          that.$message.error(err.response.data.msg);
+        });
+    }
+  },
+  build(that, index) { // 获取楼栋信息
+    const buildData = common.get('buildList');
+    if (buildData != null) {
+      that.building_name = buildData;
+    } else {
+      that.axios.post(process.env.BASE_API + 'building_info/getAllBuild', { mall_id: index })
+        .then((res) => {
+          that.building_name = res.data.data;
+          common.set('buildList', res.data.data);
+        }).catch((err) => {
+          that.$message.error(err.response.data.msg);
+        });
+    }
+  },
+  floor(that, index) { // 获取楼层信息
+    const floorData = common.get('floorList');
+    if (floorData != null) {
+      that.building_name = floorData;
+    } else {
+      that.axios.post(process.env.BASE_API + 'floor_info/getAllFloor', { building_id: index })
+        .then((res) => {
+          that.floor_name = res.data.data;
+          common.set('floorList', res.data.data);
+        }).catch((err) => {
+          that.$message.error(err.response.data.msg);
+        });
+    }
+  }
+};

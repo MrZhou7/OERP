@@ -1,0 +1,66 @@
+<template>
+  <div>
+      <el-row>
+        <el-col :span="2">
+          <div class="grid-content bg-purple">
+            <span style="color: red;">*</span>场地 {{ index }}
+          </div>
+        </el-col>
+        <el-col :span="16">
+          <div class="grid-content bg-purple-light">
+            <el-form-item label="场地编号">
+              <el-input v-model="areaDate.shen" placeholder="审批人"></el-input>
+            </el-form-item>
+            <el-form-item label="场地等级">
+              <el-select v-model="areaDate.region" placeholder="活动区域">
+                <el-option label="区域一" value="shanghai"></el-option>
+                <el-option label="区域二" value="beijing"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="计租面积">
+              <el-input v-model="areaDate.bide" placeholder="审批人"></el-input>
+            </el-form-item>
+          </div>
+        </el-col>
+        <el-col :span="6">
+          <div class="grid-content bg-purple">
+            <el-form-item>
+              <el-button type="primary" @click="deleteTese">删除</el-button>
+            </el-form-item>
+          </div>
+        </el-col>
+      </el-row>
+  </div>
+</template>
+
+<script>
+    export default {
+        name: "siteArea",
+      props: {
+        index: {
+          type: Number,
+          default: null
+        }
+      },
+      data(){
+        return{
+          areaDate:{
+            user: '',
+            region: ''
+          }
+        }
+      },
+      methods:{
+        //删除场地
+        deleteTese() {
+          console.log(this.index);
+          this.$emit('deleteSite', this.index)
+        },
+      }
+    }
+</script>
+
+<style scoped>
+  .areaStyle{}
+  .areaSite{}
+</style>

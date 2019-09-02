@@ -1,0 +1,59 @@
+<template>
+  <main>
+    <el-tabs type="border-card">
+      <el-tab-pane label="总裁级">
+        <el-button v-for="(item, index) in tableData[0]" :key="index" @click="change(item)" type = "text" size="medium">{{ item.lastname }}</el-button>
+      </el-tab-pane>
+      <el-tab-pane label="总监级">
+        <el-button v-for="(item, index) in tableData[1]" :key="index" @click="change(item)" type = "text" size="medium">{{ item.lastname }}</el-button>
+      </el-tab-pane>
+      <el-tab-pane label="部长级">
+        <el-button v-for="(item, index) in tableData[2]" :key="index" @click="change(item)" type = "text" size="medium">{{ item.lastname }}</el-button>
+      </el-tab-pane>
+      <el-tab-pane label="高级经理级">
+        <el-button v-for="(item, index) in tableData[3]" :key="index" @click="change(item)" type = "text" size="medium">{{ item.lastname }}</el-button>
+      </el-tab-pane>
+      <el-tab-pane label="经理级">
+        <el-button v-for="(item, index) in tableData[4]" :key="index" @click="change(item)" type = "text" size="medium">{{ item.lastname }}</el-button>
+      </el-tab-pane>
+    </el-tabs>
+  </main>
+</template>
+
+<script>
+export default {
+  name: 'Index',
+  data() {
+    return {
+      isLoading: false,
+      tableData: []
+    }
+  },
+  created() {
+    this.getUser();
+  },
+  methods: {
+    getUser() {
+      this.isLoading = true;
+      this.axios.post('http://10.1.200.173/oa/User/getUserList').then(res => {
+        console.log(res.data.data);
+        this.isLoading = false;
+        this.tableData = res.data.data;
+      });
+    },
+    change(data) {
+      console.log(data)
+      this.$router.push({
+        path: '/system/form',
+        query: {
+          id: this.data
+        }
+      });
+    }
+  }
+};
+</script>
+
+<style scoped>
+.el-tabs{ margin: 10px; }
+</style>

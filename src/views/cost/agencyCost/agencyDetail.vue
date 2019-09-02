@@ -1,0 +1,485 @@
+<template>
+  <el-main>
+    <el-form ref="formInline" :model="formInline" label-width="100px" class="demo-ruleForm">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="门店">
+            <el-select v-model="formInline.mall_id" placeholder="请选择门店名称" clearable>
+              <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name" :value="mall.mall_id"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="合同ID">
+            <el-input v-model="formInline.contract_main_id" clearable/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="合同编号">
+            <el-input v-model="formInline.contract_code" clearable/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商铺编号">
+            <el-input v-model="formInline.store_code" clearable/>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row v-show="formShow">
+        <el-col :span="12">
+          <el-form-item label="起止日期">
+            <el-date-picker
+              v-model="start_date"
+              :picker-options="pickerOptions"
+              type="daterange"
+              value-format="yyyy-MM-dd"
+              align="right"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              @change="startDate($event, 1)"/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="代收类型">
+            <el-select v-model="formInline.pay_trans_type" clearable placeholder="请选择">
+              <el-option label="银行刷卡" value="1"/>
+              <el-option label="银联代收" value="2"/>
+              <el-option label="租赁代刷卡" value="3"/>
+              <el-option label="订单收款" value="4"/>
+              <el-option label="订单退款" value="5"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="状态">
+            <el-select v-model="formInline.pay_in_flag" clearable placeholder="请选择">
+              <el-option label="未生成" value="0"/>
+              <el-option label="已生成" value="1"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="12">
+          <el-form-item>
+            <el-button type="primary" @click="submitForm('formInline')">查 询</el-button>
+            <span class="searchRight" @click="moreSearch">{{ formShow ? '收起' : '展开' }}<i :class="searchRight"/></span>
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+    <div class="btn_bottom">
+      <el-button @click="createAgency">生成代收款</el-button>
+    </div>
+    <div class="contract_table">
+      <el-table
+        ref="table"
+        :height="height"
+        :data="tableData"
+        :show-overflow-tooltip="true"
+        highlight-current-row
+        border
+        tooltip-effect="dark"
+        style="width: 100%"
+        @selection-change="getRadio"
+        @row-click="clickRow">
+        <el-table-column
+          type="selection"
+          fixed
+          width="55"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="pay_in_id"
+          min-width="120"
+          label="代收款编号"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="code"
+          min-width="100"
+          label="订单编号"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="pay_time"
+          min-width="100"
+          label="收款日期"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="trans_date"
+          min-width="100"
+          label="发生日期"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="contract_code"
+          min-width="100"
+          label="合同编号"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="store_code"
+          min-width="100"
+          label="商铺编号"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="store_name"
+          min-width="100"
+          label="商铺名称"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="pay_trans_type"
+          min-width="100"
+          label="代收类型">
+          <template slot-scope="scope">
+            <span v-if="scope.row.pay_trans_type == 1">银行刷卡</span>
+            <span v-else-if="scope.row.pay_trans_type == 2">银联代收</span>
+            <span v-else-if="scope.row.pay_trans_type == 3">租赁代刷卡</span>
+            <span v-else-if="scope.row.pay_trans_type == 4">订单收款</span>
+            <span v-else-if="scope.row.pay_trans_type == 5">订单退款</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="pay_in_flag"
+          min-width="100"
+          label="状态">
+          <template slot-scope="scope">
+            <span v-if="scope.row.pay_in_flag == 0">未生成</span>
+            <span v-else-if="scope.row.pay_in_flag == 1">已生成</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="pay_amt"
+          min-width="100"
+          label="付款金额"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="paid_amt_by_store"
+          min-width="120"
+          label="分摊金额"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="pay_name"
+          min-width="120"
+          label="支付方式"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="fee_amt"
+          min-width="120"
+          label="手续费"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="net_amt"
+          min-width="120"
+          label="净额"/>
+        <el-table-column
+          fixed="right"
+          label="操作"
+          min-width="80">
+          <template slot-scope="scope">
+            <el-button type = "text" size="small" @click.native.prevent="checkAgency(scope.$index, tableData)">查 看</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        :page-sizes="[20, 30, 40, 50]"
+        :current-page.sync="currentPage"
+        :total="total"
+        :page-size="20"
+        background
+        layout="prev, pager, next, total, sizes"
+        @current-change="pagination"
+        @size-change="handleSizeChange"/>
+    </div>
+    <!--生成代收款弹窗-->
+    <el-dialog
+      :close-on-click-modal="false"
+      :visible.sync="dialogVisible"
+      title="生成代收款"
+      top="5%"
+      width="50%"
+      @close="handleClose('ruleForm')">
+      <el-tabs type="border-card">
+        <el-form ref="ruleForm" :model="ruleForm" :rules="rules" label-width="110px" class="demo-ruleForm">
+          <el-form-item label="门店" prop="mall_id">
+            <el-select v-model="ruleForm.mall_id" placeholder="请选择门店">
+              <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name" :value="mall.mall_id"/>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="合同编号">
+            <el-input v-model="ruleForm.contract_code"/>
+          </el-form-item>
+          <el-form-item label="商铺编号">
+            <el-input v-model="ruleForm.store_code"/>
+          </el-form-item>
+          <el-form-item label="起止日期">
+            <el-date-picker
+              v-model="account_date"
+              :picker-options="pickerOptions"
+              type="daterange"
+              value-format="yyyy-MM-dd"
+              align="right"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              @change="startDate($event, 2)"/>
+          </el-form-item>
+          <el-form-item label="代收类型">
+            <el-select v-model="ruleForm.pay_in_flag" placeholder="请选择">
+              <el-option label="银行刷卡" value="1"/>
+              <el-option label="银联代收" value="2"/>
+              <el-option label="租赁代刷卡" value="3"/>
+              <el-option label="订单收款" value="4"/>
+              <el-option label="订单退款" value="5"/>
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="createForm('ruleForm')">生 成</el-button>
+          </el-form-item>
+        </el-form>
+      </el-tabs>
+    </el-dialog>
+    <!--查看交易明细弹窗-->
+    <el-dialog
+      :close-on-click-modal="false"
+      :visible.sync="dialogVisibleDetail"
+      title="代收款交易明细"
+      top="5%"
+      width="60%">
+      <div class="contract_table">
+        <el-tabs type="border-card">
+          <el-table
+            ref="tableOne"
+            :height="height"
+            :data="tableDataOne"
+            :show-overflow-tooltip="true"
+            highlight-current-row
+            border
+            tooltip-effect="dark"
+            style="width: 100%">
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="mall_name"
+              min-width="100"
+              label="项目名称"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="contract_code"
+              min-width="100"
+              label="合同编号"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="store_code"
+              min-width="100"
+              label="商铺编号"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="store_name"
+              min-width="100"
+              label="商铺名称"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="pay_trans_type"
+              min-width="100"
+              label="代收类型">
+              <template slot-scope="scope">
+                <span v-if="scope.row.pay_trans_type == 1">银行刷卡</span>
+                <span v-else-if="scope.row.pay_trans_type == 2">银联代收</span>
+                <span v-else-if="scope.row.pay_trans_type == 3">租赁代刷卡</span>
+                <span v-else-if="scope.row.pay_trans_type == 4">订单收款</span>
+                <span v-else-if="scope.row.pay_trans_type == 5">订单退款</span>
+              </template>
+            </el-table-column>>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="trans_date"
+              min-width="100"
+              label="发生日期"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="pay_amt"
+              min-width="100"
+              label="付款金额"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="paid_amt_by_store"
+              min-width="120"
+              label="分摊金额"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="fee_amt"
+              min-width="120"
+              label="手续费"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="net_amt"
+              min-width="100"
+              label="净额">
+            </el-table-column>
+          </el-table>
+          <el-pagination
+            :page-sizes="[20, 30, 40, 50]"
+            :current-page.sync="currentPage"
+            :total="totalOne"
+            :page-size="20"
+            background
+            layout="prev, pager, next, total, sizes"
+            @current-change="paginationOne"
+            @size-change="handleSizeChangeOne"/>
+        </el-tabs>
+      </div>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+import { common } from '@/common/common';
+import building from '@/utils/building';
+export default {
+  name: 'Deposit',
+  data() {
+    return {
+      formInline: { mall_id: '' }, // 搜索条件信息
+      ruleForm: { mall_id: '', contract_code: '', store_code: '', pay_in_flag: '', start: '', end: '' }, // 代收款表单 加内容，方便验证
+      rules: { mall_id: { required: true, message: '请选择项目名称', trigger: 'change' }},
+      height: window.innerHeight - 300 + 'px',
+      loading: false,
+      total: 0,
+      totalOne: 0,
+      currentPage: 1, // 页码
+      mall_name: [], // 门店信息
+      pickerOptions: building.publicTime(),
+      tableData: [], // 订单table
+      tableDataOne: [], // 代收款明细table
+      agencyList: '', // 单行点击的数据
+      searchRight: 'el-icon-arrow-down',
+      formShow: false, // 更多搜索
+      dialogVisible: false, // 代收款弹窗
+      dialogVisibleDetail: false, // 代收款交易明细弹窗
+      start_date: '', // 起止日期
+      account_date: '' // 生成代收款里的时间
+    };
+  },
+  created() {
+    building.Mall(this); // 先获取门店数据
+    const searchHistory = common.get('agencyData');
+    if (searchHistory != null) {
+      this.formInline = searchHistory.search;
+      common.getPreData(searchHistory.search, 'PayTrans/getList', this, 'agencyData');
+    }
+  },
+  methods: {
+    submitForm() { // 查询
+      const data = this.formInline;
+      data.limit = 20;
+      common.getPreData(data, 'PayTrans/getList', this, 'agencyData');
+      common.set('agencyData', { 'search': data });
+    },
+    clickRow(row) { // 点击table的row获取当前行数据
+      this.$refs.table.toggleRowSelection(row);
+      this.agencyList = row;
+    },
+    getRadio(row) { // 去除多选
+      building.radioBtn(row, this.$refs.table);
+    },
+    createAgency() { // 生成代收款
+      this.dialogVisible = true;
+      this.ruleForm.mall_id = this.formInline.mall_id;
+      this.formInline.start && (this.account_date = [this.formInline.start, this.formInline.end]);
+    },
+    createForm(formName) { // 生成代收款
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (!this.account_date) {
+            this.$message({ message: '日期不能为空', type: 'warning' });
+          } else {
+            this.http.post('PayMoney/producePayIn', this.ruleForm).then(res => {
+              const n = res.data.data;
+              if (n < 1) {
+                this.$message.warning('没有可以生成代收款的费用数据');
+              } else {
+                this.$message.success('成功生成代收款' + n + '条！');
+                this.dialogVisible = false;
+              }
+            });
+          }
+        } else {
+          this.$message({
+            message: '请输入完整信息！！！',
+            type: 'warning'
+          })
+          return false;
+        }
+      });
+    },
+    handleClose(formName) { // 关闭弹窗回调
+      this.$refs[formName].resetFields();
+    },
+    checkAgency(index, row) { // 查看
+      const R = this.formInline;
+      R.store_id = row[index].store_id;
+      this.http.post('PayTrans/getList', R).then(res => {
+        this.tableDataOne = res.data.data;
+        this.totalOne = res.data.count;
+        this.dialogVisibleDetail = true;
+      });
+    },
+    pagination(val) { // 分页功能
+      const data = this.formInline;
+      data.page = val;
+      common.getPreData(data, 'PayTrans/getList', this, 'agencyData');
+      common.set('agencyData', { 'search': data });
+    },
+    handleSizeChange(val) {
+      const data = this.formInline;
+      data.limit = val;
+      common.getPreData(data, 'PayTrans/getList', this, 'agencyData');
+      common.set('agencyData', { 'search': data });
+    },
+    paginationOne(val) {
+      const R = this.formInline;
+      R.page = val;
+      this.http.post('PayTrans/getList', R).then(res => {
+        this.tableDataOne = res.data.data;
+        this.totalOne = res.data.count;
+        this.dialogVisibleDetail = true;
+      });
+    },
+    handleSizeChangeOne(val) {
+      const R = this.formInline;
+      R.limit = val;
+      this.http.post('PayTrans/getList', R).then(res => {
+        this.tableDataOne = res.data.data;
+        this.totalOne = res.data.count;
+        this.dialogVisibleDetail = true;
+      });
+    },
+    moreSearch() { // 更多搜索
+      this.formShow = !this.formShow;
+      if (this.searchRight == 'el-icon-arrow-down') {
+        this.searchRight = 'el-icon-arrow-up';
+        this.height = window.innerHeight - 345;
+      } else {
+        this.searchRight = 'el-icon-arrow-down';
+        this.height = window.innerHeight - 300;
+      }
+    },
+    startDate(e, index) { // 搜索日期赋值
+      switch (index) {
+        case 1:
+          e ? this.formInline.start = e[0] : this.formInline.start = '';
+          e ? this.formInline.end = e[1] : this.formInline.end = '';
+          break;
+        case 2:
+          e ? this.ruleForm.start = e[0] : this.ruleForm.start = '';
+          e ? this.ruleForm.end = e[1] : this.ruleForm.end = '';
+          break;
+      }
+    }
+  }
+};
+</script>
+
+<style scoped>
+  .btn_bottom{padding-left: 15px;}
+  .el-row > div > .el-form-item { margin-bottom: 5px !important; }
+</style>

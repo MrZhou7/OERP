@@ -1,0 +1,314 @@
+<template>
+  <el-main>
+    <el-form :model="formInline" class="demo-form-inline" label-width="80px">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="门店名称">
+            <el-select v-model="formInline.mall_id" placeholder="请选择项目名称">
+              <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name" :value="mall.mall_id"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="楼栋">
+            <el-select v-model="formInline.building_id" placeholder="请选择所属楼栋" clearable @focus="getBuild">
+              <el-option v-for="build in building_name" :key="build.building_id" :label="build.building_name" :value="build.building_id"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="楼层">
+            <el-select v-model="formInline.floor_id" placeholder="请选择所属楼层" clearable @focus="getFloor">
+              <el-option v-for="floor in floor_name" :key="floor.floor_id" :label="floor.floor_name" :value="floor.floor_id"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="状态">
+            <el-select v-model="formInline.customer_name" placeholder="请选择费用类型">
+              <el-option value="" label="全部"></el-option>
+              <el-option label="启用" value="1"></el-option>
+              <el-option label="停用" value="0"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="商铺编码">
+            <el-input v-model="formInline.contract_code" clearable placeholder="请输入商铺编码"></el-input>
+
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商铺名称">
+            <el-input v-model="formInline.contract_name" clearable placeholder="请输入商铺名称"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="合同ID">
+            <el-input v-model="formInline.costId" clearable placeholder="请输入合同ID"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="合同编号">
+            <el-input v-model="formInline.code" clearable placeholder="请输入合同编号"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="商户编号">
+            <el-input v-model="formInline.costCode" clearable placeholder="请输入商户编号"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item>
+            <el-button type="primary" @click="onSecher()">搜索</el-button>
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+    <div class="btn_bottom">
+      <el-button type="primary" @click="addShop">新增</el-button>
+    </div>
+    <div class="contract_table">
+      <el-table
+        ref="tableOne"
+        :height="tableHeight"
+        :data="tableData"
+        :show-overflow-tooltip="true"
+        border
+        tooltip-effect="dark"
+        style="width: 100%"
+        @selection-change="changFun"
+        @row-click="clickRow">
+        <el-table-column
+          type="selection"
+          width="55"/>
+        <el-table-column
+          prop="customer_code"
+          label="状态"
+          width="80">
+          <template slot-scope="scope">
+              {{ scope.row.customer_code == 1 ? '停用': '启用' }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="customer_name"
+          label="商户编号"
+          :show-overflow-tooltip="true"
+          width="150"/>
+        <el-table-column
+          prop="cust_short_name"
+          label="商户名称"
+          :show-overflow-tooltip="true"
+          width="150"/>
+        <el-table-column
+          prop="contact_phone"
+          label="商铺编码"
+          :show-overflow-tooltip="true"
+          width="150"/>
+        <el-table-column
+          prop="legal"
+          label="商铺名称"
+          :show-overflow-tooltip="true"
+          width="150"/>
+        <el-table-column
+          prop="customer_rank"
+          label="楼栋"
+          :show-overflow-tooltip="true"
+          width="150">
+        </el-table-column>
+
+        <el-table-column
+          prop="address"
+          label="楼层"
+          :show-overflow-tooltip="true"
+          width="300"/>
+        <el-table-column
+          prop="enabled"
+          label="合同ID"
+          :show-overflow-tooltip="true"
+          width="150">
+        </el-table-column>
+        <el-table-column
+          prop="enabled"
+          label="合同编号"
+          :show-overflow-tooltip="true"
+          width="150">
+        </el-table-column>
+        <el-table-column
+          prop="enabled"
+          label="开始时间"
+          :show-overflow-tooltip="true"
+          width="150">
+        </el-table-column>
+        <el-table-column
+          prop="enabled"
+          label="结束时间"
+          :show-overflow-tooltip="true"
+          width="150">
+        </el-table-column>
+        <el-table-column
+          prop="enabled"
+          label="终止日期"
+          :show-overflow-tooltip="true"
+          width="150">
+        </el-table-column>
+        <el-table-column
+          prop="enabled"
+          label="品类"
+          :show-overflow-tooltip="true"
+          width="150">
+        </el-table-column>
+        <el-table-column
+          prop="enabled"
+          label="品牌"
+          :show-overflow-tooltip="true"
+          width="150">
+        </el-table-column>
+        <el-table-column
+          prop="enabled"
+          label="经营区域"
+          :show-overflow-tooltip="true"
+          width="150">
+        </el-table-column>
+        <el-table-column
+          prop="enabled"
+          label="商铺面积"
+          :show-overflow-tooltip="true"
+          width="150">
+        </el-table-column>
+        <el-table-column
+          fixed="right"
+          label="操作"
+          width="200">
+          <template slot-scope="scope">
+            <el-button type="text" size="small" @click.native.prevent="checkBusiness(scope.row)">查看</el-button>
+            <el-button type="text" size="small" @click.native.prevent="editClick(scope.row)">编辑</el-button>
+            <el-button type="text" size="small" @click.native.prevent="synchronization(scope.row)">同步</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        :page-sizes="[10, 20, 30, 40, 50]"
+        :page-size="pageSize"
+        :current-page.sync="currentPage"
+        :total="total"
+        background
+        layout="prev, pager, next, total, sizes"
+        @current-change="pagination"
+        @size-change="handleSizeChange"/>
+    </div>
+    <!--查看编辑弹窗-->
+    <el-dialog :title="name" :visible.sync="addShopDialog"  v-if="addShopDialog" width="70%" height="70%" top="3%" :close-on-click-modal="false">
+      <addShop v-on:addShopData="addShopData" :addShopId="addShopId" :addShopType="addShopType"></addShop>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+  import addShop from '@/components/sale/shops/addShop.vue' //商铺
+  import { common } from '@/common/common';
+  import building from '@/utils/building';
+  export default {
+    name: 'shopsManagement',
+    components: { addShop },
+    data() {
+      return {
+        mall_name: [], // 门店信息
+        building_name: [], // 楼栋
+        floor_name: [], // 楼层
+        formInline: {}, // 楼层
+        total: 0, // 分页
+        currentPage: 1, // 页码
+        pageSize: 10,//当前页码
+        tableHeight: window.innerHeight - 342,
+        tableData: [], // 查询获取的数据
+        store_name: '',
+        checkData:[],
+        addShopDialog:false,
+        addShopId: '',
+        addShopType: '',
+      };
+    },
+    created() {
+      building.Mall(this); // 先获取门店数据
+    },
+    methods: {
+      getBuild() { // 获取楼栋信息
+        if(!this.formInline.mall_id) {
+          this.$message({
+            message: '请选择门店',
+            type: 'warning'
+          })
+        }else {
+          building.build(this, this.formInline.mall_id);
+        }
+      },
+      getFloor() { // 获取楼层信息
+        if(!this.formInline.building_id) {
+          this.$message({
+            message: '请选择楼栋',
+            type: 'warning'
+          })
+        }else {
+          building.floor(this, this.formInline.building_id);
+        }
+      },
+      pagination(val) { // 分页
+        const data = this.formInline;
+        data.page = val;
+        common.getPreData(data, 'customer/getCustomerList', this, 'businessSearch');
+        common.set('businessSearch', { 'search': data });
+      },
+      handleSizeChange(val) {
+        const data = this.formInline;
+        data.limit = val;
+        common.getPreData(data, 'customer/getCustomerList', this, 'businessSearch');
+        common.set('businessSearch', { 'search': data });
+      },
+
+
+
+      clickRow(row) { // 点击table的row
+        this.$refs.tableOne.toggleRowSelection(row);
+        this.checkData = row
+      },
+      changFun(row) {//获取当前行数据
+        if (row.length > 1) { //去除多选
+          this.$refs.multipleTable.clearSelection();
+          this.$refs.multipleTable.toggleRowSelection(row.pop());
+        }else if(row.length = 0) {
+
+        }
+      },
+      addShop: function() { // 新增商户
+        this.addShopDialog = true;
+        this.addShopId = '';
+        this.name = '新增商铺';
+        this.addShoptype = 1;
+      },
+      viewRow(row) {
+        this.addShopDialog = true;
+        this.addShopId = row.id;
+        this.addShoptype = 2;
+        this.name = '查看商铺';
+      },
+      editRow(row) {
+        this.addShopDialog = true;
+        this.addShopId = row.id;
+        this.addShoptype = 3;
+        this.name = '编辑商铺';
+      },
+      synchronization(row) {},
+      addShopData(data) {},
+    }
+  };
+</script>
+
+<style scoped lang="scss">
+  #businessWrap{padding: 15px;}
+  .el-form-item {margin-bottom: 5px;}
+</style>

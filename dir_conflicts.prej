@@ -1,0 +1,12 @@
+试图修改属性 “svn:global-ignores”，但是它的本地取值已经改变。
+本地属性取值:
+*.md
+README-zh.md
+README.md
+dist
+
+外部属性取值:
+*.md
+README-zh.md
+README.md
+

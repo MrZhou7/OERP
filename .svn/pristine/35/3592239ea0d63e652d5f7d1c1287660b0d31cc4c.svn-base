@@ -1,0 +1,124 @@
+.el-form {
+  margin: 10px;
+  padding: 10px;
+  background: #f8f8f8;
+}
+.el-dialog__header{
+  padding: 10px 20px;
+}
+.el-dialog__body{
+  padding: 10px 20px;
+}
+.el-date-editor--daterange.el-input__inner {
+  width: 100%;
+}
+.el-select .el-input__inner {   //select的右边距调整
+  cursor: pointer;
+  padding-right: 15px;
+}
+.el-cascader { //层级选择器width位100%
+  width: 100%;
+}
+.el-input__inner {
+  border-radius: 2px;
+  border: 1px solid #e4e4e4;
+}
+
+.el-select {
+  width: 100%;
+}
+
+.btn_bottom {
+  margin-bottom: 5px;
+}
+
+.cell {
+  button span {
+    padding-right: 15px;
+    border-right: 1px solid #6aa3a9;
+  }
+
+  button:last-child span {
+    border-right: 0;
+  }
+}
+
+.elem_quote {
+  margin-bottom: 10px;
+  padding: 10px;
+  line-height: 22px;
+  border-left: 5px solid #009688;
+  border-radius: 0 2px 2px 0;
+  background-color: #f2f2f2;
+  color: #888d92;
+  font-size: 14px;
+}
+
+
+.label_required>.el-form-item__label:before {
+  content: "*";
+  color: #ff0000;
+}
+.el-dialog__wrapper{
+  background: rgba(0, 0, 0, 0.34);
+}
+//加载上传图片
+.avatar-uploader .el-upload {
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.avatar-uploader .el-upload:hover {
+  border-color: #409EFF;
+}
+.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 178px;
+  height: 178px;
+  line-height: 178px;
+  text-align: center;
+}
+.avatar {
+  width: 178px;
+  height: 178px;
+  display: block;
+}
+.width_100 .el-form-item__label {
+  width: 100px !important;
+}
+
+.width_100 .el-form-item__content, .width_100 .el-form-item__content {
+  margin-left: 100px !important;
+}
+.width_110 .el-form-item__label {
+  width: 110px !important;
+}
+.width_110 .el-form-item__content, .width_110 .el-form-item__content {
+  margin-left: 110px !important;
+}
+.width_130 .el-form-item__label {
+  width: 130px !important;
+}
+.width_130 .el-form-item__content, .width_130 .el-form-item__content {
+  margin-left: 130px !important;
+}
+.width_160 .el-form-item__label {
+  width: 165px !important;
+}
+.width_160 .el-form-item__content, .width_160 .el-form-item__content {
+  margin-left: 165px !important;
+}
+.el-tree-node__content:hover {//tree的hover样式
+  background-color:#409EFF;
+}
+
+.el-tree--highlight-current .el-tree-node.is-current>.el-tree-node__content { //选中后的背景色
+  background-color:#409EFF;
+}
+
+.el-tree-node:focus > .el-tree-node__content {
+  background-color: #409EFF !important; //选中后的组件高亮
+}

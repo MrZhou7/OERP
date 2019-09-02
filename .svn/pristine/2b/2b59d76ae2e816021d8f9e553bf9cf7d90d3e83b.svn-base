@@ -1,0 +1,188 @@
+<template>
+  <el-main>
+    <p class="category-text">支付大类
+      <span class="addCategory" @click="addReturn = true">添加大类</span>
+    </p>
+    <el-table
+      :height="tableHeight"
+      :data="tableData"
+      :show-overflow-tooltip="true"
+      border
+      tooltip-effect="dark"
+      style="width: 100%">
+      <el-table-column
+        prop="code"
+        :show-overflow-tooltip="true"
+        label="编号"
+        min-width="150">
+      </el-table-column>
+      <el-table-column
+        prop="name"
+        :show-overflow-tooltip="true"
+        label="名称" min-width="150">
+      </el-table-column>
+      <el-table-column
+        prop="main"
+        :show-overflow-tooltip="true"
+        label="描述" min-width="150">
+      </el-table-column>
+      <el-table-column
+        prop="contract_code"
+        :show-overflow-tooltip="true"
+        label="是否启用"
+        min-width="150">
+      </el-table-column>
+
+      <el-table-column
+        fixed="right"
+        algin="center"
+        label="操作"
+        min-width="150">
+        <template slot-scope="scope">
+          <el-button
+            @click.native.prevent="viewRow(scope.row)"
+            type="text"
+            size="small">
+            查看
+          </el-button>
+          <el-button
+          @click.native.prevent="editRow(scope.row)"
+          type="text"
+          size="small">
+           编辑
+          </el-button>
+          <el-button
+          @click.native.prevent="deleteRow(scope.row)"
+          type="text"
+          size="small">
+           删除
+          </el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <el-pagination
+      :page-sizes="[10, 20, 30, 40, 50]"
+      :page-size="pageSize"
+      :current-page.sync="currentPage"
+      :total="total"
+      background
+      layout="prev, pager, next, total, sizes"
+      @current-change="pagination"
+      @size-change="handleSizeChange"/>
+    <el-dialog :title="name" :visible.sync="addReturn" append-to-body width="500px" :close-on-click-modal="false">
+      <el-form ref="rentDetailRules" :model="addReturnObj" :rules="rentDetailRules" label-width="80px">
+        <el-form-item label="编码" class="label_required" prop="codes">
+          <el-input v-model="addReturnObj.codes"  :disabled="view" clearable ></el-input>
+        </el-form-item>
+        <el-form-item label="名称" class="label_required" prop="name">
+          <el-input v-model="addReturnObj.name"  :disabled="view" clearable ></el-input>
+        </el-form-item>
+        <el-form-item label="描述" class="label_required" prop="describe">
+          <el-input v-model="addReturnObj.describe"  :disabled="view" clearable ></el-input>
+        </el-form-item>
+        <el-form-item>
+        <el-checkbox-group v-model="addReturnObj.enable">
+          <el-checkbox name="type" label="是否启用" :disabled="view"></el-checkbox>
+        </el-checkbox-group>
+        </el-form-item>
+      </el-form>
+      <span slot="footer">
+        <el-button @click="cancle('rentDetailRules')">取 消</el-button>
+        <el-button type="primary" @click="addTure('rentDetailRules')">确 定</el-button>
+      </span>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+  export default {
+    name: 'paymentCategory',
+    data() {
+      return {
+        tableData:[],
+        total: 0,//分页总数据
+        currentPage: 1,//当前页码
+        pageSize: 10,//当前页码
+        tableHeight: window.innerHeight - 123,//表格高度
+        name: '新增',
+        addReturn: false,
+        addReturnObj: {},
+        rentDetailRules: {
+          'codes': [{ required: true, message: '请输入编码', trigger: 'blur' }],
+          'name': [{ required: true, message: '请输入名称', trigger: 'blur' }],
+          'describe': [{ required: true, message: '请输入描述', trigger: 'blur' }]
+        },
+        view:false
+      }
+    },
+    created: function() {
+    },
+    methods: {
+      paymentData(data) {
+        this.axios
+          .post(process.env.BASE_API + 'table_util/getPreData', { payModeId: data })
+          .then(function(res) {
+            if (res.data.error_code == 0) {
+              this.addReturnObj = res.data.data;
+            }
+          })
+          .catch(function(err) {
+            this.$message.error(err.response.data.msg);
+          })
+      },
+      pagination(val) {// 列表分页
+        data = this.formInline;
+        data.page = val;
+        common.getPreData(data, 'InvoiceHeader/getList', this, 'billAdminIndexSearch');
+        common.set('billAdminIndexSearch', { 'search': {mall_id:this.formInline.mall_id,page: val} });
+      },
+      handleSizeChange(val) {// 列表分页
+        data = this.formInline;
+        data.limit = val;
+        common.getPreData(data, 'InvoiceHeader/getList', this, 'billAdminIndexSearch');
+        common.set('billAdminIndexSearch', { 'search': {mall_id:this.formInline.mall_id,limit: val} });
+      },
+      viewRow(row) {
+        this.view = true;
+        this.name = '查看';
+        this.paymentData(row.id);
+      },
+      editRow(row) {
+        this.view = true;
+        this.name = '编辑';
+        this.paymentData(row.id);
+      },
+      deleteRow(row) {
+        this.axios
+          .post(process.env.BASE_API + 'table_util/getPreData', { payModeId: row.id })
+          .then(function(res) {
+            if (res.data.error_code == 0) {
+              this.$message.error('删除成功');
+            }
+          })
+          .catch(function(err) {
+            this.$message.error(err.response.data.msg);
+          })
+      },
+      cancle(formName) {
+        this.addReturn = false;
+        this.$refs[formName].resetFields();
+      },
+      addTure(formName) {
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            this.$refs[formName].resetFields();
+            this.addReturn = false;
+          } else {
+            this.$message.error('请填写完整')
+          }
+        })
+      },
+    }
+  }
+</script>
+
+<style scoped>
+  .category-text{background: #f7f7f7;line-height: 40px;font-size: 14px;color: #606266;padding: 0 15px;box-sizing: border-box;font-weight: bold;}
+  .addCategory{color: #38f;float:right;cursor:pointer;}
+</style>

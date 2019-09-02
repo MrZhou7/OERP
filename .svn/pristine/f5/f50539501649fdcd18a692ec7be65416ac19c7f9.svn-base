@@ -1,0 +1,148 @@
+<template>
+  <div id="businessTableWrap">
+    <el-table
+      :data="tableData"
+      style="width: 100%"
+      max-height="400">
+      <el-table-column
+        fixed
+        prop="mall_name"
+        label="门店名称"
+        width="150">
+      </el-table-column>
+      <el-table-column
+        prop="building_name"
+        label="所属楼栋"
+        width="150">
+      </el-table-column>
+      <el-table-column
+        prop="floor_name"
+        label="所属楼层"
+        width="150">
+      </el-table-column>
+      <el-table-column
+        prop="unit_type"
+        label="资源类别"
+        width="150">
+      </el-table-column>
+      <el-table-column
+        prop="merchant_type_id"
+        label="场地类型"
+        width="300">
+      </el-table-column>
+      <el-table-column
+        prop="within_area"
+        label="计租面积"
+        width="300">
+      </el-table-column>
+      <el-table-column
+        fixed="right"
+        label="操作"
+        width="400">
+        <template slot-scope="scope">
+          <el-button @click.native.prevent="checkSite(scope.$index, tableData)" type="text" size="small">查看</el-button>
+          <el-button type="text" size="small" @click.native.prevent="editSite(scope.$index, tableData)">编辑</el-button>
+          <el-button
+            @click.native.prevent="deleteRow(scope.$index, tableData)"
+            type="text"
+            size="small">
+            移除
+          </el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <el-dialog
+      title="查看场地"
+      :visible.sync="checkSiteVisible"
+      width="80%">
+      <CheckSite :checkSiteData="checkSiteData"></CheckSite>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="checkSiteVisible = false">返回</el-button>
+      </span>
+    </el-dialog>
+    <el-dialog
+      title="编辑场地"
+      :visible.sync="editSiteVisible"
+      width="80%">
+      <EditSite :editSiteData="editSiteData" @isEditShow="isEditShow"></EditSite>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+  import CheckSite from '@/components/site/checkSite'
+  import EditSite from '@/components/site/editSite'
+  export default {
+    name: "siteTable",
+    components:{
+      CheckSite,EditSite
+    },
+    props:{
+      tableData:{
+        type: Array,
+        default: []
+      }
+    },
+    watch: {
+      tableData(n, o) {
+        //console.log(n)
+      }
+    },
+    data() {
+      return {
+        checkSiteVisible:false,
+        editSiteVisible:false,
+        checkSiteData:{},
+        editSiteData:{}
+      }
+    },
+    methods: {
+      //移除table
+      deleteRow(index, rows) {
+        rows.splice(index, 1);
+      },
+      //接受子组件参数
+      isEditShow(data){
+        this.editSiteVisible = data;
+      },
+      //编辑
+      editSite(index,table){
+        this.editSiteVisible = true;
+        this.getData(index, table)
+      },
+      //查看场地信息
+      checkSite(index,table){
+        this.checkSiteVisible = true;
+        //this.getData(index, table)
+        console.log(table[index])
+      },
+      getData(index, table){
+        const that = this;
+        let mallId= {
+          building_id:table[index].building_id,
+          floor_id:table[index].floor_id,
+          mall_id:table[index].mall_id,
+          unit_type:table[index].unit_type,
+          merchant_type_id:table[index].merchant_type_id,
+          operate_area_id:table[index].operate_area_id
+        };
+        this.axios({
+          method:'post',
+          data:mallId,
+          url:process.env.BASE_API + 'propertyUnit/getUnitDetail'
+        }).then((res)=>{
+          if (res.status == 200) {
+            that.checkSiteData = res.data.data
+            that.editSiteData = res.data.data
+          }
+        }).catch(function(err) {
+          that.$message.error(err.response.data.msg)
+        })
+      }
+    }
+  }
+</script>
+
+<style scoped>
+
+</style>

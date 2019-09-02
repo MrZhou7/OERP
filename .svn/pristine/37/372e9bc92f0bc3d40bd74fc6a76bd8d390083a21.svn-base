@@ -1,0 +1,130 @@
+<template>
+  <div class="addSubclass">
+    <el-form :model="newLists" :rules="rules" ref="ruleForm" label-width="110px" class="demo-ruleForm">
+      <el-form-item label="费用编码" >
+        <el-input v-model="newLists.charge_code" :disabled="true"></el-input>
+      </el-form-item>
+      <el-form-item label="费用名称" prop="type_name">
+        <el-input v-model="newLists.type_name" ></el-input>
+      </el-form-item>
+      <el-form-item label="记账科目号" prop="account_code">
+        <el-input v-model="newLists.account_code"></el-input>
+      </el-form-item>
+
+      <el-form-item label="控制标记"  prop="tags">
+        <el-select v-model="newLists.tags" >
+          <el-option label="默认 " :value="0"></el-option>
+          <el-option label="租金 " :value="1"></el-option>
+          <el-option label="费用 " :value="2"></el-option>
+          <el-option label="押金 " :value="3"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="所属模块" prop="module">
+        <el-select v-model="newLists.module" >
+          <el-option label="财务 " :value="1"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="收费性质"  prop="charge_reason_type">
+        <el-select v-model="newLists.charge_reason_type" >
+          <el-option label="固定费用" :value="1"></el-option>
+          <el-option label="临时费用" :value="2"></el-option>
+          <el-option label="代收费用" :value="3"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="发票类型" prop="invoice_type">
+        <el-select v-model="newLists.invoice_type"  >
+          <el-option label="服务发票" :value="1"></el-option>
+          <el-option label="租金发票" :value="2"></el-option>
+          <el-option label="代开发票" :value="3"></el-option>
+          <el-option label="收据" :value="4"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="是否有效" prop="enabled">
+        <el-radio-group v-model="newLists.enabled">
+          <el-radio :label="0">否</el-radio>
+          <el-radio :label="1">是</el-radio>
+        </el-radio-group>
+      </el-form-item>
+      <el-form-item label="添加人">
+        <el-input v-model="newLists.added_by" :disabled="true"></el-input>
+      </el-form-item>
+      <el-form-item label="说明">
+        <el-input type="textarea" v-model="newLists.type_desc"></el-input>
+      </el-form-item>
+      <el-form-item algin="right">
+        <el-button type="primary" @click="saveList('ruleForm')">保存</el-button>
+        <el-button type="primary" @click="cancle()">取消</el-button>
+      </el-form-item>
+    </el-form>
+
+  </div>
+</template>
+
+<script>
+  export default {
+    data() {
+      return {
+        rules: {
+          type_name: [
+            { required: true, message: '请输入品类名称', trigger: 'blur' },
+            { min: 1, max: 20, message: '长度在20 个字符以内', trigger: 'blur' }
+          ],
+          enabled: [ { required: true, message: '请选择是否有效', trigger: 'blur' } ],
+          tags: [ { required: true, message: '请选择控制编标记', trigger: 'blur' } ],
+          module: [ { required: true, message: '请选择所属模块', trigger: 'blur' } ],
+          charge_type: [ { required: true, message: '请填写收支类型', trigger: 'blur' } ],
+          account_code: [ { required: true, message: '请选择记账科目号', trigger: 'blur' } ],
+          invoice_type: [ { required: true, message: '请选择发票类型', trigger: 'blur' } ],
+          charge_reason_type: [ { required: true, message: '请选择收费类型', trigger: 'blur' } ],
+        },
+        newLists:{
+        }
+      }
+    },
+    watch: {
+      parent_id(n, o) {
+        this.ruleForm.boss = n[0].type_name
+      }
+    },
+    methods: {
+      //保存信息
+      saveList(formName) {
+        this.$refs[formName].validate((valid) => {
+          const that = this;
+          if (valid) {
+            console.log(this.newLists)
+            // this.axios({
+            //   method: 'post',
+            //   url:process.env.BASE_API + 'ChargeType/addType',
+            //   data: this.newLists
+            // }).then((res)=>{
+            //   this.$message({
+            //     message: '保存成功',
+            //     type: 'success'
+            //   });
+            //   this.cancle();
+            // }).catch(function(err) {
+            //   that.$message.error(err.response.data.msg)
+            // })
+          } else {
+            this.$message({
+              message: '请完善信息！！！',
+              type: 'warning'
+            });
+          }
+        });
+      },
+      //取消
+      cancle(){
+        this.$emit("listenDialog",false)
+      }
+    }
+  }
+</script>
+
+<style rel="stylesheet/css" lang="scss" scoped>
+  .addSubclass{margin-top:5px;}
+  .el-form-item {
+    margin-bottom: 20px !important;
+  }
+</style>

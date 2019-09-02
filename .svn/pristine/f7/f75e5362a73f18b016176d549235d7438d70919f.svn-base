@@ -1,0 +1,85 @@
+<template>
+  <main>
+    <el-row>
+      <el-col :span="10">
+        <div class="category-tree-content">
+          <el-input
+            v-model="filterText"
+            placeholder="输入关键字进行品类搜索">
+          </el-input>
+          <el-tree
+            v-loading="loading"
+            ref="tree2"
+            :highlight-current="true"
+            :data="dataTree"
+            :props="defaultProps"
+            :default-expanded-keys="defaultExpandedKeys"
+            :filter-node-method="filterNode"
+            node-key="id"
+            class="filter-tree"
+            @node-click="handleNodeClick"/>
+        </div>
+      </el-col>
+      <el-col :span="14">
+
+      </el-col>
+    </el-row>
+  </main>
+</template>
+
+<script>
+import { common } from '@/common/common';
+export default {
+  name: 'UserOA',
+  data() {
+    return {
+      title: '',
+      dialogVisible: false,
+      filterText: '', // 查询过滤的初始值
+      dataTree: [], // 树状图显示数据
+      defaultExpandedKeys: [], // 默认展开的节点
+      defaultProps: {
+        children: 'children',
+        label: 'text'
+      },
+      loading: false
+    };
+  },
+  watch: {
+    filterText(val) {
+      this.$refs.tree2.filter(val);
+    }
+  },
+  created() {
+    this.getUserTree();
+  },
+  methods: {
+    filterNode(value, data) { // 组织架构的搜索查询
+      if (!value) return true;
+      return data.text.indexOf(value) !== -1;
+    },
+    handleNodeClick(node, data) { // 点击传参给用户信息，并显示用户信息
+      console.log(node)
+      console.log(data)
+    },
+    getUserTree() { // 获取tree信息个表格的查询及点击组织架构获取信息
+      //common.getTree('dept/getDeptTree', this, 'userTreeData');
+      this.axios.post('http://10.1.2.168/v1/Organization/getTree').then(res => {
+        this.dataTree = res.data.data;
+        console.log(this.dataTree)
+        //this.defaultExpandedKeys = [this.dataTree[0].id];
+        this.loading = false;
+      }).catch(function(err) {
+        this.$message.error(err.responseJSON.msg);
+      });
+    },
+  }
+};
+</script>
+
+<style scoped>
+  .userWrap{padding: 15px;}
+  .el-input--suffix .el-input__inner {padding-right:15px;}
+  .filter-tree{overflow: auto;height:calc(100vh - 150px);}
+  .category-tree-content{margin:10px;border: 1px solid #e2e2e2;}
+</style>

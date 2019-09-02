@@ -1,0 +1,102 @@
+<template>
+  <div class="roleWrap">
+    <div class="roleWrapTitle">角色维护</div>
+    <el-form ref="form" :model="form" label-width="80px">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="归属组织">
+            <el-input v-model="form.name"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item>
+            <el-button type="primary" @click="search">搜索</el-button>
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+    <el-row>
+      <el-button type="success" @click="addRole=true">新增角色</el-button>
+    </el-row>
+    <el-dialog
+      title="新增角色"
+      top="0"
+      :close-on-click-modal="false"
+      :visible.sync="addRole"
+      width="80%" height="100%">
+      <AddRole></AddRole>
+      <!--<span slot="footer" class="dialog-footer">
+        <el-button @click="addRole = false">取 消</el-button>
+      </span>-->
+    </el-dialog>
+    <!--<el-table-->
+      <!--ref="multipleTable"-->
+      <!--:data="tableData"-->
+      <!--tooltip-effect="dark"-->
+      <!--style="width: 100%"-->
+      <!--border-->
+      <!--@selection-change="handleSelectionChange">-->
+      <!--<el-table-column-->
+        <!--type="selection"-->
+        <!--width="55">-->
+      <!--</el-table-column>-->
+      <!--<el-table-column-->
+        <!--label="日期"-->
+        <!--width="120">-->
+        <!--<template slot-scope="scope">{{ scope.row.date }}</template>-->
+      <!--</el-table-column>-->
+      <!--<el-table-column-->
+        <!--prop="name"-->
+        <!--label="姓名"-->
+        <!--width="120">-->
+      <!--</el-table-column>-->
+      <!--<el-table-column-->
+        <!--prop="address"-->
+        <!--label="地址"-->
+        <!--show-overflow-tooltip>-->
+      <!--</el-table-column>-->
+    <!--</el-table>-->
+    <el-pagination
+      background
+      layout="prev, pager, next"
+      :total="1000">
+    </el-pagination>
+  </div>
+</template>
+
+<script>
+  import AddRole from '@/components/system/role/addRole'
+  export default {
+    name: 'role',
+    components:{AddRole},
+    data() {
+      return{
+        form: {
+          name:'',
+        },
+        tableData:[],
+        addRole:false,//新增角色弹窗
+      }
+    },
+    methods: {
+      search(){}
+    }
+  }
+</script>
+
+<style scoped lang="scss">
+  .roleWrap{
+    padding: 15px;
+  .roleWrapTitle{
+    position: relative;
+    height: 42px;
+    line-height: 42px;
+    padding: 0 15px;
+    border-bottom: 1px solid #f6f6f6;
+    color: #333;
+    border-radius: 2px 2px 0 0;
+    font-size: 14px;
+  }
+  }
+
+</style>

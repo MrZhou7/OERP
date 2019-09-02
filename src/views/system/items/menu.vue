@@ -1,0 +1,318 @@
+<template>
+  <div class="roleWrap">
+    <el-row>
+      <el-col :span="6">
+        <div class="category-tree-content">
+          <el-input
+            v-model="filterText"
+            placeholder="输入关键字进行搜索"/>
+          <el-tree
+            v-loading="loading"
+            ref="tree2"
+            :highlight-current="true"
+            :data="dataTree"
+            :props="defaultProps"
+            :filter-node-method="filterNode"
+            node-key="id"
+            class="filter-tree"
+            @node-click="handleNodeClick"/>
+        </div>
+      </el-col>
+      <el-col :span="18">
+        <el-form ref="ruleForm" :rules="rules" :model="ruleForm" label-width="100px" class="demo-ruleForm">
+          <el-form-item label="资源名称" prop="permission_name">
+            <el-input v-model="ruleForm.permission_name" class="inputWindth"></el-input>
+          </el-form-item>
+          <el-form-item label="上级名称" prop="parent_id">
+            <el-select v-model="ruleForm.parent_id" placeholder="请选择上级名称" class="inputWindth">
+              <el-option label="所有菜单" value="0"/>
+              <el-option v-for="item in fatherId" :key="item.permission_id" :label="item.permission_name" :value="item.permission_id"/>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="资源URL" prop="url">
+            <el-input v-model="ruleForm.url" class="inputWindth"></el-input>
+          </el-form-item>
+          <el-form-item label="级内顺序" prop="sort">
+            <el-input v-model="ruleForm.sort" class="inputWindth"></el-input>
+          </el-form-item>
+          <el-form-item label="图标" prop="permission_icon">
+            <el-input v-model="ruleForm.permission_icon" class="inputWindth"></el-input>
+          </el-form-item>
+          <el-form-item label="">
+            <el-button v-if="isSHowMenu" :disabled="btn.one" type="primary" @click="save('ruleForm', 1)">保存(修改)</el-button>
+            <el-button v-if="!isSHowMenu" type="success" @click="save('ruleForm', 2)">保存(新增)</el-button>
+            <el-button @click="addChildren('ruleForm')">添加资源</el-button>
+          </el-form-item>
+        </el-form>
+        <el-form :rules="rulesOne" :model="menuForm" ref="menuForm" label-width="100px" class="demo-ruleForm">
+          <el-form-item label="操作名称" prop="name">
+            <el-select v-model="menuForm.name" placeholder="请选择操作名称" @change="changeCode" class="inputWindth">
+              <el-option v-for="btn in btnList" :key="btn.value" :label="btn.name" :value="btn.value"/>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="操作编码">
+            <el-select v-model="menuForm.code" class="inputWindth" disabled>
+              <el-option v-for="btn in btnList" :key="btn.value" :label="btn.code" :value="btn.value"/>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="">
+            <el-button v-if="isSHowCost" :disabled="btn.two" type="primary" @click="submitForm('menuForm', 1)">新 增</el-button>
+            <el-button v-if="!isSHowCost" type="success" @click="submitForm('menuForm', 2)">保 存</el-button>
+            <el-button @click="resetForm('menuForm')">重 置</el-button>
+          </el-form-item>
+        </el-form>
+        <div class="contract_table">
+          <el-table
+            ref="table"
+            :height="height"
+            :data="tableData"
+            :show-overflow-tooltip="true"
+            border
+            tooltip-effect="dark"
+            style="width: 100%">
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="name"
+              min-width="100"
+              label="操作名称">
+            </el-table-column>
+            <el-table-column
+              prop="code"
+              min-width="100"
+              label="操作编码"/>
+            <el-table-column
+              label="操作"
+              min-width="100">
+              <template slot-scope="scope">
+                <el-button type = "text" size="small" @click.native.prevent="deleteData(scope.$index, tableData)">删 除</el-button>
+                <el-button type = "text" size="small" @click.native.prevent="editData(scope.$index, tableData)">编 辑</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+      </el-col>
+    </el-row>
+  </div>
+</template>
+
+<script>
+import { common } from '@/common/common';
+import building from '@/utils/building';
+export default {
+  name: 'Role',
+  data() {
+    return {
+      isSHowMenu: true, //  判断是修改保存还是添加保存 默认是修改保存
+      isSHowCost: true, // 判断是修改保存还是添加保存 默认是修改保存
+      dataTree: [], // 权限信息
+      tableData: [], // 橘色权限table
+      btnList: [], // 按钮名称
+      filterText: '', // 查询过滤的初始值
+      loading: false,
+      height: window.innerHeight - 580 + 'px',
+      defaultProps: {
+        children: 'children',
+        label: 'text'
+      },
+      btn: { // 保存按钮的是否能按
+        one: true,
+        two: true
+      },
+      ruleForm: { permission_name: '', parent_id: '', url: '', sort: '', permission_icon: '' }, // 资源明细表单
+      menuForm: { name: '', code: '' }, // 修改表单
+      fatherId: [], // 父级资源
+      permission_id: null, // 权限id
+      operate_id: '',
+      rules: {
+        permission_name: [
+          { required: true, message: '请输入资源名称', trigger: 'blur' }
+        ],
+        parent_id: [
+          { required: true, message: '请选择上级名称', trigger: 'change' }
+        ],
+        url: [
+          { required: true, message: 'url不能为空', trigger: 'blur' }
+        ],
+        sort: [
+          { required: true, message: '级内顺序不能为空', trigger: 'blur' }
+        ],
+        permission_icon: [
+          { required: true, message: '图标不能为空', trigger: 'blur' }
+        ]
+      },
+      rulesOne: {
+        name: [{ required: true, message: '填写操作名称', trigger: 'change' }]
+      }
+    };
+  },
+  watch: {
+    filterText(val) {
+      this.$refs.tree2.filter(val);
+    }
+  },
+  created() {
+    this.loading = true;
+    this.getUserTree();
+    this.getFather();
+    this.getBtnList();
+  },
+  methods: {
+    filterNode(value, data) { // 组织架构的搜索查询
+      if (!value) return true;
+      return data.text.indexOf(value) !== -1;
+    },
+    handleNodeClick(node, data) { // 点击传参给用户信息，并显示用户信息
+      this.isSHowCost = true;
+      this.isSHowMenu = true;
+      this.$refs.menuForm.resetFields();
+      this.btn.one = false;
+      this.btn.two = false;
+      this.permission_id = node.data.operation_type_id;
+      this.http.post('Permission/getInfo', { permission_id: this.permission_id }).then(res => {
+        res.data.data.parent_id = node.data.parent_id;
+        this.ruleForm = res.data.data;
+        this.tableData = res.data.data.list;
+      });
+    },
+    save(formName, index) { // 保存修改
+      const that = this;
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (index == 1) {
+            const u = {
+              permission_id: that.permission_id,
+              permission_name: that.ruleForm.permission_name,
+              pid: that.ruleForm.parent_id,
+              url: that.ruleForm.url,
+              sort: that.ruleForm.sort,
+              permission_icon: that.ruleForm.permission_icon
+            };
+            that.getMenu('Permission/editPermission', u);
+          } else if (index == 2) {
+            const r = {
+              permission_name: that.ruleForm.permission_name,
+              pid: that.ruleForm.parent_id,
+              url: that.ruleForm.url,
+              sort: that.ruleForm.sort,
+              enabled: 1,
+              permission_icon: that.ruleForm.permission_icon,
+              vue_path: 1
+            };
+            that.getMenu('Permission/addPermission', r);
+          }
+        } else {
+          this.$message({ message: '请输入完整信息！！！', type: 'warning' });
+          return false;
+        }
+      });
+    },
+    getMenu(url, data) {
+      this.http.post(url, data).then(res => {
+        this.getUserTree();
+        this.isSHowMenu = true;
+        this.$message({ message: '成功！', type: 'success' });
+      });
+    },
+    addChildren(formName) { // 添加资源
+      this.isSHowMenu = false;
+      this.$refs[formName].resetFields();
+    },
+    submitForm(formName, index) { // 新增/编辑保存功能
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          const that = this;
+          this.$refs[formName].validate((valid) => {
+            if (valid) {
+              if (index == 1) {
+                const u = {
+                  permission_id: that.permission_id,
+                  name: that.menuForm.name,
+                  code: that.menuForm.code,
+                  enabled: 1
+                };
+                this.getMenuList('PermissionOperate/add', u, that);
+              } else if (index == 2) {
+                const r = {
+                  operate_id: that.operate_id,
+                  name: that.menuForm.name,
+                  code: that.menuForm.code,
+                  enabled: 1
+                };
+                this.getMenuList('PermissionOperate/edit', r, that);
+              }
+            } else {
+              this.$message({ message: '请输入完整信息！！！', type: 'warning' });
+              return false;
+            }
+          });
+        } else {
+          console.log('error submit!!');
+          return false;
+        }
+      });
+    },
+    getMenuList(url, r, that) {
+      that.http.post(url, r).then(res => {
+        that.http.post('Permission/getInfo', { permission_id: that.permission_id }).then(res => {
+          that.tableData = res.data.data.list;
+        });
+        that.$refs.menuForm.resetFields();
+        that.$message({ message: '成功！', type: 'success' });
+      });
+    },
+    editData(index, table) { // 编辑操作
+      this.operate_id = table[index].operate_id;
+      this.menuForm.name = table[index].name;
+      this.menuForm.code = table[index].code;
+      this.isSHowCost = false;
+      this.submitForm();
+    },
+    changeCode(value) { // 选中按钮名称时的事件
+      this.menuForm.code = value;
+    },
+    deleteData(index, table) { // 操作删除
+      const l = {
+        operate_id: table[index].operate_id,
+        name: table[index].name,
+        code: table[index].code,
+        enabled: 0
+      };
+      this.http.post('PermissionOperate/edit', l).then(res => {
+        this.http.post('Permission/getInfo', { permission_id: this.permission_id }).then(res => {
+          this.tableData = res.data.data.list;
+        });
+        this.$message({ message: '删除成功！', type: 'success' });
+      });
+    },
+    resetForm(formName) { // 重置
+      this.isSHowCost = true;
+      this.$refs[formName].resetFields();
+    },
+    getFather() { // 获取父级资源
+      this.http.post('Permission/equality').then(res => {
+        this.fatherId = res.data.data;
+      });
+    },
+    getBtnList() { // 获取按钮名称
+      this.http.post('TableUtil/getRouteList').then(res => {
+        this.btnList = res.data.data;
+      });
+    },
+    getUserTree() { // 获取tree信息资源权限信息
+      this.http.post('Permission/PermissionList').then(res => {
+        this.dataTree = res.data.data;
+        this.loading = false;
+      });
+    }
+  }
+};
+</script>
+
+<style scoped lang="scss">
+  .roleWrap{ padding: 15px;}
+  .filter-tree{ overflow: auto;height:calc(100vh - 150px);}
+  .author-tree{ overflow: auto;height:calc(100vh - 60vh);}
+  .category-tree-content{ margin:10px;border: 1px solid #e2e2e2;}
+  .el-form-item{ margin-bottom: 5px; }
+  .inputWindth{ width: 50%; }
+</style>

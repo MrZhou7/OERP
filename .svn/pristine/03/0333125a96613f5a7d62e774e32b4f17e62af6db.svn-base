@@ -1,0 +1,183 @@
+<template>
+  <div class="content">
+    <el-form ref="form" label-width="80px">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="品牌名称" class="search_lable">
+            <el-input v-model="brand_name" placeholder="请输入商户名称"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="品牌编码" class="search_lable">
+            <el-input v-model="brand_code" placeholder="请输入商户编号"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="品牌状态" class="search_lable">
+            <el-select v-model="brand_status" placeholder="是品牌状态">
+              <el-option value='' label="请选择"></el-option>
+              <el-option :value='1' label="库内"></el-option>
+              <el-option :value='0' label="库外"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6" align="center" class="search_lable">
+          <el-button align="center" type="primary" @click="onSecher">查询</el-button>
+        </el-col>
+      </el-row>
+    </el-form>
+    <el-table
+      :data="brandList"
+      style="width: 100%;text-align: center;height: 100%"
+      border
+      :show-overflow-tooltip="true"
+      align: center
+      max-height="350">
+      <el-table-column
+        align="center"
+        prop="brand_name"
+        :show-overflow-tooltip="true"
+        label="品牌名称"
+        resizable: true>
+      </el-table-column>
+      <el-table-column
+        align="center"
+        prop="brand_code"
+        :show-overflow-tooltip="true"
+        label="品牌编码">
+      </el-table-column>
+      <el-table-column
+        prop="brand_status"
+        align="center"
+        label="品牌状态">
+        <template slot-scope="scope">
+          {{scope.row.brand_status == 1 ? '库外' : '库内'}}
+        </template>
+      </el-table-column>
+
+      <el-table-column
+        fixed="right"
+        label="操作"
+        align="center"
+        width="100">
+        <template slot-scope="scope">
+          <el-button @click="choice(scope.row)" type="text" size="small">选择</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <el-pagination
+      :page-sizes="[10, 20, 30, 40, 50]"
+      :page-size="pageSize"
+      :current-page.sync="currentPage"
+      :total="total"
+      background
+      layout="prev, pager, next, total, sizes"
+      @current-change="pagination"
+      @size-change="handleSizeChange"/>
+  </div>
+</template>
+<script>
+  var data = {}
+  export default {
+    data() {
+      return {
+        brand_name: '',
+        brand_code: '',
+        brand_status: '',
+        brandList: [],
+        total: 0,
+        currentPage: 1, // 页码
+        pageSize: 10, // 页码
+      }
+    },
+    props: ['operationTypeId', 'refundType'],
+    watch: {
+      operationTypeId: function(newVal, oldVal) {
+        data = {
+          limit: this.pageSize,
+          operation_type: newVal
+        }
+        this.getCustomer(data)
+      },
+      refundType(newVal, oldVal){
+        console.log(newVal)
+      }
+    },
+    created() {
+      data = {
+        limit: this.pageSize,
+        operation_type: this.operationTypeId
+      }
+      this.getCustomer(data)
+    },
+    methods: {
+      onSecher() {
+        let that = this
+        data = {
+          brand_name: this.brand_name,
+          brand_code: this.brand_code,
+          brand_status: this.brand_status,
+          limit: this.pageSize
+        }
+        this.getCustomer(data)
+      },
+      pagination(val) {
+        data = {
+          page: val,
+          limit: this.pageSize,
+          brand_name: this.brand_name,
+          brand_code: this.brand_code,
+          brand_status: this.brand_status,
+        }
+        this.getCustomer(data)
+      },
+      handleSizeChange(val) {
+        data = {
+          limit: val,
+          brand_name: this.brand_name,
+          brand_code: this.brand_code,
+          brand_status: this.brand_status,
+        }
+        this.pageSize = val;
+        this.getCustomer(data)
+      },
+      getCustomer(data) {
+        let that = this
+        this.axios
+          .post(process.env.BASE_API + 'brand_info/getbrandlist', data)
+          .then(function(res) {
+              if (res.data.code == 0) {
+                that.total = res.data.count
+                that.brandList = res.data.data
+              }else {
+                that.$message.error(red.data.msg);
+              }
+              if(res.data.data.length == 0) {
+                that.$message.error('暂无数据');
+              }
+          })
+          .catch(function(err) {
+            operation_type: this.operationTypeId
+          })
+      },
+      choice(data) {
+        this.$emit('brandData', data)
+      }
+    }
+  }
+</script>
+
+<style lang="scss">
+  .search_lable {
+    margin-bottom: 0px !important;
+  }
+
+  .search_lable > .el-form-item__label {
+    width: 80px !important;
+  }
+
+  .search_lable .el-form-item__content {
+    margin-left: 80px !important;
+  }
+
+</style>

@@ -1,0 +1,696 @@
+<template>
+  <el-main>
+    <el-form ref="form" :model="formInline" label-width="80px" class="search">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="门店选择">
+            <el-select v-model="formInline.mall_id" placeholder="请选择">
+              <el-option
+                v-for="(item,index) in preData.mall"
+                :key="index"
+                :label="item.mall_name"
+                :value="parseInt(item.mall_id)">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="订单编号">
+            <el-input v-model="formInline.code" placeholder="请输入公司名称"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商铺编号">
+            <el-input v-model="formInline.store_code" placeholder="请输入公司名称"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商铺">
+            <el-input v-model="store_name" suffix-icon="el-icon-search" clearable ref="getPayWayChang"
+                      @focus="fieldClick"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="审批状态">
+            <el-select v-model="formInline.status" placeholder="请选择">
+              <el-option value="" label="全部"></el-option>
+              <el-option value="1" label="草稿"></el-option>
+              <el-option value="2" label="审批中"></el-option>
+              <el-option value="3" label="审批通过"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="退款状态">
+            <el-select v-model="formInline.exec_status" placeholder="请选择">
+              <el-option value="" label="全部"></el-option>
+              <el-option value="1" label="已退款"></el-option>
+              <el-option value="0" label="未退款"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="申请起止日期" class="width_110">
+            <el-date-picker
+              v-model="formInline.start"
+              type="daterange"
+              format="yyyy-MM-dd"
+              :picker-options="pickerOptions"
+              @change="billingTime($event)"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期">
+            </el-date-picker>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="单据状态">
+            <el-select v-model="formInline.corp_type" placeholder="请选择">
+              <el-option value="" label="全部"></el-option>
+              <el-option value="1" label="有效"></el-option>
+              <el-option value="2" label="无效"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6" align="center">
+          <el-button type="primary" @click="onSecher(formInline)">查询</el-button>
+        </el-col>
+      </el-row>
+    </el-form>
+    <div class="btn_bottom">
+      <el-button type="primary" @click="addRow()">新增</el-button>
+      <el-button @click="inCheckings()" :disabled="statusClick.inCheckings">审核</el-button>
+      <el-button @click="refunds()" :disabled="statusClick.refunds">退款</el-button>
+      <el-button @click="revokeInCheckings()" :disabled="statusClick.revokeInCheckings">取消审核通过</el-button>
+    </div>
+    <div class="contract_table">
+      <el-table
+        :data="tableData"
+        style="width: 100%;"
+        border
+        ref="multipleTable"
+        align: center
+        @row-click="clickRow"
+        @selection-change="changFun"
+        :height="tableHeight">
+        <el-table-column
+          prop="id"
+          fixed
+          type="selection"
+          width="55">
+        </el-table-column>
+        <el-table-column
+          prop="code"
+          :show-overflow-tooltip="true"
+          label="订单编号"
+          minWidth="120">
+        </el-table-column>
+        <el-table-column
+          prop="store_code"
+          :show-overflow-tooltip="true"
+          label="商铺编号"
+          minWidth="120">
+        </el-table-column>
+        <el-table-column
+          prop="store_name"
+          label="商铺名称"
+          :show-overflow-tooltip="true"
+          minWidth="120">
+        </el-table-column>
+
+        <el-table-column
+          prop="total_amt"
+          label="订单金额"
+          :show-overflow-tooltip="true"
+          minWidth="120">
+        </el-table-column>
+        <el-table-column
+          prop="paid_amt"
+          label="已付金额"
+          :show-overflow-tooltip="true"
+          minWidth="120">
+        </el-table-column>
+        <el-table-column
+          prop="pay_name"
+          label="支付方式"
+          :show-overflow-tooltip="true"
+          minWidth="120">
+        </el-table-column>
+        <el-table-column
+          prop="return_amt"
+          label="退款金额"
+          :show-overflow-tooltip="true"
+          minWidth="120">
+        </el-table-column>
+        <el-table-column
+          prop="status"
+          :show-overflow-tooltip="true"
+          label="审批状态"
+          minWidth="120">
+          <template slot-scope="scope">
+            <span v-if='scope.row.status==0'>草稿</span>
+            <span v-else-if='scope.row.status==1'>审批中</span>
+            <span v-else-if='scope.row.status==2'>审批通过</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="exec_status"
+          label="退款状态"
+          :show-overflow-tooltip="true"
+          minWidth="120">
+          <template slot-scope="scope">
+            {{ scope.row.exec_status == 0? '未退款' : '已退款' }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="delivery_status"
+          label="配送状态"
+          width="120">
+          <template slot-scope="scope">
+            <span v-if='scope.row.delivery_status==0'>未配送</span>
+            <span v-else-if='scope.row.delivery_status==1'>部分配送</span>
+            <span v-else-if='scope.row.delivery_status==2'>已配送</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="enabled"
+          label="单据状态"
+          width="120">
+          <template slot-scope="scope">
+            {{ scope.row.enabled == 0? '无效' : '有效' }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          fixed="right"
+          algin="center"
+          label="操作"
+          width="200">
+          <template slot-scope="scope">
+            <el-button
+              @click.native.prevent="viewRow(scope.row)"
+              type="text"
+              size="small">
+              查看
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        :page-sizes="[10, 20, 30, 40, 50]"
+        :page-size="pageSize"
+        :current-page.sync="currentPage"
+        :total="total"
+        background
+        layout="prev, pager, next, total, sizes"
+        @current-change="pagination"
+        @size-change="handleSizeChange"/>
+    </div>
+    <!--新增/查看退货单据-->
+    <el-dialog
+      :title="name"
+      width="80%"
+      top="3%"
+      :close-on-click-modal="false"
+      :visible.sync="refundVisible" v-if="refundVisible">
+      <AddRufund v-on:addRufundData="addRufundData" :refundOpen="refundOpen" :refundOpenId="refundOpenId"></AddRufund>
+    </el-dialog>
+    <el-dialog
+      title="查看"
+      width="80%"
+      :close-on-click-modal="false"
+      :visible.sync="refundView">
+      <el-form :model="refundViewDetail" label-width="80px" class="search">
+        <el-row>
+          <el-col :span="6">
+            <el-form-item label="收货状态">
+              <el-select v-model="refundViewDetail.delivery_status" placeholder="请选择配送状态" :disabled="true">
+                <el-option label="全部" value=""></el-option>
+                <el-option label="未收货" value="0"></el-option>
+                <el-option label="部分收货" value="1"></el-option>
+                <el-option label="已收货" value="2"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="退货类型">
+              <el-select v-model="refundViewDetail.return_type" placeholder="请选择配送状态" :disabled="true">
+                <el-option value='' label="请选择"></el-option>
+                <el-option value='0' label="未知"></el-option>
+                <el-option value='1' label="退货"></el-option>
+                <el-option value='2' label="部分退货"></el-option>
+                <el-option value='2' label="作废"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="退货原因" class="label_required" >
+              <el-select v-model="refundViewDetail.reson_type" placeholder="请选择退货原因" :disabled="true">
+                <el-option value='' label="请选择"></el-option>
+                <el-option value='0' label="未知"></el-option>
+                <el-option value='1' label="用户原因"></el-option>
+                <el-option value='2' label="操作原因"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="退款状态" class="label_required" >
+              <el-select v-model="refundViewDetail.exec_status" placeholder="请选择退货类型" :disabled="true">
+                <el-option value='' label="请选择"></el-option>
+                <el-option value='0' label="未退款"></el-option>
+                <el-option value='1' label="已退款"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="6">
+            <el-form-item label="申请人">
+              <el-select v-model="refundViewDetail.person_id" placeholder="请选择配送状态" :disabled="true">
+                <el-option label="全部" value=""></el-option>
+                <el-option label="张瑞" value="0"></el-option>
+                <el-option label="李琳" value="1"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="申请日期">
+              <el-input v-model="refundViewDetail.return_time" :disabled="true"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="审批状态">
+              <el-select v-model="refundViewDetail.status" placeholder="请选择配送状态" :disabled="true">
+                <el-option label="全部" value=""></el-option>
+                <el-option label="草稿" value="0"></el-option>
+                <el-option label="审批中" value="1"></el-option>
+                <el-option label="审批通过" value="2"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="退货备注">
+              <el-input v-model="refundViewDetail.note" :disabled="true"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="24">
+            <el-form-item label="审批意见">
+              <el-input v-model="refundViewDetail.corp_name" :disabled="true"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <blockquote class="elem_quote">退货商品列表</blockquote>
+      <div class="contract_table">
+        <el-table
+          :data="refundViewDetailTable"
+          align: center
+          height="320"
+          ref="addShop"
+          border
+          highlight-current-row
+          align: center>
+          <el-table-column
+            fixed
+            prop="sku"
+            :show-overflow-tooltip="true"
+            label="商品编号"
+            resizable: true
+            algin:center>
+          </el-table-column>
+          <el-table-column
+            fixed
+            prop="product_name"
+            :show-overflow-tooltip="true"
+            label="商品名称"
+            resizable: true
+            algin:center>
+          </el-table-column>
+          <el-table-column
+            fixed
+            prop="product_type"
+            :show-overflow-tooltip="true"
+            label="商品类型"
+            resizable: true
+            algin:center>
+            <template slot-scope="scope">
+              <span v-if='scope.row.product_type==1'>正常商品</span>
+              <span v-else-if='scope.row.product_type==2'> 促销商品</span>
+            </template>
+          </el-table-column>
+          <el-table-column
+            fixed
+            prop="old_price"
+            :show-overflow-tooltip="true"
+            label="原价"
+            resizable: true
+            algin:center>
+          </el-table-column>
+          <el-table-column
+            fixed
+            prop="new_price"
+            :show-overflow-tooltip="true"
+            label="现价"
+            resizable: true
+            algin:center>
+          </el-table-column>
+          <el-table-column
+            fixed
+            prop="product_counts"
+            :show-overflow-tooltip="true"
+            label="数量"
+            resizable: true
+            algin:center>
+          </el-table-column>
+          <el-table-column
+            fixed
+            prop="net_amt"
+            :show-overflow-tooltip="true"
+            label="总价"
+            resizable: true
+            algin:center>
+          </el-table-column>
+        </el-table>
+      </div>
+    </el-dialog>
+    <el-dialog :title="nameText"  :visible.sync="categoryChoice" width="70%" height="70%" :close-on-click-modal="false">
+      备注：
+      <el-input
+        placeholder="请填写备注"
+        v-model="remark"/>
+      <span slot="footer">
+        <el-button @click="categoryChoice = false">取 消</el-button>
+        <el-button @click="reject" v-if="nameText != '取消审核通过'">驳回</el-button>
+        <el-button type="primary" @click="inCheckingsTrue()">确 定</el-button>
+      </span>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>var data = {}
+import { common } from '@/common/common'
+import AddRufund from '@/components/order/addRefund.vue' //新增订单退款
+
+export default {
+  components: {
+    AddRufund
+  },
+  data() {
+    return {
+      formInline: {},
+      tableData: [],
+      pickerOptions: {
+        shortcuts: [{
+          text: '最近一周',
+          onClick(picker) {
+            const end = new Date()
+            const start = new Date()
+            start.setTime(start.getTime())
+            end.setTime(end.getTime() - 3600 * 1000 * 24 * 7)
+            picker.$emit('pick', [end, start])
+          }
+        }, {
+          text: '最近一个月',
+          onClick(picker) {
+            const end = new Date()
+            const start = new Date()
+            start.setTime(start.getTime())
+            end.setTime(end.getTime() - 3600 * 1000 * 24 * 30)
+            picker.$emit('pick', [end, start])
+          }
+        }, {
+          text: '最近一年',
+          onClick(picker) {
+            const end = new Date()
+            const start = new Date()
+            start.setTime(start.getTime())
+            end.setTime(start.getTime() - 3600 * 1000 * 24 * 365)
+            picker.$emit('pick', [end, start])
+          }
+        }]
+      },
+      statusClick: {
+        inCheckings: true,
+        refunds: true,
+        revokeInCheckings: true
+      },
+      remark:'',
+      store_name: '',
+      total: 0,//分页
+      name: '新增退货单',
+      currentPage: 1,//当前页码
+      pageSize: 10,//当前页码
+      tableHeight: window.innerHeight - 345,
+      preData: {},//公司类型数据
+      refundVisible: false,//新增退货单据
+      categoryChoice: false,//新增退货单据
+      refundView: false,//查看退货单据
+      refundOpen: 1,//新增退货单据
+      refundOpenId: '',//新增退货单据
+      refundViewDetail: {},
+      refundViewDetailTable: [],
+      nameText:'审核',
+    }
+  },
+  created: function() {
+    this.getData()//预加载数据
+    const searchHistory = common.get('refundSearch')
+    if (searchHistory != null) {
+      this.formInline = searchHistory.search
+      this.pageSize = searchHistory.search.limit
+      common.getPreData(this.formInline, 'OrderReturnMain/getList', this, 'refundSearch')
+    }
+  },
+  methods: {
+    getData() {//预渲染参数
+      this.http.post('table_util/getPreData',  { act: 'contract' }).then(res => {
+        this.preData = res.data.data;
+      }).catch((err) => {
+        this.$message.error(err.response.data.msg);
+      });
+    },
+    pagination(val) {
+      data = this.formInline
+      data.page = val
+      common.getPreData(data, 'OrderReturnMain/getList', this, 'refundSearch')
+      common.set('refundSearch', { 'search': data })
+    },
+    clickRow(row) {//选择当前行
+      this.$refs.multipleTable.toggleRowSelection(row);
+      this.checkData = row;
+    },
+    changFun(row) {//获取当前行数据
+      if (row.length > 1) { //去除多选
+        this.$refs.multipleTable.clearSelection();
+        this.$refs.multipleTable.toggleRowSelection(row.pop());
+      } else {
+        if (row.length != 0) {
+          this.checkedList(row[0]);
+          this.checkData = row[0];
+        }else {
+          this.checkData = {};
+          this.statusClick.inCheckings = true;
+          this.statusClick.refunds = true;
+          this.statusClick.revokeInCheckings = true;
+        }
+      }
+    },
+    checkedList(row) {
+      if (row != undefined) {
+        if (row.enabled != 0) {
+          if (row.status == 0) {
+            this.statusClick.inCheckings = false;
+            this.statusClick.refunds = true;
+            this.statusClick.revokeInCheckings = true;
+          } else if(row.status == 2) {
+            const returnAmt = row.return_amt == null? 0: parseFloat(row.return_amt);
+            const payAmt = parseFloat(row.paid_amt) - returnAmt;
+             if(payAmt != 0) {
+               this.statusClick.inCheckings = true;
+               this.statusClick.refunds = false;
+               this.statusClick.revokeInCheckings = false;
+             }else {
+               this.statusClick.inCheckings = true;
+               this.statusClick.refunds = true;
+               this.statusClick.revokeInCheckings = false;
+             }
+          }else {
+            this.statusClick.inCheckings = true;
+            this.statusClick.refunds = true;
+            this.statusClick.revokeInCheckings = false;
+          }
+        } else {
+          this.statusClick.inCheckings = true;
+          this.statusClick.refunds = true;
+          this.statusClick.revokeInCheckings = true;
+        }
+      }
+    },
+    handleSizeChange(val) {
+      data = this.formInline
+      data.limit = val
+      common.getPreData(data, 'OrderReturnMain/getList', this, 'refundSearch')
+      common.set('refundSearch', { 'search': data })
+    },
+    billingTime(e) {// 立账起始日期
+      e ? this.formInline.start = e[0] : this.formInline.start = ''
+      e ? this.formInline.end = e[1] : this.formInline.end = ''
+    },
+    onSecher() {//查询
+      const data = this.formInline
+      common.getPreData(data, 'OrderReturnMain/getList', this, 'refundSearch')
+      common.set('refundSearch', { 'search': data })
+    },
+    fieldClick() {
+      //场地点击
+      if (!this.formInline.mall_id) {
+        this.$message({
+          message: '请选择门店',
+          type: 'warning'
+        })
+      } else {
+        if (this.formInline.store_id == '' || this.formInline.store_id == undefined && this.store_name == '') {
+          this.fieldChoice = true
+        } else {
+          this.formInline.store_id = ''
+          this.store_name = ''
+          this.$nextTick(() => {
+            this.$refs.getPayWayChang.blur()
+          })
+        }
+      }
+    },
+    fieldData(data) {//场地赋值
+      if (data.length == undefined) {
+        this.store_name = data.store_name
+        this.formInline.store_id = data.store_id
+      } else {
+        let store_id = '', store_name = ''
+        data.forEach((index, i) => {
+          if (i != data.length - 1) {
+            store_id += index.store_id + ','
+            store_name += index.store_name + ','
+          } else {
+            store_id += index.store_id
+            store_name += index.store_name
+          }
+          this.store_name = store_name
+          this.formInline.store_id = store_id
+        })
+      }
+      this.fieldChoice = false
+    },
+    viewRow(row) {
+      let that = this;
+      that.http.post('OrderReturnMain/getDetail',  { id: row.id }).then(res => {
+        that.refundViewDetail = res.data.data.main;
+        that.refundViewDetailTable = res.data.data.list;
+        that.refundView = true;
+      }).catch((err) => {
+        that.$message.error(err.response.data.msg);
+      });
+    },
+    //新增
+    addRow(row) {
+      this.refundOpenId = '';
+      this.refundVisible = true;
+      this.name = '新增退货单';
+      this.refundOpen = 1;
+    },
+    inCheckings() {
+      this.categoryChoice = true;
+      this.nameText = '审核';
+    },
+    refunds() {
+      this.refundVisible = true;
+      this.name = '退款操作';
+      this.refundOpen = 2;
+      this.refundOpenId = this.checkData.id;
+    },
+    revokeInCheckings() {
+      this.categoryChoice = true;
+      this.nameText = '取消审核通过';
+    },
+    inCheckingsTrue() {
+      let that = this;
+      const data = {
+        id: this.checkData.id,
+        status: this.nameText == '审核' ? 2 : 0,
+        remark: this.remark
+      }
+      that.http.post('OrderReturnMain/editStatus', data).then(res => {
+        that.$message.success('提交成功')
+        that.onSecher();
+        that.categoryChoice = false;
+        that.btnDisabled();
+        that.remark = '';
+      }).catch((err) => {
+        that.$message.error(err.response.data.msg);
+      });
+    },
+    btnDisabled() {
+      this.statusClick.inCheckings = true;
+      this.statusClick.refunds = true;
+      this.statusClick.revokeInCheckings = true;
+    },
+    reject() {
+      let that = this;
+      const data = {
+        id: this.checkData.id,
+        enabled: 0,
+        remark: this.remark
+      }
+      that.http.post('OrderReturnMain/editEnabled', data).then(res => {
+        that.$message.success('提交成功');
+        that.categoryChoice = false;
+        that.onSecher();
+        that.btnDisabled();
+        that.remark = '';
+      }).catch((err) => {
+        that.$message.error(err.response.data.msg);
+      });
+    },
+    cancleTitle(text, val) {
+      let that = this;
+      this.$prompt(text, '提示', {
+        confirmButtonText: '审核',
+        cancelButtonText: '取消',
+      }).then(({ value }) => {
+        const data = {
+          id: this.checkData.id,
+          status: val,
+          remark: value == null ? '' : value
+        }
+        that.http.post('OrderReturnMain/editStatus', data).then(res => {
+          that.$message.success('提交成功')
+          that.onSecher();
+        }).catch((err) => {
+          that.$message.error(err.response.data.msg);
+        });
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '取消输入'
+        })
+      })
+    },
+    //获取新增退款单据数据
+    addRufundData(data) {
+      this.onSecher();
+      this.refundVisible = data;
+      this.refundOpenId = '';
+    }
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+  .search > .el-row > div > .el-form-item {
+    margin-bottom: 5px !important;
+  }
+</style>

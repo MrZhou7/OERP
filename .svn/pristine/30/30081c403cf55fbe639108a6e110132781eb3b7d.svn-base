@@ -1,0 +1,200 @@
+<template>
+  <div class="roleWrap">
+    <el-row>
+      <el-col :span="6">
+        <div class="roleWrapTitle">组织架构</div>
+        <div class="category-tree-content">
+          <el-input
+            v-model="filterText"
+            placeholder="输入关键字进行品类搜索">
+          </el-input>
+          <el-tree
+            ref="tree2"
+            v-loading="loading"
+            :highlight-current="true"
+            :data="dataTree"
+            :props="defaultProps"
+            :default-expand-all="true"
+            :filter-node-method="filterNode"
+            class="filter-tree"
+            @node-click="handleNodeClick"
+          />
+        </div>
+      </el-col>
+      <el-col :span="18">
+        <div class="roleWrapTitle">角色维护</div>
+        <el-form ref="form" :model="form" label-width="80px">
+          <el-row>
+            <el-col :span="6">
+              <el-form-item label="角色名称">
+                <el-input v-model="form.role_name"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item>
+                <el-button type="primary" @click="search">搜索</el-button>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item>
+                <el-button type="success" @click="addRole">新增角色</el-button>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+        <el-table
+          ref="multipleTable"
+          :data="tableData"
+          tooltip-effect="dark"
+          style="width: 100%"
+          :height="height"
+          border>
+          <el-table-column
+            type="selection"
+            width="55">
+          </el-table-column>
+          <el-table-column
+            prop="mall_id"
+            label="所属门店"
+            show-overflow-tooltip>
+          </el-table-column>
+          <el-table-column
+            prop="dept_code"
+            label="所属部门"
+            show-overflow-tooltip>
+          </el-table-column>
+          <el-table-column
+            prop="role_name"
+            label="角色名称">
+          </el-table-column>
+          <el-table-column
+            prop="subject_code"
+            label="角色描述">
+          </el-table-column>
+          <el-table-column
+            prop="enabled"
+            label="是否生效">
+          </el-table-column>
+          <el-table-column
+            fixed="right"
+            label="操作"
+            width="120">
+            <template slot-scope="scope">
+              <el-button @click.native.prevent="deleteRow(scope.$index, tableData4)" type="text" size="small">查看</el-button>
+              <el-button @click.native.prevent="deleteRow(scope.$index, tableData4)" type="text" size="small">移除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        <el-pagination
+          background
+          layout="prev, pager, next"
+          @current-change="pageinations"
+          :current-page.sync="currentPage"
+          :total="total">
+        </el-pagination>
+      </el-col>
+    </el-row>
+    <el-dialog
+      title="新增角色"
+      top="0"
+      :close-on-click-modal="false"
+      :visible.sync="dialogVisible"
+      width="80%" height="100%">
+      <AddRole :depcode="depcode"></AddRole>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+var data = {};
+import AddRole from '@/components/system/role/addRole';
+import { common } from '@/common/common';
+
+export default {
+  name: 'Role',
+  components: { AddRole },
+  data() {
+    return {
+      form: {
+        role_name: ''
+      },
+      depcode: '', // 传给子组件的dept_code
+      filterText: '', // 查询过滤的初始值
+      loading: false,
+      total: 0,
+      height: window.innerHeight - 275 + 'px',
+      tableData: [],
+      currentPage: 1, // 页码
+      dialogVisible: false, // 新增角色弹窗
+      dataTree: [], // 树状图显示数据
+      defaultProps: {
+        children: 'children',
+        label: 'text'
+      }
+    };
+  },
+  created() {
+    this.loading = true;
+    this.getUserTree();
+  },
+  methods: {
+    filterNode(value, data) { // 组织架构的搜索查询
+      if (!value) return true;
+      return data.text.indexOf(value) !== -1;
+    },
+    getUserTree() { // 获取tree信息个表格的查询及点击组织架构获取信息
+      common.getTree('dept/getDeptTree', this);
+    },
+    handleNodeClick(node, data) { // 点击传参给用户信息，并显示用户信息
+      this.depcode = { dept_code: data.data.data.dept_code };
+      common.getPreData(depcode, 'dept/getAdminTree', this);
+    },
+    pageinations(val) { // 分页功能
+      data = this.form;
+      data.page = val;
+      data.limit = 10;
+      common.getPreData(data, 'Role/roleList', this, 'roalSearch');
+      common.set('roalSearch', { 'search': data });
+    },
+    search() { // 搜索
+      if (this.form.role_name == "") {
+        this.$message({
+          message: '角色名称不能为空',
+          type: 'warning'
+        });
+      } else {
+        data = this.form;
+        common.getPreData(data, 'Role/roleList', this, 'roalSearch');
+        common.set('roalSearch', { 'search': data });
+      }
+    },
+    addRole() { // 新增角色
+      this.dialogVisible = true;
+    }
+  }
+};
+</script>
+
+<style scoped lang="scss">
+  .roleWrap{
+    padding: 15px;
+  .roleWrapTitle{
+    position: relative;
+    height: 42px;
+    line-height: 42px;
+    padding: 0 15px;
+    border-bottom: 1px solid #f6f6f6;
+    color: #333;
+    border-radius: 2px 2px 0 0;
+    font-size: 14px;
+    background-color: #DFEAF2;
+  }
+  }
+  .filter-tree{
+    overflow: auto;height: 750px;
+  }
+  .category-tree-content{
+    margin:10px;
+    border: 1px solid #e2e2e2;
+  }
+</style>

@@ -1,0 +1,213 @@
+import Vue from 'vue';
+import Router from 'vue-router';
+import { Message } from 'element-ui';
+/* Layout */
+import Layout from '../views/layout/Layout';
+
+/* Router Modules */
+import costRouter from './modules/cost'; // 费用管理
+import baseRouter from './modules/base';// 基础管理
+import orderRouter from './modules/order'; // 订单管理
+import saleRouter from './modules/sale'; // 销售管理
+
+// in development-env not use lazy-loading, because lazy-loading too many pages will cause webpack hot update too slow. so only in production use lazy-loading;
+// detail: https://panjiachen.github.io/vue-element-admin-site/#/lazy-loading
+
+Vue.use(Router);
+
+/**
+ * hidden: true                   if `hidden:true` will not show in the sidebar(default is false)
+ * alwaysShow: true               if set true, will always show the root menu, whatever its child routes length
+ *                                if not set alwaysShow, only more than one route under the children
+ *                                it will becomes nested mode, otherwise not show the root menu
+ * redirect: noredirect           if `redirect:noredirect` will no redirect in the breadcrumb
+ * name:'router-name'             the name is used by <keep-alive> (must set!!!)
+ * meta : {
+    title: 'title'               the name show in subMenu and breadcrumb (recommend set)
+    icon: 'svg-name'             the icon show in the sidebar
+    breadcrumb: false            if false, the item will hidden in breadcrumb(default is true)
+  }
+ **/
+export const constantRouterMap = [
+  { path: '/login', component: () => import('@/views/login/index'), hidden: true },
+  { path: '/404', component: () => import('@/views/404'), hidden: true },
+
+  {
+    path: '/',
+    component: Layout,
+    redirect: '/OERP',
+    name: 'OERP',
+    hidden: true,
+    children: [{
+      path: 'OERP',
+      component: () => import('@/views/dashboard/index')
+    }]
+  },
+  {
+    path: '/system',
+    component: Layout,
+    name: 'System',
+    meta: { title: '系统管理', icon: 'nested' },
+    children: [
+      {
+        path: '/system/user',
+        component: () => import('@/views/system/user/index'), // Parent router-view
+        name: 'User',
+        meta: { title: '用户维护' }
+      },
+      {
+        path: '/system/role',
+        component: () => import('@/views/system/role/index'), // Parent router-view
+        name: 'Role',
+        meta: { title: '角色维护' }
+      },
+      {
+        path: '/system/authority',
+        component: () => import('@/views/system/authority/index'), // Parent router-view
+        name: 'Authority',
+        meta: { title: '权限管理' }
+      }
+    ]
+  },
+  {
+    path: '/contract',
+    component: Layout,
+    redirect: '/contract/index',
+    name: 'contract',
+    meta: { title: '合同管理', icon: 'nested' },
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/contract/index'), // Parent router-view
+        name: '租赁合同管理',
+        meta: { title: '租赁合同管理' }
+      },
+      {
+        path: 'create',
+        component: () => import('@/views/contract/create'), // Parent router-view
+        name: '新增租赁合同',
+        meta: { title: '新增租赁合同' },
+        hidden: true
+      },
+      {
+        path: 'suspension',
+        component: () => import('@/views/contract/suspension'), // Parent router-view
+        name: '合同终止',
+        meta: { title: '合同终止' }
+      }
+    ]
+  },
+  baseRouter, // 基础管理
+  costRouter, // 费用管理
+  orderRouter, // 订单管理
+  saleRouter, // 销售管理
+  // {
+  //   path: '/financing',
+  //   component: Layout,
+  //   name: 'Financing',
+  //   meta: { title: '财务管理', icon: 'nested' },
+  //   children: [
+  //     {
+  //       path: '/views/financing/voucher',
+  //       component: () => import('@/views/financing/voucher'),
+  //       name: 'Voucher',
+  //       meta: { title: '凭证费用' }
+  //     }
+  //   ]
+  // },
+  {
+    path: '/real',
+    component: Layout,
+    name: 'Real',
+    meta: { title: '物业管理', icon: 'nested' },
+    children: [
+      {
+        path: '/realCost',
+        name: 'RealCost',
+        meta: { title: '物业费用' },
+        component: () => import('@/views/real/realCost')
+      }]
+  },
+  // {
+  //   path: '/attract',
+  //   component: Layout,
+  //   name: 'Attract',
+  //   meta: { title: '招商管理', icon: 'nested' },
+  //   children: [
+  //     {
+  //       path: '/attract/attractCost',
+  //       name: 'AttractCost',
+  //       meta: { title: '招商费用' },
+  //       component: () => import('@/views/attract/attractCost')
+  //     }]
+  // },
+  {
+    path: '/promotion',
+    component: Layout,
+    name: 'Promotion',
+    meta: { title: '促销管理', icon: 'nested' },
+    children: [
+      {
+        path: '/promotion/index',
+        name: 'index',
+        meta: { title: '促销管理' },
+        component: () => import('@/views/promotion/index')
+      }
+    ]
+  },
+  {
+    path: '/distribution',
+    component: Layout,
+    name: 'Distribution',
+    meta: { title: '配送管理', icon: 'nested' },
+    children: [
+      {
+        path: '/distribution/index',
+        name: 'index',
+        meta: { title: '配送管理' },
+        component: () => import('@/views/distribution/index')
+      }
+    ]
+  },
+  {
+    path: '/statement',
+    component: Layout,
+    name: 'Statement',
+    meta: { title: '报表管理', icon: 'nested' },
+    children: [
+      {
+        path: '/statement/index',
+        name: 'index',
+        meta: { title: '报表管理' },
+        component: () => import('@/views/statement/index')
+      }
+    ]
+  },
+  { path: '*', redirect: '/404', hidden: true }
+];
+
+// 路由守卫，路由拦截器
+// constantRouterMap.beforeEach((to, from, next) => {
+//   if (!to.matched || to.matched.length === 0) {
+//     Message.error({
+//       message: '页面不存在',
+//       duration: '2000',
+//       onClose: function () {
+//         next({
+//           replace: true,
+//           name: 'error-404'
+//         });
+//       }
+//     });
+//   } else {
+//     next();
+//   }
+// });
+
+export default new Router({
+  // 后端支持可开
+  mode: 'history',
+  base: '/main/',
+  scrollBehavior: () => ({ y: 0 }),
+  routes: constantRouterMap
+})

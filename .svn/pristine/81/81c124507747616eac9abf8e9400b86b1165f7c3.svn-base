@@ -1,0 +1,129 @@
+<template>
+  <div class="addSubclass">
+    <el-form ref="ruleForm" :model="ruleForm" :rules="rules" label-width="120px" class="demo-ruleForm">
+      <el-form-item label="经营品类名称" prop="type_name">
+        <el-input v-model="ruleForm.type_name	"placeholder="请选择经营品类名称" class="inputWindth"/>
+      </el-form-item>
+      <el-form-item label="经营品类编号" prop="type_code">
+        <el-input v-model="ruleForm.type_code" placeholder="请选择经营品类编号" class="inputWindth"/>
+      </el-form-item>
+      <el-form-item label="所在级别">
+        <el-input v-model="type_level" :disabled="true" class="inputWindth"/>
+      </el-form-item>
+      <el-form-item label="上级类别" prop="boss">
+        <el-select v-model="ruleForm.boss" placeholder="请选择上级类别" class="inputWindth">
+          <el-option
+            v-for="item in parent_id"
+            :key="item.type_name"
+            :label="item.type_name"
+            :value="item.type_name"/>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="是否有效" prop="enabled">
+        <el-radio-group v-model="ruleForm.enabled">
+          <el-radio :label="0">否</el-radio>
+          <el-radio :label="1">是</el-radio>
+        </el-radio-group>
+      </el-form-item>
+      <el-form-item label="级内顺序" prop="type_index">
+        <el-input v-model="ruleForm.type_index" class="inputWindth"/>
+      </el-form-item>
+      <el-form-item label="说明" prop="type_desc">
+        <el-input v-model="ruleForm.type_desc" type="textarea" class="inputWindth"/>
+      </el-form-item>
+      <el-form-item>
+        <el-col :span="12">
+          <el-button type="primary" @click="saveList('ruleForm')">保存</el-button>
+        </el-col>
+        <el-col :span="12">
+          <el-button @click="cancle()">取消</el-button>
+        </el-col>
+      </el-form-item>
+    </el-form>
+  </div>
+</template>
+
+<script>
+export default {
+  props: {
+    parent_id: {
+      type: Array,
+      default: function() {}
+    },
+    type_level: {
+      type: Number,
+      default: null
+    }
+  },
+  data() {
+    return {
+      rules: {
+        type_name: [
+          { required: true, message: '请输入品类名称', trigger: 'blur' },
+          { min: 1, max: 20, message: '长度在 0 到 20 个字符', trigger: 'blur' }
+        ],
+        type_code: [
+          { required: true, message: '请输入品类编号', trigger: 'blur' },
+          { min: 1, max: 20, message: '长度在 0 到 20 个字符', trigger: 'blur' }
+        ],
+        boss: [{ required: true, message: '请选择上级类别', trigger: 'change' }],
+        enabled: [{ required: true, message: '请选择是否有效', trigger: 'blur' }],
+        type_index: [{ required: true, message: '请选择级内顺序', trigger: 'blur' }]
+      },
+      ruleForm: {
+        type_name: '',
+        type_code: '',
+        enabled: 1,
+        type_index: 0,
+        type_desc: '',
+        boss: '',
+        parentId: ''
+      }
+    };
+  },
+  watch: {
+    parent_id(n, o) {
+      this.ruleForm.boss = n[0].type_name;
+    }
+  },
+  methods: {
+    saveList(formName) { // 保存信息
+      for (var i = 0; i < this.parent_id.length; i++) {
+        if (this.parent_id[i].type_name == this.ruleForm.boss) {
+          this.ruleForm.parentId = this.parent_id[i].parent_id;
+        }
+      }
+      const postData = {
+        type_name: this.ruleForm.type_name,
+        type_code: this.ruleForm.type_code,
+        type_desc: this.ruleForm.type_desc,
+        type_level: this.type_level,
+        parent_id: this.ruleForm.parentId,
+        type_index: this.ruleForm.type_index,
+        enabled: this.ruleForm.enabled
+      };
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          this.http.post('Operation_Type/addCate', { postData }).then((res) => {
+            this.$message({ message: '保存成功', type: 'success' });
+            this.cancle();
+          });
+        } else {
+          this.$message({
+            message: '请输入完整信息！！！',
+            type: 'warning'
+          })
+        }
+      });
+    },
+    cancle() { // 取消
+      this.$emit('listenDialog', false);
+    }
+  }
+};
+</script>
+
+<style rel="stylesheet/css" lang="scss" scoped>
+  .addSubclass{margin-top:6px;}
+  .inputWindth{width:80%;}
+</style>

@@ -1,0 +1,248 @@
+<template>
+  <div>
+    <el-button @click="add">导出为PDF</el-button>
+    <div id="export_content">
+      <h2>员工信息表</h2>
+      <el-row>
+        <el-col :span="4" class="info">工号</el-col>
+        <el-col :span="4">{{ main.loginid }}</el-col>
+        <el-col :span="4" class="info">姓名</el-col>
+        <el-col :span="4">{{ main.lastname }}</el-col>
+        <el-col :span="4" class="info">性别</el-col>
+        <el-col :span="4">{{ main.sex }}</el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="4" class="info">出生日期</el-col>
+        <el-col :span="4">{{ main.birthday }}</el-col>
+        <el-col :span="4" class="info">婚姻状况</el-col>
+        <el-col :span="4">{{ main.maritalstatus }}</el-col>
+        <el-col :span="4" class="info">政治面貌</el-col>
+        <el-col :span="4">{{ main.policy ? main.policy : '无' }}</el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="4" class="info">毕业院校</el-col>
+        <el-col :span="4">{{ main.byyx }}</el-col>
+        <el-col :span="4" class="info">最高学历</el-col>
+        <el-col :span="4">{{ main.zgxl }}</el-col>
+        <el-col :span="4" class="info">专业</el-col>
+        <el-col :span="4">{{ main.zy }}</el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="4" class="info">身份证号码</el-col>
+        <el-col :span="4">{{ main.sfzhm }}</el-col>
+        <el-col :span="4" class="info">手机号</el-col>
+        <el-col :span="4">{{ main.mobile }}</el-col>
+        <el-col :span="4" class="info">职称</el-col>
+        <el-col :span="4">{{ main.zc ? main.zc : '无' }}</el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="4" class="info">紧急联系人姓名</el-col>
+        <el-col :span="4">{{ main.jjlxrxm ? main.jjlxrxm : '无' }}</el-col>
+        <el-col :span="4" class="info">紧急联系人电话</el-col>
+        <el-col :span="4">{{ main.jjlxrdh ? main.jjlxrdh : '无' }}</el-col>
+        <el-col :span="4" class="info">工作地点</el-col>
+        <el-col :span="4">{{ main.gzdd ? main.gzdd : '无' }}</el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="4" class="info">户籍所在地</el-col>
+        <el-col :span="20">{{ main.hjszd }}</el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="4" class="info">现家庭住址</el-col>
+        <el-col :span="20">{{ main.xjtzz }}</el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="4" class="info">员工属性</el-col>
+        <el-col :span="4">{{ main.ygsx ? main.ygsx : '无' }}</el-col>
+        <el-col :span="4" class="info">部门属性</el-col>
+        <el-col :span="4">{{ main.bmsx ? main.bmsx : '无' }}</el-col>
+        <el-col :span="4" class="info">所属条线</el-col>
+        <el-col :span="4">{{ main.sstx ? main.sstx : '无' }}</el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="4" class="info">一级部门</el-col>
+        <el-col :span="4">{{ main.yjbm ? main.yjbm : '无' }}</el-col>
+        <el-col :span="4" class="info">二级部门</el-col>
+        <el-col :span="4">{{ main.ejbm ? main.ejbm : '无' }}</el-col>
+        <el-col :span="4" class="info">三级部门</el-col>
+        <el-col :span="4">{{ main.sjbm ? main.sjbm : '无' }}</el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="4" class="info">岗位名称</el-col>
+        <el-col :span="4">{{ main.gwmc ? main.gwmc : '无' }}</el-col>
+        <el-col :span="4" class="info">岗位层级</el-col>
+        <el-col :span="4">{{ main.gwcj ? main.gwcj : '无' }}</el-col>
+        <el-col :span="4" class="info">入司途径</el-col>
+        <el-col :span="4">{{ main.rstj ? main.rstj : '无' }}</el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="4" class="info">是否二次入职</el-col>
+        <el-col :span="4">{{ main.sfecrz }}</el-col>
+        <el-col :span="4" class="info">入职日期</el-col>
+        <el-col :span="4">{{ main.modedatacreatedate }}</el-col>
+        <el-col :span="4" class="info">司龄</el-col>
+        <el-col :span="4">{{ main.sl ? main.sl : '无' }}</el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="4" class="info">内部推荐人事单位</el-col>
+        <el-col :span="4">{{ main.nbtjrdw ? main.nbtjrdw : '无' }}</el-col>
+        <el-col :span="4" class="info">内部推荐人姓名</el-col>
+        <el-col :span="4">{{ main.nbtjrdh ? main.nbtjrdh : '无' }}</el-col>
+        <el-col :span="4" class="info">与推荐人关系</el-col>
+        <el-col :span="4">{{ main.ytjrgx ? main.ytjrgx : '无' }}</el-col>
+      </el-row>
+      <h5>- -入司前的工作经历</h5>
+      <el-table :data="tableData.one" border style="width: 100%">
+        <el-table-column type="index" label="序号" width="55"></el-table-column>
+        <el-table-column prop="gzjl_kssj" label="开始时间"></el-table-column>
+        <el-table-column prop="gzjl_jssj" label="结束时间"></el-table-column>
+        <el-table-column prop="gzjl_gzdw" label="工作单位"></el-table-column>
+        <el-table-column prop="gzjl_zwgw" label="岗位/职务"></el-table-column>
+      </el-table>
+      <h5>- -入司后的工作经历</h5>
+      <el-table :data="tableData.two" border style="width: 100%">
+        <el-table-column type="index" label="序号" width="55"></el-table-column>
+        <el-table-column prop="gzjl1_kssj" label="开始时间"></el-table-column>
+        <el-table-column prop="gzjl1_jssj" label="结束时间"></el-table-column>
+        <el-table-column prop="gzjl1_gzdw" label="工作单位"></el-table-column>
+        <el-table-column prop="gzjl1_gw" label="岗位"></el-table-column>
+      </el-table>
+      <h5>- -教育经历</h5>
+      <el-table :data="tableData.three" border style="width: 100%">
+        <el-table-column type="index" label="序号" width="55"></el-table-column>
+        <el-table-column prop="jyjl_kssj" label="开始时间"></el-table-column>
+        <el-table-column prop="jyjl_jssj" label="结束时间"></el-table-column>
+        <el-table-column prop="jyjl_byxx" label="毕业院校"></el-table-column>
+        <el-table-column prop="jyjl_zy" label="专业"></el-table-column>
+        <el-table-column prop="jyjl_xl" label="学历"></el-table-column>
+        <el-table-column prop="jyjl_xxfs" label="学习方式"></el-table-column>
+      </el-table>
+      <h5>- -入司前培训经历</h5>
+      <el-table :data="tableData.four" border style="width: 100%">
+        <el-table-column type="index" label="序号" width="55"></el-table-column>
+        <el-table-column prop="pxjl_kssj" label="培训开始时间"></el-table-column>
+        <el-table-column prop="pxjl_jssj" label="培训结束时间"></el-table-column>
+        <el-table-column prop="pxjl_pxjg" label="培训机构"></el-table-column>
+        <el-table-column prop="pxjl_pxnr" label="培训项目(课程)"></el-table-column>
+        <el-table-column prop="pxjl_qdzsxx" label="取得证书信息"></el-table-column>
+      </el-table>
+      <h5>- -入司后培训经历</h5>
+      <el-table :data="tableData.five" border style="width: 100%">
+        <el-table-column type="index" label="序号" width="55"></el-table-column>
+        <el-table-column prop="pxjl1_kssj" label="培训开始时间"></el-table-column>
+        <el-table-column prop="pxjl1_jssj" label="培训结束时间"></el-table-column>
+        <el-table-column prop="pxjl1_pxjg" label="培训机构"></el-table-column>
+        <el-table-column prop="pxjl1_pxnr" label="培训项目(课程)"></el-table-column>
+        <el-table-column prop="pxjl1_qdzsxx" label="取得证书信息"></el-table-column>
+      </el-table>
+      <h5>- -资格证书</h5>
+      <el-table :data="tableData.six" border style="width: 100%">
+        <el-table-column type="index" label="序号" width="55"></el-table-column>
+        <el-table-column prop="zgzs_zczgzs" label="职称/资格证书"></el-table-column>
+        <el-table-column prop="zgzs_hdsj" label="获得时间"></el-table-column>
+        <el-table-column prop="zgzs_ssgzzy" label="所属工种/专业"></el-table-column>
+        <el-table-column prop="zgzs_bfjg" label="颁发机构(课程)"></el-table-column>
+      </el-table>
+      <h5>- -奖惩经历</h5>
+      <el-table :data="tableData.seven" border style="width: 100%">
+        <el-table-column type="index" label="序号" width="55"></el-table-column>
+        <el-table-column prop="jfjl_jcsj" label="奖惩时间"></el-table-column>
+        <el-table-column prop="jfjl_gzdw" label="工作单位"></el-table-column>
+        <el-table-column prop="jfjl_jcssdw" label="奖惩实施单位"></el-table-column>
+        <el-table-column prop="jfjl_jcsx" label="奖惩记录"></el-table-column>
+      </el-table>
+      <h5>- -家庭背景</h5>
+      <el-table :data="tableData.eight" border style="width: 100%">
+        <el-table-column type="index" label="序号" width="55"></el-table-column>
+        <el-table-column prop="jtbj_cyxm" label="成员姓名"></el-table-column>
+        <el-table-column prop="jtbj_ybrgx" label="与本人关系"></el-table-column>
+        <el-table-column prop="jtbj_zy" label="职业"></el-table-column>
+        <el-table-column prop="jtbj_gzdw" label="工作单位"></el-table-column>
+        <el-table-column prop="jtbj_dh" label="电话"></el-table-column>
+      </el-table>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'Index',
+  data() {
+    return {
+      main: {},
+      tableData: { one: [], two: [], three: [], four: [], five: [], six: [], seven: [], eight: [] }
+    }
+  },
+  created() {
+    this.getMeta();
+  },
+  methods: {
+    getMeta() {
+      this.axios.post('http://10.1.200.173/oa/User/getUserInfo', { type: 'pdf' }).then(res =>{
+        this.main = res.data.data.main;
+        this.tableData.one = res.data.data.gzjl;
+        this.tableData.two = res.data.data.gzjl1;
+        this.tableData.three = res.data.data.jyjl;
+        this.tableData.four = res.data.data.pxjl;
+        this.tableData.five = res.data.data.pxjl1;
+        this.tableData.six = res.data.data.zgzs;
+        this.tableData.seven = res.data.data.jfjl;
+        this.tableData.eight = res.data.data.jtbj;
+      })
+    },
+    add() {
+      const that = this;
+      html2canvas(
+        document.getElementById("export_content"),
+        {
+          dpi: 172,//导出pdf清晰度
+          onrendered: function(canvas) {
+            var contentWidth = canvas.width;
+            var contentHeight = canvas.height;
+
+            //一页pdf显示html页面生成的canvas高度;
+            var pageHeight = contentWidth / 592.28 * 841.89;
+            //未生成pdf的html页面高度
+            var leftHeight = contentHeight;
+            //pdf页面偏移
+            var position = 0;
+            //html页面生成的canvas在pdf中图片的宽高（a4纸的尺寸[595.28,841.89]）
+            var imgWidth = 595.28;
+            var imgHeight = 592.28 / contentWidth * contentHeight;
+
+            var pageData = canvas.toDataURL('image/jpeg', 1.0);
+            var pdf = new jsPDF('', 'pt', 'a4');
+
+            //有两个高度需要区分，一个是html页面的实际高度，和生成pdf的页面高度(841.89)
+            //当内容未超过pdf一页显示的范围，无需分页
+            if (leftHeight < pageHeight) {
+              pdf.addImage(pageData, 'JPEG', 0, 0, imgWidth, imgHeight);
+            } else {
+              while (leftHeight > 0) {
+                pdf.addImage(pageData, 'JPEG', 0, position, imgWidth, imgHeight)
+                leftHeight -= pageHeight;
+                position -= 841.89;
+                //避免添加空白页
+                if (leftHeight > 0) {
+                  pdf.addPage();
+                }
+              }
+            }
+            pdf.save(that.main.lastname + '.pdf');
+          },
+          //背景设为白色（默认为黑色）
+          background: "#fff"
+        })
+    }
+  }
+};
+</script>
+
+<style scoped>
+  #export_content{ font-size: 14px;margin: 5px; }
+  .el-row{ border-top: 1px solid #C5DCF1;border-left: 1px solid #C5DCF1;}
+  .el-col{ border-bottom: 1px solid #C5DCF1;border-right: 1px solid #C5DCF1;padding: 8px 0;}
+  h2{ letter-spacing: 1px; text-align: center;margin: 8px 0; }
+  h5{ letter-spacing: 1px;;margin: 8px 0; }
+  .info{ background-color: #E8F3FF; }
+</style>

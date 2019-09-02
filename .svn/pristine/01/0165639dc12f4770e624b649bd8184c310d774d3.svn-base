@@ -1,0 +1,158 @@
+<template>
+  <el-main>
+    <el-form ref="formInline" :model="formInline" label-width="120px" class="demo-ruleForm">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="门店">
+            <el-select v-model="formInline.mall_id" placeholder="请选择门店名称">
+              <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name" :value="mall.mall_id"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="成员名称">
+            <el-select v-model="formInline.mall_id" placeholder="请选择门店名称">
+              <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name" :value="mall.mall_id"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="成员类型">
+            <el-select v-model="formInline.mall_id" placeholder="请选择门店名称">
+              <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name" :value="mall.mall_id"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item>
+            <el-button type="primary" @click="submitForm('formInline')">查 询</el-button>
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+    <div class="btn_bottom">
+      <el-button type="primary" @click="add">新 增</el-button>
+    </div>
+    <div class="contract_table">
+      <el-table
+        ref="table"
+        :height="height"
+        :data="tableData"
+        :show-overflow-tooltip="true"
+        :highlight-current-row="true"
+        border
+        tooltip-effect="dark"
+        style="width: 100%">
+        <el-table-column
+          fixed="right"
+          label="查看"
+          min-width="150">
+          <template slot-scope="scope">
+            <el-button type = "text" size="small" @click.native.prevent="edit(scope.$index, tableData)">编 辑</el-button>
+          </template>
+        </el-table-column>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="notice_code"
+          min-width="120"
+          label="项目名称"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="contract_code"
+          min-width="100"
+          label="成员名称"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="contract_main_id"
+          min-width="100"
+          label="成员类型"/>
+        <!--<el-table-column-->
+          <!--:show-overflow-tooltip="true"-->
+          <!--prop="status"-->
+          <!--min-width="100"-->
+          <!--label="状态">-->
+          <!--<template slot-scope="scope">-->
+            <!--<span v-if="scope.row.status == 1">禁用</span>-->
+            <!--<span v-else-if="scope.row.status == 2">启用</span>-->
+          <!--</template>-->
+        <!--</el-table-column>-->
+      </el-table>
+      <el-pagination
+        :page-sizes="[20, 30, 40, 50]"
+        :page-size="20"
+        :current-page.sync="currentPage"
+        :total="total"
+        background
+        layout="prev, pager, next, total, sizes"
+        @size-change="handleSizeChange"
+        @current-change="pagination"/>
+    </div>
+    <!--新增/编辑团队信息列表的弹窗-->
+    <el-dialog
+      :title="title"
+      :close-on-click-modal="false"
+      :visible.sync="dialogVisible"
+      top="5%"
+      width="80%">
+      <teamMember></teamMember>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+import building from '@/utils/building'
+import { common } from '@/common/common'
+import TeamMember from '@/components/basic/teamMember'
+export default {
+  name: 'Team',
+  components: { TeamMember },
+  data() {
+    return {
+      formInline: { mall_id: '' }, // 搜索条件信息
+      mall_name: [], // 门店信息
+      title: '', // 弹窗名称
+      dialogVisible: false, // 弹窗显示隐藏
+      loading: false,
+      total: 0,
+      currentPage: 1, // 页码
+      height: window.innerHeight - 275 + 'px',
+      tableData: [], // table
+    }
+  },
+  created() {
+    building.Mall(this); // 获取项目名称信息
+  },
+  methods: {
+    submitForm() { // 查询
+      const data = this.formInline;
+      data.limit = 20;
+      common.getPreData(data, 'ChargeNotice/getList', this, 'costList');
+      common.set('costList', { 'search': data });
+    },
+    pagination(val) { // 分页功能
+      const data = this.formInline;
+      data.page = val;
+      common.getPreData(data, 'ChargeNotice/getList', this, 'costList');
+      common.set('costList', { 'search': data });
+    },
+    handleSizeChange(val) {
+      const data = this.formInline;
+      data.limit = val;
+      common.getPreData(data, 'ChargeNotice/getList', this, 'costList');
+      common.set('costList', { 'search': data });
+    },
+    add() { // 新增
+      this.title = '新增项目团队信息';
+      this.dialogVisible = true;
+    },
+    edit() { // 编辑
+      this.title = '编辑项目团队信息';
+      this.dialogVisible = true;
+    }
+  }
+};
+</script>
+
+<style scoped>
+
+</style>

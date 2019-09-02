@@ -1,0 +1,28 @@
+function del(text, url, data, that) {
+  that.$confirm('此操作将作废' + text + '是否继续?', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+    center: true
+  }).then(() => {
+    that.axios
+      .post(url, data)
+      .then((res) => {
+        this.$message({
+          type: 'success',
+          message: '删除成功!'
+        })
+      }).catch((err) => {
+        this.$message.error(err.response.data.msg);
+      })
+  }).catch(() => {
+    that.$message({
+      type: 'info',
+      message: '已取消删除'
+    });
+  });
+}
+
+export {
+  del
+}

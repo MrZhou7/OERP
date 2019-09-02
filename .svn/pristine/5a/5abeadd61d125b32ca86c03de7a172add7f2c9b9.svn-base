@@ -1,0 +1,609 @@
+<template>
+  <el-main>
+    <el-form ref="formInline" :model="formInline" label-width="100px" class="demo-ruleForm">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="门店">
+            <el-select v-model="formInline.mall_id" placeholder="请选择门店名称">
+              <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name" :value="mall.mall_id"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="合同ID">
+            <el-input v-model="formInline.contract_id" clearable/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="合同编号">
+            <el-input v-model="formInline.contract_code" clearable/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="会计期">
+            <el-input v-model="timeRent" suffix-icon="el-icon-search" clearable @click.native="accounting"/>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row v-show="formShow">
+        <el-col :span="6">
+          <el-form-item label="商户编号">
+            <el-input v-model="formInline.customer_code" clearable/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商户名称">
+            <el-input v-model="formInline.customer_name" clearable/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商铺编号">
+            <el-input v-model="formInline.store_code" clearable/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商铺名称">
+            <el-input v-model="formInline.store_id" clearable/>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row v-show="formShow">
+        <el-col :span="6">
+          <el-form-item label="账单编号">
+            <el-input v-model="formInline.invoice_code" clearable/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="审核状态">
+            <el-select v-model="formInline.status" placeholder="请选择">
+              <el-option value="" label="全部"/>
+              <el-option label="作废" value="0"/>
+              <el-option label="草稿" value="1"/>
+              <el-option label="审批中" value="2"/>
+              <el-option label="审批通过" value="3"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="是否生成账单">
+            <el-select v-model="formInline.invoice_status	" placeholder="请选择">
+              <el-option value="" label="全部"/>
+              <el-option label="是" value="1"/>
+              <el-option label="否" value="0"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="12">
+          <el-form-item>
+            <el-button type="primary" @click="submitForm('formInline')">查 询</el-button>
+            <span class="searchRight" @click="moreSearch">{{ formShow ? '收起' : '展开' }}<i :class="searchRight"></i></span>
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+    <div class="btn_bottom">
+      <el-button type="primary" @click="addRent">新增</el-button>
+      <el-button :disabled="submitRent" @click="submitList">提交审核</el-button>
+      <el-button :disabled="auditRent" @click="auditList">审核</el-button>
+      <el-button :disabled="cancleRent" @click="cancleList">撤销审核</el-button>
+      <el-button :disabled="cancellationRent" @click="cancellation">作废</el-button>
+      <el-button :disabled="createRent" @click="createCheck">生成账单</el-button>
+    </div>
+    <div class="contract_table">
+      <el-table
+        ref="tableOne"
+        :height="height"
+        :data="tableData"
+        :show-overflow-tooltip="true"
+        :highlight-current-row="true"
+        border
+        tooltip-effect="dark"
+        style="width: 100%"
+        @selection-change="getRadio"
+        @row-click="clickRow">
+        <el-table-column
+          type="selection"
+          width="55"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="status"
+          min-width="100"
+          label="审批状态">
+          <template slot-scope="scope">
+            <span v-if="scope.row.status == 0">作废</span>
+            <span v-else-if="scope.row.status == 1">草稿</span>
+            <span v-else-if="scope.row.status == 2">审核中</span>
+            <span v-else-if="scope.row.status == 3">审核通过</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="code"
+          min-width="120"
+          label="单据编号"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="customer_code"
+          min-width="100"
+          label="商户编号"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="customer_name"
+          min-width="100"
+          label="商户名称"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="store_name"
+          min-width="100"
+          label="商铺名称"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="store_code"
+          min-width="100"
+          label="商铺编号"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="contract_code"
+          min-width="100"
+          label="合同编号"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="charge_description"
+          min-width="100"
+          label="费用类型"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="month_name"
+          min-width="100"
+          label="会计期"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="date_from"
+          min-width="100"
+          label="开始日期"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="date_to"
+          min-width="100"
+          label="结束日期"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="dis_amt"
+          min-width="100"
+          label="优惠金额"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="remark"
+          min-width="100"
+          label="备注"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="invoice_status"
+          min-width="120"
+          label="是否生成账单">
+          <template slot-scope="scope">
+            <span v-if="scope.row.invoice_status == 0">未生成</span>
+            <span v-else-if="scope.row.invoice_status == 1">已生成</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="invoice_code"
+          min-width="100"
+          label="账单编号"/>
+        <el-table-column
+          fixed="right"
+          label="操作"
+          min-width="150">
+          <template slot-scope="scope">
+            <el-button type = "text" size="small" @click.native.prevent="checkRent(scope.$index, tableData)">查 看</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        :page-sizes="[20, 30, 40, 50]"
+        :current-page.sync="currentPage"
+        :total="total"
+        :page-size="20"
+        background
+        layout="prev, pager, next, total, sizes"
+        @size-change="handleSizeChange"
+        @current-change="pagination"/>
+    </div>
+    <!--查看租金优惠的弹窗-->
+    <el-dialog
+      :visible.sync="dialogVisible"
+      :close-on-click-modal="false"
+      append-to-body
+      title="查看"
+      top="5%"
+      width="60%">
+      <div class="heightRent">
+        <el-form ref="rentForm" :model="rentForm" label-width="100px" class="demo-ruleForm">
+          <el-row>
+            <el-col :span="12">
+              <el-form-item label="门店">
+                <el-select v-model="rentForm.mall_id">
+                  <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name" :value="mall.mall_id"/>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="优惠单号">
+                <el-input v-model="rentForm.code" readonly/>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="12">
+              <el-form-item label="合同ID">
+                <el-input v-model="rentForm.contract_id" readonly/>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="合同编号">
+                <el-input v-model="rentForm.contract_code" readonly/>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="12">
+              <el-form-item label="会计期">
+                <el-input v-model="rentForm.month_name" readonly/>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="费用类型">
+                <el-input v-model="rentForm.charge_description" readonly/>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="12">
+              <el-form-item label="优惠金额">
+                <el-input v-model="rentForm.dis_amt" readonly/>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="24">
+              <el-form-item label="备注">
+                <el-input v-model="rentForm.remark" readonly/>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+      </div>
+    </el-dialog>
+    <!--选择会计期的弹窗-->
+    <el-dialog
+      :visible.sync="dialogVisibleTime"
+      :close-on-click-modal="false"
+      append-to-body
+      title="选择会计期"
+      top="5%"
+      width="60%">
+      <div class="height">
+        <el-form ref="searchForm" :model="searchForm" label-width="100px" class="demo-ruleForm">
+          <el-row>
+            <el-col :span="6">
+              <el-form-item label="费用期名称">
+                <el-input v-model="searchForm.month_name" clearable/>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="起始日期">
+                <el-date-picker
+                  v-model="timeValue"
+                  :picker-options="pickerOptions"
+                  value-format="yyyy-MM-dd"
+                  type="daterange"
+                  range-separator="至"
+                  start-placeholder="开始日期"
+                  end-placeholder="结束日期"
+                  @change="startDate($event)">
+                </el-date-picker>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item>
+                <el-button size="medium" type="primary" @click="search('searchForm')">查 询</el-button>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+        <div class="contract_table">
+          <el-table
+            ref="tableTwo"
+            :height="heightTwo"
+            :data="tableDataTwo"
+            :show-overflow-tooltip="true"
+            :highlight-current-row="true"
+            border
+            tooltip-effect="dark"
+            style="width: 100%">
+            <el-table-column
+              type="selection"
+              width="55"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="account_year"
+              min-width="100"
+              label="记账年度"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="account_month"
+              min-width="100"
+              label="费用期序号"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="month_name"
+              min-width="120"
+              label="费用期名称"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="month_start_day"
+              min-width="120"
+              label="费用期起始日期"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="month_end_day"
+              min-width="150"
+              label="费用期结束日期"/>
+            <el-table-column
+              fixed="right"
+              label="操作"
+              min-width="80">
+              <template slot-scope="scope">
+                <el-button type="text" size="mini" @click="choose(scope.$index, tableDataTwo)">选 择</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          <el-pagination
+            :page-sizes="[10, 20, 30, 40, 50]"
+            :page-size="20"
+            :current-page.sync="currentPageTwo"
+            :total="totalTwo"
+            background
+            layout="prev, pager, next, total, sizes"
+            @size-change="handleSizeChangeTwo"
+            @current-change="paginationTwo"/>
+        </div>
+      </div>
+    </el-dialog>
+    <!--新增的弹窗-->
+    <el-dialog
+      :visible.sync="openRent"
+      :close-on-click-modal="false"
+      v-if="openRent"
+      append-to-body
+      title="新增"
+      top="5%"
+      width="60%">
+      <AddRent @isShow="isShow"></AddRent>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+import { common } from '@/common/common';
+import building from '@/utils/building';
+import AddRent from '@/components/contract/addRent';
+export default {
+  name: 'RentManage',
+  components: {
+    AddRent
+  },
+  data() {
+    return {
+      openRent: false,
+      formInline: { mall_id: '' }, // 搜索条件信息
+      rentForm: {}, // 查看详细信息
+      searchForm: {}, // 会记期搜索表单
+      height: window.innerHeight - 300 + 'px',
+      heightTwo: window.innerHeight - 500 + 'px',
+      loading: false,
+      total: 0,
+      currentPage: 1, // 页码
+      totalTwo: 0,
+      currentPageTwo: 1, // 页码
+      pickerOptions: building.publicTime(),
+      timeValue: '', // 时间
+      timeRent: '', // 会计期
+      mall_name: [], // 门店信息
+      tableData: [], // 租金table
+      tableDataTwo: [], // 会计期table
+      submitRent: true, // 提交审核按钮
+      auditRent: true, // 审核按钮
+      cancleRent: true, // 撤销审核
+      createRent: true, // 生成账单
+      cancellationRent: true, // 作废
+      formShow: false, // 更多搜索
+      searchRight: 'el-icon-arrow-down',
+      RentList: {}, // 点击获取的单行信息
+      dialogVisibleTime: false, // 选择会计期的弹窗
+      dialogVisible: false // 查看租金优惠弹窗
+    };
+  },
+  created() {
+    building.Mall(this); // 获取项目名称信息
+    const searchHistory = common.get('rentList');
+    if (searchHistory != null) {
+      this.formInline = searchHistory.search;
+      common.getPreData(searchHistory.search, 'InvoiceDiscount/getlist', this, 'rentList');
+    }
+  },
+  methods: {
+    submitForm() { // 查询
+      if (this.timeRent == '') {
+        this.formInline.peroid_id = '';
+        const data = this.formInline;
+        data.limit = 20;
+        common.getPreData(data, 'InvoiceDiscount/getlist', this, 'rentList');
+        common.set('rentList', { 'search': data });
+      } else {
+        const data = this.formInline;
+        data.limit = 20;
+        common.getPreData(data, 'InvoiceDiscount/getlist', this, 'rentList');
+        common.set('rentList', { 'search': data });
+      }
+    },
+    getRadio(row) { // 去除多选
+      building.radioBtn(row, this.$refs.tableOne);
+    },
+    clickRow(row) { // 点击table的row
+      this.$refs.tableOne.toggleRowSelection(row);
+      this.RentList = row;
+      this.checkedList(row);
+    },
+    accounting() { // 会计期赋值
+      this.dialogVisibleTime = true;
+      this.http.post('StandardAccountPeroid/getList', this.searchForm).then(res => {
+        this.tableDataTwo = res.data.data;
+        this.totalTwo = res.data.count;
+      });
+    },
+    search() { // 查询会计期
+      this.http.post('StandardAccountPeroid/getList', this.searchForm).then(res => {
+        this.tableDataTwo = res.data.data;
+        this.totalTwo = res.data.count;
+      });
+    },
+    choose(index, row) { // 选择会计期
+      this.timeRent = row[index].month_name;
+      this.formInline.peroid_id = row[index].standard_account_peroid_id;
+      this.dialogVisibleTime = false;
+    },
+    checkedList(row) {
+      switch (row.status) {
+        case 0: // 作废
+          this.submitRent = true; // 提交
+          this.auditRent = true; // 审核
+          this.cancleRent = true; // 撤销审核
+          this.createRent = true; // 账单
+          this.cancellationRent = true; // 作废
+          break;
+        case 1: // 提交审核
+          this.submitRent = false; // 提交
+          this.auditRent = true; // 审核
+          this.cancleRent = true; // 撤销审核
+          this.createRent = true; // 账单
+          this.cancellationRent = false; // 作废
+          break;
+        case 2: // 审核中
+          this.submitRent = true; // 提交
+          this.auditRent = false; // 审核
+          this.cancleRent = true; // 撤销审核
+          this.createRent = true; // 账单
+          this.cancellationRent = false; // 作废
+          break;
+        case 3: // 确认取消
+          this.submitRent = true;
+          this.auditRent = true;
+          this.cancleRent = false;
+          this.createRent = false;
+          this.cancellationRent = false; // 作废
+          break;
+      }
+    },
+    createCheck() { // 生成账单
+      common.del('您将提交生成账单, 是否继续?', 'InvoiceDiscount/produceBill', { id: this.RentList.id },
+        'InvoiceDiscount/getlist', this, 'rentList');
+      this.cancel();
+    },
+    cancleList() { // 撤销审核
+      common.del('您将提交撤销审核, 是否继续?', 'InvoiceDiscount/editStatus', { id: this.RentList.id, status: 1 },
+        'InvoiceDiscount/getlist', this, 'rentList');
+      this.cancel();
+    },
+    submitList() { // 提交审核
+      common.del('您将提交审核, 是否继续?', 'InvoiceDiscount/editStatus', { id: this.RentList.id, status: 2 },
+        'InvoiceDiscount/getlist', this, 'rentList');
+      this.cancel();
+    },
+    auditList() { // 审核通过
+      common.del('您将提交审核通过, 是否继续?', 'InvoiceDiscount/editStatus', { id: this.RentList.id, status: 3 },
+        'InvoiceDiscount/getlist', this, 'rentList');
+      this.cancel();
+    },
+    cancellation() { // 作废
+      common.del('您将提交作废, 是否继续?', 'InvoiceDiscount/editStatus', { id: this.RentList.id, status: 0 },
+        'InvoiceDiscount/getlist', this, 'rentList');
+      this.cancel();
+    },
+    cancel() {
+      this.submitRent = true;
+      this.auditRent = true;
+      this.cancleRent = true;
+      this.createRent = true;
+      this.cancellationRent = true;
+    },
+    checkRent(index, row) { // 查看
+      this.dialogVisible = true;
+      this.http.post('InvoiceDiscount/getDetail', { id: row[index].id }).then(res => {
+        this.rentForm = res.data.data;
+      });
+    },
+    addRent() { // 新增
+      this.openRent = true;
+    },
+    isShow(data) {
+      const list = this.formInline;
+      common.getPreData(list, 'InvoiceDiscount/getlist', this, 'rentList');
+      common.set('rentList', { 'search': list });
+      this.openRent = data;
+    },
+    pagination(val) { // 分页功能
+      const data = this.formInline;
+      data.page = val;
+      common.getPreData(data, 'InvoiceDiscount/getlist', this, 'rentList');
+      common.set('rentList', { 'search': data });
+    },
+    handleSizeChange(val) {
+      const data = this.formInline;
+      data.limit = val;
+      common.getPreData(data, 'InvoiceDiscount/getlist', this, 'rentList');
+      common.set('rentList', { 'search': data });
+    },
+    paginationTwo(val) { // 分页功能
+      const data = this.searchForm;
+      data.page = val;
+      this.http.post('StandardAccountPeroid/getList', data).then(res => {
+        this.tableDataTwo = res.data.data;
+        this.totalTwo = res.data.count;
+      });
+    },
+    handleSizeChangeTwo(val) {
+      const data = this.searchForm;
+      data.limit = val;
+      this.http.post('StandardAccountPeroid/getList', data).then(res => {
+        this.tableDataTwo = res.data.data;
+        this.totalTwo = res.data.count;
+      });
+    },
+    startDate(e) { // 搜索日期赋值
+      e ? this.searchForm.start = e[0] : this.searchForm.start = '';
+      e ? this.searchForm.end = e[1] : this.searchForm.end = '';
+    },
+    moreSearch() { // 更多搜索
+      this.formShow = !this.formShow;
+      if (this.searchRight == 'el-icon-arrow-down') {
+        this.searchRight = 'el-icon-arrow-up';
+        this.height = window.innerHeight - 390;
+      } else {
+        this.searchRight = 'el-icon-arrow-down';
+        this.height = window.innerHeight - 300;
+      }
+    }
+  }
+};
+</script>
+
+<style scoped>
+  .el-form-item {margin-bottom: 5px;}
+  .heightRent{overflow: auto;height: calc(100vh - 60vh)}
+  .height{overflow: auto;height: calc(100vh - 35vh)}
+</style>
+

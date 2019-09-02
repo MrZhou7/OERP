@@ -1,0 +1,56 @@
+var common = {
+  del: function(text, url, data, update ,that, dataRenlod) {//作废事件
+    console.log(data)
+    that.$confirm(text, '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+      center: true
+    }).then(() => {
+      that.axios
+        .post(process.env.BASE_API + url, data)
+        .then((res) => {
+          that.$message({
+            type: 'success',
+            message: '成功!'
+          })
+          this.getPreData(that.formInline,update,that) //重新请求数据
+        }).catch((err) => {
+        that.$message.error(err.response.data.msg)
+      })
+    }).catch(() => {
+      that.$message({
+        type: 'info',
+        message: '已取消删除'
+      })
+    })
+  },
+  lookup: function(data, itme) {//获取基础信息
+    let that = itme
+    return that.axios
+      .post(process.env.BASE_API + 'lookup/getLookupByCode', { lookup_code: data })
+      .then((res) => res.data.data)
+      .catch((err) => {
+      that.$message.error(err.response.data.msg)
+    })
+
+  },
+  getPreData: function(data,url,item) {//查询
+    const that = item
+    that.axios
+      .post(process.env.BASE_API + url, data)
+      .then(function(res) {
+        console.log(res.data)
+        if (res.data.code == 0 ) {
+          that.tableData = res.data.data
+        }
+      })
+      .catch(function(err) {
+        that.$message.error(err.responseJSON.msg)
+      })
+  },
+}
+
+export {
+  common
+}

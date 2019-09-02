@@ -1,0 +1,432 @@
+<template>
+  <div class="editBusiness">
+    <div class="businessContent">
+      <el-tabs type="border-card">
+        <el-tab-pane label="商户信息">
+          <el-form ref="businessForm" :model="businessForm" :rules="rules" label-width="120px" class="demo-ruleForm">
+            <el-row>
+              <el-col :span="8">
+                <el-form-item label="商户编号" prop="customer_code">
+                  <el-input v-model="businessForm.customer_code" placeholder="商户信息保存后自动生成" disabled/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="商户名称" placeholder="中英文、数字，限30字符" prop="customer_name">
+                  <el-input v-model="businessForm.customer_name" :disabled="checkBool"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="商户简称" placeholder="中英文、数字，限30字符">
+                  <el-input v-model="businessForm.cust_short_name" :disabled="checkBool"/>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="8">
+                <el-form-item label="身份证号" prop="card_no">
+                  <el-input v-model="businessForm.card_no" :disabled="checkBool" placeholder="请输入身份证号"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="公司电话" prop="company_phone">
+                  <el-input v-model="businessForm.company_phone" :disabled="checkBool" placeholder="请输入公司电话"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="法人代表">
+                  <el-input v-model="businessForm.legal" :disabled="checkBool" placeholder="中英文、数字，限30字符"/>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="8">
+                <el-form-item label="注册资本">
+                  <el-input v-model="businessForm.registered_capital" :disabled="checkBool" placeholder="请输入注册资本"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="手机" prop="contact_phone">
+                  <el-input v-model="businessForm.contact_phone" :disabled="checkBool" placeholder="请输入手机号码"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="商户级别" prop="customer_rank">
+                  <el-select v-model="businessForm.customer_rank" :disabled="checkBool" placeholder="请选择">
+                    <el-option v-for="(item,index) in customerRank" :key="index" :label="item.values_name" :value="item.values_code"/>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="8">
+                <el-form-item label="身份证颁发地" prop="card_address">
+                  <el-cascader
+                    :disabled="checkBool"
+                    :options="cityData"
+                    :props="cityProps"
+                    v-model="businessForm.card_address"
+                    :clearable="true"
+                    placeholder="请选择省/市"
+                    change-on-select
+                  />
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="商户来源" prop="source_type">
+                  <el-select v-model="businessForm.source_type" :disabled="checkBool" placeholder="请选择">
+                    <el-option v-for="item in customerSource" :key="item.values_code" :label="item.values_name" :value="item.values_code"/>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="商户类型" prop="customer_type">
+                  <el-select v-model="businessForm.customer_type" :disabled="checkBool" placeholder="请选择">
+                    <el-option v-for="item in customerType" :key="item.values_code" :label="item.values_name" :value="item.values_code"/>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="8">
+                <el-form-item label="商户地址" prop="address">
+                  <el-cascader
+                    :disabled="checkBool"
+                    :options="cityData"
+                    v-model="businessForm.businessAddress"
+                    :props="cityProps"
+                    :clearable="true"
+                    change-on-select
+                    placeholder="请选择省/市/区"
+                  />
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-input v-model="businessForm.address" :disabled="checkBool" prop="detailAddress" placeholder="请输入详细地址，限50字符内"/>
+              </el-col>
+            </el-row>
+            <el-form-item v-if="!checkBool">
+              <el-button type="primary" @click="submitForm('businessForm')">保存</el-button>
+            </el-form-item>
+          </el-form>
+        </el-tab-pane>
+        <el-tab-pane label="银行信息">
+          <div class="btn_bottom">
+            <el-button type="primary" @click="add(1)">新 增</el-button>
+          </div>
+          <div class="contract_table">
+            <el-table
+              ref="table"
+              :data="tableData"
+              :show-overflow-tooltip="true"
+              class="tableHeight"
+              border
+              tooltip-effect="dark">
+              <el-table-column
+                type="index"
+                label="序号"
+                width="55"/>
+              <el-table-column
+                fixed="right"
+                label="操作"
+                min-width="150">
+                <template slot-scope="scope">
+                  <el-button type = "text" size="small" @click.native.prevent="editCostList(scope.$index, tableData)">编 辑</el-button>
+                  <el-button type = "text" size="small" @click.native.prevent="deleteCostList(scope.$index, tableData)">删 除</el-button>
+                </template>
+              </el-table-column>
+              <el-table-column
+                :show-overflow-tooltip="true"
+                prop="store_id"
+                min-width="100"
+                label="商铺名称">
+                <template slot-scope="scope">
+                  <span v-for="item in storeList" v-if="scope.row.store_id == item.store_id" :key="item.store_id">
+                    {{ item.store_name }}
+                  </span>
+                </template>
+              </el-table-column>
+              <el-table-column
+                :show-overflow-tooltip="true"
+                prop="bank_name"
+                min-width="180"
+                label="开户行"/>
+              <el-table-column
+                :show-overflow-tooltip="true"
+                prop="bank_account_no"
+                min-width="180"
+                label="银行账户"/>
+              <el-table-column
+                :show-overflow-tooltip="true"
+                prop="account_name"
+                min-width="180"
+                label="账户名称"/>
+              <el-table-column
+                :show-overflow-tooltip="true"
+                prop="added_by"
+                min-width="180"
+                label="添加人"/>
+            </el-table>
+          </div>
+        </el-tab-pane>
+        <el-tab-pane label="证照信息">证照信息</el-tab-pane>
+        <el-tab-pane label="联系人信息">联系人信息</el-tab-pane>
+        <el-tab-pane label="附件信息">附件信息</el-tab-pane>
+      </el-tabs>
+    </div>
+    <!--新增银行信息-->
+    <el-dialog
+      :close-on-click-modal="false"
+      :visible.sync="dialogVisible.one"
+      title="新增银行信息"
+      append-to-body
+      width="40%">
+      <el-form :model="ruleForm" :rules="rulesOne" ref="ruleForm" label-width="100px" class="demo-ruleForm">
+        <el-form-item label="商铺">
+          <el-select v-model="ruleForm.store_id" placeholder="请选择" prop="store_id">
+            <el-option
+              v-for="item in storeList"
+              :key="item.store_id"
+              :label="item.store_name"
+              :value="item.store_id">
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="开户行" placeholder="中英文、数字，限30字符">
+          <el-input v-model="ruleForm.bank_name"></el-input>
+        </el-form-item>
+        <el-form-item label="银行账户" placeholder="中英文、数字，限30字符" prop="bank_account_no">
+          <el-input v-model="ruleForm.bank_account_no"></el-input>
+        </el-form-item>
+        <el-form-item label="账户名称" placeholder="中英文、数字，限30字符" prop="account_name">
+          <el-input v-model="ruleForm.account_name"></el-input>
+        </el-form-item>
+        <el-form-item label="添加人" placeholder="中英文、数字，限30字符">
+          <el-input v-model="ruleForm.added_by	"></el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-button v-if="isSHowCost" type="primary" @click="addForm('ruleForm', 1)">新 增</el-button>
+          <el-button v-if="!isSHowCost" type="success" @click="addForm('ruleForm', 2)">保 存</el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import { common } from '@/common/common';
+
+export default {
+  name: 'EditBusiness',
+  props: {
+    editData: {
+      type: Object,
+      default: function() {}
+    },
+    checkBool: {
+      type: Boolean,
+      default: false
+    },
+    editCode: {
+      type: Number,
+      default: false
+    },
+  },
+  data() {
+    return {
+      ruleForm: {}, // 银行表单
+      cityData: [], // 请求本地的城市文件
+      customerRank: [], // 商戶級別信息
+      customerType: [], // 商户类型
+      customerSource: [], // 商户来源
+      storeList: [], // 商铺数据
+      tableData: [], // 银行卡信息table
+      tableIndex: '', // 编辑时的数组下标
+      businessView: true, // 根据不同参数，显示隐藏
+      isSHowCost: true, // 新增和保存按钮的显示
+      dialogVisible: {
+        one: false, // 新增银行信息弹窗
+        two: false, // 新增证照信息弹窗
+        three: false, // 新增附件信息弹窗
+        four: false// 新增联系人信息弹窗
+      },
+      cityProps: {
+        children: 'children',
+        label: 'text',
+        value: 'id'
+      },
+      businessForm: {
+        customer_type: '',
+        source_type: '',
+        customer_code: '',
+        customer_name: '',
+        cust_short_name: '',
+        card_no: '',
+        company_phone: '',
+        legal: '',
+        registered_capital: '',
+        contact_phone: '',
+        customer_rank: '',
+        card_address: [],
+        businessAddress: [],
+        address: '' // 详细地址，与address一起传
+      },
+      rulesOne: {
+        store_id: [{ required: true, message: '请选择商铺', trigger: 'change' }],
+        bank_account_no: [{ required: true, message: '请输入银行卡号', trigger: 'blur' }],
+        account_name: [{ required: true, message: '请输入账户名称', trigger: 'blur' }]
+      },
+      rules: {
+        customer_name: [
+          { required: true, message: '请输入商户名称', trigger: 'blur' },
+          { min: 1, max: 30, message: '长度在 30 字符以内', trigger: 'blur' }
+        ],
+        card_no: [
+          { required: true, message: '请输入身份证号', trigger: 'blur' },
+          {
+            pattern: /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/, message: '你的身份证格式不正确', trigger: 'blur'
+          }
+        ],
+        company_phone: [
+          { required: true, message: '请输入电话号码', trigger: 'blur' },
+          { min: 7, max: 11, message: '请输入正确号码', trigger: 'blur' }
+        ],
+        contact_phone: [
+          { required: true, message: '请输入手机号码', trigger: 'blur' },
+          { validator: function(rule, value, callback) {
+            if (/^1[34578]\d{9}$/.test(value) == false) {
+              callback(new Error('请输入正确的手机号'));
+            } else {
+              callback();
+            }
+          }, trigger: 'blur' }
+        ],
+        customer_rank: [{ required: true, message: '请选择', trigger: 'blur' }],
+        card_address: [{ required: true, message: '请选择身份证颁发地址', trigger: 'blur' }],
+        businessAddress: [{ required: true, message: '请选择商户地址', trigger: 'blur' }],
+        address: [{ required: true, message: '请填写详细地址', trigger: 'blur' }],
+        source_type: [{ required: true, message: '请选择商户来源', trigger: 'blur' }],
+        customer_type: [{ required: true, message: '请选择商户类型', trigger: 'blur' }]
+      }
+    };
+  },
+  created() {
+    this.getCityData();
+    this.getStore();
+    common.lookup('L018', this).then((res) => {
+      this.customerSource = res;
+    });
+    common.lookup('L019', this).then((res) => {
+      this.customerType = res;
+    });
+    common.lookup('L020', this).then((res) => {
+      this.customerRank = res;
+    });
+  },
+  methods: {
+    submitForm(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          this.http.post('customer/editCustomer', { businessForm: JSON.stringify(this.businessForm) }).then((res) => {
+            //this.$emit('through', false);
+            this.$message({ showClose: true, message: '修改商户成功！', type: 'success' });
+          })
+        } else {
+          this.$message({
+            message: '请输入完整信息！！！',
+            type: 'warning'
+          })
+        }
+      });
+    },
+    add(index) {
+      switch (index) {
+        case 1:
+          this.dialogVisible.one = true;
+          break;
+        case 2:
+          this.dialogVisible.two = true;
+          break;
+        case 3:
+          this.dialogVisible.three = true;
+          break;
+        case 4:
+          this.dialogVisible.four = true;
+          break;
+      }
+    },
+    addForm(formName, index) { // 新增银行卡信息 保存编辑银行卡信息
+      const that = this;
+      const list = {};
+      list.account_name = this.ruleForm.account_name;
+      list.added_by = this.ruleForm.added_by;
+      list.bank_account_no = this.ruleForm.bank_account_no;
+      list.bank_name = this.ruleForm.bank_name;
+      list.store_id = this.ruleForm.store_id;
+      list.cust_id = this.editData.customer_id;
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (index == 1) {
+            that.tableData.push(list);
+            this.http.post('BankInfo/addBankInfoByCust', list).then(res => {
+              this.$message.success('添加成功!!!');
+              this.dialogVisible.one = false;
+            });
+            this.ruleForm = {};
+          } else if (index == 2) {
+            that.tableData.splice(this.tableIndex, 1, list);
+            this.ruleForm = {};
+            this.isSHowCost = true;
+            this.dialogVisible.one = false;
+          }
+        } else {
+          this.$message({
+            message: '请输入完整信息！！！',
+            type: 'warning'
+          })
+        }
+      });
+    },
+    editCostList(index, row) { // 编辑银行卡信息
+      this.dialogVisible.one = true;
+      this.isSHowCost = false;
+      this.tableIndex = index;
+      this.ruleForm = row[index];
+    },
+    deleteCostList(index, row) { // 删除银行卡信息
+      if (this.isSHowCost) {
+        row.splice(index, 1);
+      } else {
+        this.$message.error('正在编辑，请勿删除！');
+      }
+    },
+    getCityData() { // 获取城市地点文件
+      // this.http.post(process.env.BASE_CITY).then((res) => {
+      //   this.cityData = res.data;
+      // });
+      this.axios.get(process.env.BASE_CITY).then((res)=>{
+        this.cityData = res.data;
+      })
+      console.log(this.editCode)
+      if(this.editData.bankinfo) {
+        this.businessForm = this.editData.bankinfo;
+        // this.tableData = this.editData.bankinfo;
+      }else {
+        this.businessForm = this.editData;
+      }
+
+    },
+    getStore() { // 获取商铺信息
+      console.log(this.editData)
+      this.http.post('BankInfo/getAllStoresByCust', { customer_id: parseInt(this.editData.customer_id) }).then(res => {
+        this.storeList = res.data.data;
+      });
+    }
+  }
+};
+</script>
+
+<style scoped>
+  .editBusiness{ padding: 15px;height: 500px; }
+  .el-form-item {margin-bottom: 20px;}
+</style>
+

@@ -1,0 +1,285 @@
+<template>
+  <el-main>
+    <el-form :model="formInline" class="demo-form-inline" label-width="80px">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="门店名称">
+            <el-select v-model="formInline.mall_id" placeholder="请选择项目名称">
+              <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name" :value="mall.mall_id"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商铺编码">
+            <el-input v-model="formInline.customer_name" clearable placeholder="请输入商户名称"/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商铺">
+            <el-input v-model="store_name" suffix-icon="el-icon-search" clearable ref="getPayWayChang" @focus="fieldClick"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="人员选择">
+            <el-select v-model="formInline.customer_name" placeholder="请选择费用类型">
+              <el-option value="" label="请选择"></el-option>
+              <el-option label="已生效的收费单" value="1"></el-option>
+              <el-option label="待确认的收费单" value="2"></el-option>
+              <el-option label="取消中的收费单" value="3"></el-option>
+              <el-option label="以取消的收费单" value="4"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="人员类型">
+            <el-select v-model="formInline.customer_name" placeholder="请选择费用类型">
+              <el-option value="" label="请选择"></el-option>
+              <el-option label="已生效的收费单" value="1"></el-option>
+              <el-option label="待确认的收费单" value="2"></el-option>
+              <el-option label="取消中的收费单" value="3"></el-option>
+              <el-option label="以取消的收费单" value="4"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="姓名">
+            <el-input v-model="formInline.contract_code" clearable placeholder="请输入订单编号"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="手机号码">
+            <el-input v-model="formInline.contract_code" clearable placeholder="请输入订单编号"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item>
+            <el-button type="primary" @click="onSecher()">搜索</el-button>
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+    <div class="btn_bottom">
+      <el-button type="primary" @click="addPersonnelManage">新增</el-button>
+    </div>
+    <div class="contract_table">
+      <el-table
+        ref="tableOne"
+        :height="tableHeight"
+        :data="tableData"
+        :show-overflow-tooltip="true"
+        border
+        tooltip-effect="dark"
+        style="width: 100%"
+        @selection-change="changFun"
+        @row-click="clickRow">
+        <el-table-column
+          type="selection"
+          width="55"/>
+        <el-table-column
+          fixed
+          prop="customer_code"
+          label="门店"
+          width="150"/>
+        <el-table-column
+          prop="customer_name"
+          label="商铺编号"
+          width="150"/>
+        <el-table-column
+          prop="cust_short_name"
+          label="商铺名称"
+          width="150"/>
+        <el-table-column
+          prop="contact_phone"
+          label="姓名"
+          width="150"/>
+        <el-table-column
+          prop="legal"
+          label="手机号"
+          width="150"/>
+        <el-table-column
+          prop="customer_rank"
+          label="人员类别"
+          width="150">
+          <template slot-scope="scope">
+            <span v-for="(item, index) in customerRank" :key="index">
+              {{ scope.row.customer_rank == item.values_code ? item.values_name : '' }}
+            </span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="enabled"
+          label="状态"
+          width="150">
+          <template slot-scope="scope">
+            {{ scope.row.enabled == 0 ?"启用":"停用" }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          fixed="right"
+          label="操作"
+          width="200">
+          <template slot-scope="scope">
+            <el-button type="text" size="small" @click.native.prevent="viewRow(scope.row)">查看</el-button>
+            <el-button type="text" size="small" @click.native.prevent="editClick(scope.row)">编辑</el-button>
+            <el-button type="text" size="small" @click.native.prevent="deleteRow(scope.row)">删除</el-button>
+            <el-button v-if="scope.row.enabled == 0" type="text" size="small" @click.native.prevent="startRow(scope.row)">启用</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        :page-sizes="[10, 20, 30, 40, 50]"
+        :page-size="pageSize"
+        :current-page.sync="currentPage"
+        :total="total"
+        background
+        layout="prev, pager, next, total, sizes"
+        @current-change="pagination"
+        @size-change="handleSizeChange"/>
+    </div>
+    <!--查看编辑弹窗-->
+    <el-dialog title="商铺选择" :visible.sync="fieldChoice"  v-if="fieldChoice" width="70%" height="70%" :close-on-click-modal="false">
+      <Shops v-on:fieldData="fieldData" :mall="formInline.mall_id"></Shops>
+    </el-dialog>
+    <!--新增-->
+    <el-dialog title="name" :visible.sync="addPersonnel"  v-if="addPersonnel" width="70%" height="70%" :close-on-click-modal="false">
+      <addPersonnel v-on:addPersonnelData="addPersonnelData" :personnelId="personnelId" :viewType="viewType"></addPersonnel>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+  import Shops from '@/components/order/shops.vue' //商铺
+  import addPersonnel from '@/components/sale/shops/addPersonnel.vue' //新增人员
+  import { common } from '@/common/common';
+  import building from '@/utils/building';
+  export default {
+    name: 'shopPersonnel',
+    components: { Shops, addPersonnel },
+    data() {
+      return {
+        mall_name: [], // 门店信息
+        total: 0, // 分页
+        currentPage: 1, // 页码
+        pageSize: 10,//当前页码
+        tableHeight: window.innerHeight - 297,
+        tableData: [], // 查询获取的数据
+        store_name: '',
+        personnelId: '',
+        viewType: '',
+        checkData:[],
+        fieldChoice:false,
+        addPersonnel:false,
+        name:'',
+        formInline: {},
+      };
+    },
+    created() {
+      building.Mall(this); // 先获取门店数据
+      const searchHistory = common.get('businessSearch');
+      if (searchHistory != null) {
+        this.formInline = searchHistory.search;
+        common.getPreData(this.formInline, 'customer/getCustomerList', this);
+      }
+    },
+    methods: {
+      pagination(val) { // 分页
+        const data = this.formInline;
+        data.page = val;
+        common.getPreData(data, 'customer/getCustomerList', this, 'businessSearch');
+        common.set('businessSearch', { 'search': data });
+      },
+      handleSizeChange(val) {
+        const data = this.formInline;
+        data.limit = val;
+        common.getPreData(data, 'customer/getCustomerList', this, 'businessSearch');
+        common.set('businessSearch', { 'search': data });
+      },
+
+      clickRow(row) { // 点击table的row
+        this.$refs.tableOne.toggleRowSelection(row);
+        this.checkData = row
+      },
+      changFun(row) {//获取当前行数据
+        if (row.length > 1) { //去除多选
+          this.$refs.multipleTable.clearSelection();
+          this.$refs.multipleTable.toggleRowSelection(row.pop());
+        }else if(row.length = 0) {
+
+        }
+      },
+      addPersonnelManage: function() { // 新增商户
+        this.addPersonnel = true;
+        this.personnelId = '';
+        this.name = '新增';
+        this.viewType = 1;
+      },
+      viewRow(row) {
+        this.personnelId = row.id;
+        this.name = '查看';
+        this.viewType = 2;
+      },
+      editRow(row) {
+        this.personnelId = row.id;
+        this.name = '编辑';
+        this.viewType = 3;
+      },
+      deleteRow(index, row) { // 删除
+        common.del('此操作将作废该商户是否继续', 'customer/delCustomer', { customer_id: row[index].customer_id, enabled: 0 }, 'customer/getCustomerList', this);
+      },
+      startRow(index, row) { // 启用
+        common.del('此操作将作废该商户是否继续', 'customer/delCustomer', { customer_id: row[index].customer_id, enabled: 1 }, 'customer/getCustomerList', this);
+      },
+
+      fieldClick() {
+        //场地点击
+        if (!this.formInline.mall_id) {
+          this.$message({
+            message: '请选择门店',
+            type: 'warning'
+          })
+        } else {
+          if(this.formInline.store_id == '' || this.formInline.store_id == undefined && this.store_name == '') {
+            this.fieldChoice = true;
+          }else {
+            this.formInline.store_id = '';
+            this.store_name = '';
+            this.$nextTick(() => {
+              this.$refs.getPayWayChang.blur();
+            })
+          }
+        }
+      },
+      fieldData(data) {//场地赋值
+        if (data.length == undefined) {
+          this.store_name = data.store_name;
+          this.formInline.store_id = data.store_id;
+        } else {
+          let store_id = '', store_name = '';
+          data.forEach((index, i) => {
+            if (i != data.length - 1) {
+              store_id += index.store_id + ',';
+              store_name += index.store_name + ',';
+            } else {
+              store_id += index.store_id;
+              store_name += index.store_name;
+            }
+            this.store_name = store_name;
+            this.formInline.store_id = store_id;
+          })
+        }
+        this.fieldChoice = false;
+      },
+      addPersonnelData(data) {
+        this.addPersonnel = data;
+      }
+    }
+  };
+</script>
+
+<style scoped lang="scss">
+  #businessWrap{padding: 15px;}
+  .el-form-item {margin-bottom: 5px;}
+</style>

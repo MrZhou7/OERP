@@ -1,0 +1,246 @@
+<template>
+  <div id="addBrandWrap">
+    <blockquote class="elem_quote">品牌信息</blockquote>
+    <el-form ref="ruleForm" :model="ruleForm" :rules="rules" label-width="100px" class="demo-ruleForm">
+      <el-form-item label="品牌名称" prop="brand_name">
+        <el-col :span="8">
+          <el-input v-model="ruleForm.brand_name" placeholder="中英文、数字、限20字以内"/>
+        </el-col>
+      </el-form-item>
+      <el-form-item label="品牌编号">
+        <el-col :span="8">
+          <el-input v-model="ruleForm.brand_code" disabled/>
+        </el-col>
+      </el-form-item>
+      <el-form-item label="品类选择" prop="operation_type">
+        <el-col :span="8" class="getPointer">
+          <el-input v-model="ruleForm.operation_type" placeholder="请选择品类" suffix-icon="el-icon-search" @click.native="gttOperation"/>
+        </el-col>
+      </el-form-item>
+      <el-form-item label="品牌等级" prop="brand_rank">
+        <el-col :span="8">
+          <el-select v-model="ruleForm.brand_rank" placeholder="请选择品牌等级">
+            <el-option v-for="item in brandRank" :key="item.values_code" :label="item.values_name" :value="item.values_code"/>
+          </el-select>
+        </el-col>
+      </el-form-item>
+      <el-form-item label="品牌状态" prop="brand_status">
+        <el-col :span="8">
+          <el-select v-model="ruleForm.brand_status" placeholder="请选择品牌类型">
+            <el-option v-for="item in brandType" :key="item.values_code" :label="item.values_name" :value="item.values_code"/>
+          </el-select>
+        </el-col>
+      </el-form-item>
+      <el-form-item label="品牌logo" prop="logo">
+        <el-col :span="3">
+          <el-upload
+            :http-request="upLoad"
+            :show-file-list="false"
+            :on-success="handleAvatarSuccess"
+            :before-upload="beforeAvatarUpload"
+            class="avatar-uploader"
+            action="1994">
+            <img v-if="imageUrl" :src="imageUrl" class="avatar" alt="img">
+            <i v-else class="el-icon-plus avatar-uploader-icon"/>
+          </el-upload>
+        </el-col>
+      </el-form-item>
+      <el-form-item>
+        <el-col :span="20">
+          <span style="color:lightslategrey">建议尺寸:100*100像素, 格式为jpg、png、jpeg图片, 不大于500kb</span>
+        </el-col>
+      </el-form-item>
+      <el-form-item label="品牌说明" placeholder="请输入品牌说明，300字以内" prop="brand_desc">
+        <el-col :span="8">
+          <el-input v-model="ruleForm.brand_desc" type="textarea" autosize/>
+        </el-col>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="submitForm('ruleForm')">提交审核</el-button>
+        <el-button @click="cancle('ruleForm')">取消</el-button>
+      </el-form-item>
+    </el-form>
+    <!--选择品类弹窗-->
+    <el-dialog
+      :modal-append-to-body="false"
+      :close-on-click-modal="false"
+      :visible.sync="dialogVisible"
+      title="选择品类"
+      width="30%"
+      top="5%">
+      <el-input v-model="filterText" placeholder="输入关键字进行品类搜索"/>
+      <el-tree
+        v-loading="loading"
+        ref="tree2"
+        :data="dataTree"
+        :props="defaultProps"
+        :filter-node-method="filterNode"
+        default-expand-all
+        class="filter-tree"
+        @node-click="handleNodeClick"/>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="passDate">确 定</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import { common } from '@/common/common';
+export default {
+  name: 'AddBrand',
+  data() {
+    return {
+      filterText: '', // 品类搜索关键字
+      dialogVisible: false, // 品类列表的显示
+      dataTree: [], // 获取的品类信息树
+      operationData: '', // 品类选择的内容
+      brandRank: [], // 品牌等级基础数据
+      brandType: [], // 品牌狀態基礎數據
+      loading: false,
+      defaultProps: {
+        children: 'children',
+        label: 'text'
+      },
+      ruleForm: {
+        brand_name: '',
+        brand_code: '',
+        operation_type: '',
+        brand_status: '',
+        brand_rank: '',
+        brand_desc: '',
+        operation_type_id: '',
+        logo: ''
+      },
+      imageUrl: '',
+      dialogVisiblePic: false, // 上传图片是否显示
+      rules: {
+        brand_name: [
+          { required: true, message: '中英文、数字、限20字符', trigger: 'blur' },
+          { min: 0, max: 20, message: '长度在20字符以内', trigger: 'blur' }
+        ],
+        operation_type: [{ required: true, message: '请选择品类', trigger: 'change' }],
+        brand_rank: [{ required: true, message: '请选择品牌等级', trigger: 'change' }],
+        brand_status: [{ required: true, message: '请选择品牌状态', trigger: 'change' }],
+        brand_desc: [{ required: true, message: '请填写说明', trigger: 'change' }]
+      }
+    };
+  },
+  watch: {
+    filterText(val) {
+      this.$refs.tree2.filter(val);
+    }
+  },
+  created() {
+    this.loading = true;
+    common.lookup('L016', this).then((res) => {
+      this.brandRank = res;
+    });
+    common.lookup('L017', this).then((res) => {
+      this.brandType = res;
+    });
+  },
+  methods: {
+    filterNode(value, data) {
+      if (!value) return true;
+      return data.text.indexOf(value) !== -1;
+    },
+    gttOperation() { // 击弹出树状图，并获取品类信息
+      this.dialogVisible = true;
+      common.getTree('Operation_Type/cateList', this);
+    },
+    handleNodeClick(node, data) { // 点击树状图节点，获取信息
+      this.operationData = data.data.data.type_name;
+      this.ruleForm.operation_type_id = data.data.data.operation_type_id;
+    },
+    passDate() { // 弹框确定按钮
+      this.dialogVisible = false;
+      this.ruleForm.operation_type = this.operationData;
+    },
+    submitForm(formName) { // 提交
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          const brandData = {
+            brand_type: 1,
+            brand_status: this.ruleForm.brand_status,
+            brand_desc: this.ruleForm.brand_desc,
+            brand_name: this.ruleForm.brand_name,
+            logo: this.ruleForm.logo ? this.ruleForm.logo : '',
+            operation_type: this.ruleForm.operation_type_id,
+            brand_rank: this.ruleForm.brand_rank
+          };
+          this.axios.post(process.env.BASE_API + 'brand_info/addBrand', brandData).then((res) => {
+            if (res.status == 200) {
+              this.$router.push({ path: '/basic/brand' });
+              this.$message({ message: '提交审核成功', type: 'success' });
+            }
+          }).catch(function(err) {
+            this.$message.error(err.response.data.msg);
+          });
+        } else {
+          console.log('error submit!!');
+          return false;
+        }
+      });
+    },
+    cancle() { // 取消
+      this.$router.go(-1);
+    },
+    upLoad(file) { // 上传图片文件
+      const formData = new FormData();
+      formData.append('logo', file.file);
+      this.http.post('brand_info/uploadsLogo', formData).then(res => {
+        this.ruleForm.logo = res.data.data;
+        const u = process.env.BASE_API;
+        const s = u.substring(0, u.length - 3);
+        this.imageUrl = s + res.data.data;
+      });
+    },
+    handleAvatarSuccess(res, file) {
+      this.imageUrl = URL.createObjectURL(file.raw);
+    },
+    beforeAvatarUpload(file) { // 文件上传之前调用做一些拦截限制
+      const isJPG = file.type === 'image/jpeg';
+      const isLt2M = file.size / 1024 / 1024 < 2;
+
+      if (!isJPG) {
+        this.$message.error('上传头像图片只能是 JPG 格式!');
+      }
+      if (!isLt2M) {
+        this.$message.error('上传头像图片大小不能超过 2MB!');
+      }
+      return isJPG && isLt2M;
+    }
+  }
+};
+</script>
+
+<style scoped>
+  #addBrandWrap{ padding:15px; }
+  .getPointer{ cursor: pointer; }
+  .el-dialog .filter-tree{ height:calc(100vh - 280px); overflow: auto; }
+  .avatar-uploader .el-upload {
+    border: 1px dashed #d9d9d9;
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .avatar-uploader .el-upload:hover {
+    border-color: #409EFF;
+  }
+  .avatar-uploader-icon {
+    font-size: 28px;
+    color: #8c939d;
+    width: 178px;
+    height: 178px;
+    line-height: 178px;
+    text-align: center;
+  }
+  .avatar {
+    width: 178px;
+    height: 178px;
+    display: block;
+  }
+</style>

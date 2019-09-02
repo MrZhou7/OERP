@@ -1,0 +1,198 @@
+<template>
+  <el-main :style="height">
+    <el-tabs type="border-card">
+      <el-tab-pane label="账单查看">
+        <el-card class="box-card">
+          <div class="content">
+            <el-form ref="form" :model="costView" label-width="90px" class="search">
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="门店">
+                    <el-input v-model="costView.code" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="商户名称">
+                    <el-input v-model="costView.mall_name" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="商户编号">
+                    <el-select v-model="costView.deliver_status" disabled>
+                      <el-option :value='0' label="未配送"></el-option>
+                      <el-option :value='1' label="部分配送"></el-option>
+                      <el-option :value='2' label="已配送"></el-option>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="账单编号">
+                    <el-input v-model="costView.store_code" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="账单状态">
+                    <el-input v-model="costView.total_amt" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="账单类型">
+                    <el-input v-model="costView.paid_amt" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="商铺编号">
+                    <el-input v-model="costView.deliver_date" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="商铺名称">
+                    <el-input v-model="costView.remark" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="付款状态">
+                    <el-input v-model="costView.mobile_no" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="批次号">
+                    <el-input v-model="costView.order_date" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="计算人">
+                    <el-input v-model="costView.address_info" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="计算时间">
+                    <el-input v-model="costView.full_name" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="会计期">
+                    <el-input v-model="costView.mobile_no" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="账单金额">
+                    <el-input v-model="costView.deliver_date" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="应付金额">
+                    <el-input v-model="costView.remark" disabled></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </el-form>
+            <div class="contract_table">
+              <el-table
+                :data="returnVisitTable"
+                style="width: 100%;"
+                height="245px"
+                border
+                align: center>
+                <el-table-column
+                  prop="contract_main_id"
+                  type="selection"
+                  width="55">
+                </el-table-column>
+                <el-table-column
+                  fixed
+                  prop="code"
+                  :show-overflow-tooltip="true"
+                  label="回访编号"
+                  resizable: true
+                  algin:center
+                  width="140">
+                </el-table-column>
+                <el-table-column
+                  prop="call_back_time"
+                  :show-overflow-tooltip="true"
+                  label="回访日期">
+                </el-table-column>
+                <el-table-column
+                  prop="user_id"
+                  :show-overflow-tooltip="true"
+                  label="回访人">
+                  <template slot-scope="scope">
+                    {{ scope.row.user_id == 0 ? "张瑞" : "李琳" }}
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="end_type"
+                  :show-overflow-tooltip="true"
+                  label="回访状态">
+                  <template slot-scope="scope">
+                    <span v-if="scope.row.end_type == 0">未知</span>
+                    <span v-else-if="scope.row.end_type == 1">已送货</span>
+                    <span v-else-if="scope.row.end_type == 2">送货中</span>
+                    <span v-else-if="scope.row.end_type == 3">未送货</span>
+                    <span v-else-if="scope.row.end_type == 4">联系不上</span>
+                    <span v-else-if="scope.row.end_type == 5">问题处理中</span>
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="note"
+                  :show-overflow-tooltip="true"
+                  label="问题记录">
+                </el-table-column>
+              </el-table>
+            </div>
+          </div>
+        </el-card>
+      </el-tab-pane>
+      <el-tab-pane label="审批记录">
+
+      </el-tab-pane>
+    </el-tabs>
+  </el-main>
+</template>
+
+<script>
+  export default {
+    name: 'costView',
+    data() {
+      return {
+        costView: {},// 账单查看
+        costViewTable:[],
+        height: {
+          height: window.innerHeight * 0.7 + 'px'
+        },
+      }
+    },
+    props: ['costId'],
+    created() {
+
+    },
+    methods: {
+      costView(){
+        this.axios
+          .post(process.env.BASE_API + 'OrderMain/orderDetail', { id: this.view })
+          .then(function(res) {
+            if (res.data.errorCode === 0) {
+              this.costView = res.data.data
+              this.costViewTable = res.data.data.product;// 订单信息
+            }
+          })
+          .catch(function(err) {
+            this.$message.error(err.responseJSON.msg)
+          })
+      }
+    }
+  }
+</script>
+
+<style scoped>
+
+</style>

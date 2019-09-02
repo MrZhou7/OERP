@@ -1,0 +1,807 @@
+<template>
+  <el-main>
+    <el-form ref="formInline" :model="formInline" label-width="120px" class="demo-ruleForm">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="门店">
+            <el-select v-model="formInline.mall_id" placeholder="请选择门店名称">
+              <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name" :value="mall.mall_id"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商铺名称">
+            <el-input v-model="store_name" suffix-icon="el-icon-search" clearable @click.native="shopName(1)"/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商铺编号">
+            <el-input v-model="formInline.store_code" clearable placeholder="请输入商铺编号"/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="审核状态">
+            <el-select v-model="formInline.status" placeholder="请选择">
+              <el-option value="" label="全部"/>
+              <el-option label="草稿" value="1"/>
+              <el-option label="审批中" value="2"/>
+              <el-option label="审批通过" value="3"/>
+              <el-option label="作废" value="4"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row v-show="formShow">
+        <el-col :span="6">
+          <el-form-item label="临时费用单号">
+            <el-input v-model="formInline.notice_code" clearable placeholder="请输入临时费用单号"/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="账单生成标记">
+            <el-select v-model="formInline.invoiced_status" placeholder="请选择">
+              <el-option value="" label="全部"/>
+              <el-option label="未生成" value="0"/>
+              <el-option label="已生成" value="1"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="起止日期">
+            <el-date-picker
+              v-model="start_date"
+              :picker-options="pickerOptions"
+              type="daterange"
+              value-format="yyyy-MM-dd"
+              align="right"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              @change="startDate($event, 1)"/>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="临时费用类型">
+            <el-select v-model="costForm.charge_type_id" placeholder="请选择临时费用类型">
+              <el-option v-for="mall in getCostTypeList" :key="mall.charge_type_id" :label="mall.charge_description" :value="mall.charge_type_id"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item>
+            <el-button type="primary" @click="submitForm('formInline')">查 询</el-button>
+            <span class="searchRight" @click="moreSearch">{{ formShow ? '收起' : '展开' }}<i :class="searchRight"/></span>
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+    <div class="btn_bottom">
+      <el-button type="primary" @click="addCost">新增</el-button>
+      <el-button :disabled="submitCost" @click="submitList">提交审核</el-button>
+      <el-button :disabled="auditCost" @click="auditList">审核</el-button>
+      <el-button :disabled="cancleCost" @click="cancleList">撤销审核</el-button>
+      <el-button :disabled="cancellationCost" @click="cancellation">作废</el-button>
+      <el-button :disabled="createCost" @click="createCheck">生成账单</el-button>
+    </div>
+    <div class="contract_table">
+      <el-table
+        ref="tableOne"
+        :height="height"
+        :data="tableData"
+        :show-overflow-tooltip="true"
+        :highlight-current-row="true"
+        border
+        tooltip-effect="dark"
+        style="width: 100%"
+        @selection-change="getRadio"
+        @row-click="clickRow">
+        <el-table-column
+          type="selection"
+          fixed
+          width="55"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="status"
+          min-width="100"
+          label="审核状态">
+          <template slot-scope="scope">
+            <span v-if="scope.row.status == 1">草稿</span>
+            <span v-else-if="scope.row.status == 2">审核中</span>
+            <span v-else-if="scope.row.status == 3">审核通过</span>
+            <span v-else-if="scope.row.status == 4">驳回</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="notice_code"
+          min-width="120"
+          label="临时费用单号"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="contract_code"
+          min-width="100"
+          label="合同编号"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="contract_main_id"
+          min-width="100"
+          label="合同ID"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="mall_name"
+          min-width="100"
+          label="项目名称"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="store_name"
+          min-width="100"
+          label="商铺名称"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="store_code"
+          min-width="100"
+          label="商铺编号"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="customer_name"
+          min-width="100"
+          label="商户名称"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="customer_code"
+          min-width="100"
+          label="商户编号"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="notice_type"
+          min-width="120"
+          label="临时费用类型">
+          <template slot-scope="scope">
+            <span v-if="scope.row.notice_type == 1">临时收费</span>
+            <span v-else-if="scope.row.notice_type == 2">滞纳金</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="charge_amount"
+          min-width="100"
+          label="收费总额"/>
+        <el-table-column
+          prop="invoiced_status"
+          min-width="120"
+          label="账单生成标记">
+          <template slot-scope="scope">
+            <span v-if="scope.row.invoiced_status == 0">未生成</span>
+            <span v-else-if="scope.row.invoiced_status == 1">已生成</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="notice_batch_id"
+          min-width="100"
+          label="费用批次号"/>
+        <el-table-column
+          :show-overflow-tooltip="true"
+          prop="batch_id"
+          min-width="100"
+          label="账单批次号"/>
+        <el-table-column
+          fixed="right"
+          label="操作"
+          min-width="150">
+          <template slot-scope="scope">
+            <el-button type = "text" size="small" @click.native.prevent="checkCost(scope.$index, tableData)">查 看</el-button>
+            <el-button v-if="scope.row.status == 1" type = "text" size="small" @click.native.prevent="editCost(scope.$index, tableData)">编 辑</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        :page-sizes="[20, 30, 40, 50]"
+        :page-size="20"
+        :current-page.sync="currentPage"
+        :total="total"
+        background
+        layout="prev, pager, next, total, sizes"
+        @size-change="handleSizeChange"
+        @current-change="pagination"/>
+    </div>
+    <!--临时费用单的弹窗-->
+    <el-dialog
+      :title="title"
+      :close-on-click-modal="false"
+      :visible.sync="dialogVisible"
+      top="5%"
+      width="80%"
+      @close="handleClose('ruleForm')">
+      <div class="height">
+        <el-tabs type="border-card">
+          <el-tab-pane label="临时费用单明细">
+            <blockquote class="elem_quote">临时费用单主信息</blockquote>
+            <el-form ref="ruleForm" :model="ruleForm" :rules="rules" label-width="120px" class="demo-ruleForm">
+              <el-row>
+                <el-col :span="6">
+                  <el-form-item label="门店" prop="mall_id">
+                    <el-select v-model="ruleForm.mall_id" placeholder="请选择门店" :disabled = "isEdit">
+                      <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name" :value="mall.mall_id"/>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="6">
+                  <el-form-item label="商户类型" prop="customer_type">
+                    <el-select v-model="ruleForm.customer_type" placeholder="请选择商户类型" :disabled = "isEdit">
+                      <el-option value= "1" label="固定客户"/>
+                      <el-option value= "2" label="临时客户"/>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="6">
+                  <el-form-item label="临时费用类型">
+                    <el-select v-model="notice_type" placeholder="请选择临时费用类型" disabled>
+                      <el-option value= "1" label="临时收费"/>
+                      <el-option value= "2" label="滞纳金"/>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="6">
+                  <el-form-item label="审核状态">
+                    <el-select v-model="ruleForm.status" disabled>
+                      <el-option value= "1" label="草稿"/>
+                      <el-option value= "2" label="审批中"/>
+                      <el-option value= "3" label="审核通过"/>
+                      <el-option value= "4" label="驳回"/>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="6">
+                  <el-form-item label="收费状态" prop="charge_status">
+                    <el-select v-model="ruleForm.charge_status" :disabled = "isEdit">
+                      <el-option value= "1" label="编辑"/>
+                      <el-option value= "2" label="审批中"/>
+                      <el-option value= "3" label="生效"/>
+                      <el-option value= "4" label="作废"/>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="6">
+                  <el-form-item label="商铺">
+                    <el-input v-model="store_name" suffix-icon="el-icon-search" clearable @click.native="shopName(2)" :disabled = "isEdit"/>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="6">
+                  <el-form-item label="商户名称" prop="customer_name" :disabled = "isEdit">
+                    <el-input v-model="ruleForm.customer_name" :readonly="true" @focus="fieldClick"/>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="6">
+                  <el-form-item label="费用金额">
+                    <el-input v-model="charge_amount" :readonly="true"/>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="12">
+                  <el-form-item label="备注" prop="note">
+                    <el-input v-model="ruleForm.note" :disabled = "isEdit"/>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </el-form>
+            <blockquote class="elem_quote">临时费用明细列表</blockquote>
+            <el-form ref="costForm" :rules="costRules" :model="costForm" label-width="110px" class="demo-ruleForm">
+              <el-row>
+                <el-col :span="6">
+                  <el-form-item label="临时费用类型" prop="charge_type_id">
+                    <el-select v-model="costForm.charge_type_id" placeholder="请选择临时费用类型">
+
+                      <el-option v-for="mall in getCostTypeList" :key="mall.charge_type_id" :label="mall.charge_description" :value="mall.charge_type_id"/>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="起止日期" class="label_required">
+                    <el-date-picker
+                      v-model="end_date"
+                      :picker-options="pickerOptions"
+                      type="daterange"
+                      value-format="yyyy-MM-dd"
+                      align="right"
+                      range-separator="至"
+                      start-placeholder="开始日期"
+                      end-placeholder="结束日期"
+                      @change="startDate($event, 2)"/>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="6">
+                  <el-form-item label="单价" prop="price">
+                    <el-input v-model="costForm.price" type="number"/>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="6">
+                  <el-form-item label="数量" prop="number">
+                    <el-input v-model="costForm.number" type="number"/>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="6">
+                  <el-form-item label="付款金额" class="label_required">
+                    <el-input v-model="charge_amt" :readonly="true" type="number"/>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="6">
+                  <el-form-item v-show="isCheck">
+                    <el-button v-if="isSHowCost" size="small" type="primary" @click="addCostList('costForm', 1)">新 增</el-button>
+                    <el-button v-if="!isSHowCost" size="small" type="success" @click="addCostList('costForm', 2)">保 存</el-button>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </el-form>
+            <div v-show="isCheck" class="btn_bottom">
+              <el-button type="primary" :disabled="!isSHowCost" @click="saveCost('ruleForm')">保 存</el-button>
+            </div>
+            <div class="contract_table">
+              <el-table
+                ref="table"
+                :data="tableDataSecond"
+                :show-overflow-tooltip="true"
+                class="tableHeight"
+                border
+                tooltip-effect="dark">
+                <el-table-column
+                  type="index"
+                  label="序号"
+                  width="55"/>
+                <el-table-column
+                  :show-overflow-tooltip="true"
+                  prop="charge_type_id"
+                  min-width="100"
+                  label="费用类型">
+                  <template slot-scope="scope">
+                    <span v-for="item in getCostTypeList" v-if="scope.row.charge_type_id == item.charge_type_id" :key="item.charge_type_id">
+                      {{ item.charge_description }}
+                    </span>
+                  </template>
+                </el-table-column>
+                <el-table-column
+                  prop="charge_amt"
+                  min-width="100"
+                  label="费用金额"/>
+                <el-table-column
+                  prop="bill_date"
+                  min-width="100"
+                  label="开始日期"/>
+                <el-table-column
+                  prop="pairable_date"
+                  min-width="100"
+                  label="结束日期"/>
+                <el-table-column
+                  :show-overflow-tooltip="true"
+                  prop="note"
+                  min-width="180"
+                  label="备注"/>
+                <el-table-column
+                  fixed="right"
+                  label="操作"
+                  min-width="150">
+                  <template slot-scope="scope">
+                    <el-button v-show="isCheck" type = "text" size="small" @click.native.prevent="editCostList(scope.$index, tableDataSecond)">编 辑</el-button>
+                    <el-button v-show="isCheck" type = "text" size="small" @click.native.prevent="deleteCostList(scope.$index, tableDataSecond)">删 除</el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </el-tab-pane>
+          <el-tab-pane label="审批记录">审批记录</el-tab-pane>
+        </el-tabs>
+      </div>
+    </el-dialog>
+    <!--多选商铺的弹窗-->
+    <el-dialog
+      :visible.sync="dialogVisibleShop"
+      :close-on-click-modal="false"
+      title="多选商铺"
+      top="3%"
+      width="80%">
+      <Shops :mall="chooseMall_id" @fieldData="fieldData"/>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+import { common } from '@/common/common';
+import Shops from '@/components/order/shops.vue'; // 场地
+import building from '@/utils/building';
+export default {
+  name: 'RealCost',
+  components: {
+    Shops
+  },
+  data() {
+    return {
+      formInline: { mall_id: '' }, // 搜索条件信息
+      ruleForm: { mall_id: '', customer_type: '', status: '1', charge_status: '', customer_name: '', note: '' }, // 临时费用单信息
+      costForm: { charge_type_id: '', price: '', number: '' }, // 临时费用明细
+      start_date: '', // 搜索起始日期
+      end_date: '', // 新增起始日期
+      pickerOptions: building.publicTime(),
+      store_name: '', // 商铺名
+      height: window.innerHeight - 300 + 'px',
+      loading: false,
+      total: 0,
+      currentPage: 1, // 页码
+      chooseMall_id: '', // 传给子组件的mall_id
+      mall_name: [], // 门店信息
+      tableData: [], // 临时费用单table
+      tableDataSecond: [], // 临时费用明细table
+      dialogVisible: false, // 临时费用单的弹窗
+      isCheck: true, // 查看时 显示和隐藏
+      title: '', // 临时费用单的title
+      dialogVisibleShop: false, // 多选商铺的弹窗
+      submitCost: true, // 提交审核按钮
+      auditCost: true, // 审核按钮
+      cancleCost: true, // 撤销审核
+      createCost: true, // 生成账单
+      cancellationCost: true, // 作废
+      tableList: {}, // 单行费用详情信息
+      formShow: false, // 更多搜索
+      searchRight: 'el-icon-arrow-down',
+      notice_type: '1',
+      isSHowCost: true, // 新增和保存按钮的显示
+      tableIndex: '', // 编辑时的数组下标
+      getCostTypeList: [], // 费用类型
+      price: '', // 单价
+      number: '', // 数量
+      isSave: 0, // 判断是新增保存还是编辑保存
+      isEdit: false, // 编辑时不可改变
+      rules: {
+        mall_id: { required: true, message: '请选择项目名称', trigger: 'change' },
+        customer_type: { required: true, message: '请选择商户类型', trigger: 'change' },
+        charge_status: { required: true, message: '请选择商户状态', trigger: 'change' },
+        customer_name: { required: true, message: '请选择商铺和商户名称', trigger: 'blur' },
+        note: { required: true, message: '请填写备注信息', trigger: 'blur' }
+      },
+      costRules: {
+        charge_type_id: { required: true, message: '请选择临时费用类型', trigger: 'change' },
+        price: { required: true, message: '请填写正确单价', trigger: 'blur' }, // 加验证
+        number: { required: true, message: '请填写正确数量', trigger: 'blur' } // 加验证
+      }
+    };
+  },
+  computed: {
+    charge_amt: function() {
+      return (parseFloat(this.costForm.price) * parseFloat(this.costForm.number)).toFixed(2);
+    },
+    charge_amount: function() {
+      let num = 0;
+      for (var i = 0; i < this.tableDataSecond.length; i++) {
+        num = num + parseFloat(this.tableDataSecond[i].charge_amt);
+      }
+      return (!num) ? 0 : num;
+    }
+  },
+  created() {
+    building.Mall(this); // 获取项目名称信息
+    this.getCostType();
+    const searchHistory = common.get('costList');
+    if (searchHistory != null) {
+      this.formInline = searchHistory.search;
+      common.getPreData(searchHistory.search, 'ChargeNotice/getList', this, 'costList');
+    }
+  },
+  methods: {
+    submitForm() { // 查询
+      if (this.store_name == '') {
+        this.formInline.store_id = '';
+        this.doubble();
+      } else {
+        this.doubble();
+      }
+    },
+    doubble() {
+      const data = this.formInline;
+      data.limit = 20;
+      common.getPreData(data, 'ChargeNotice/getList', this, 'costList');
+      common.set('costList', { 'search': data });
+    },
+    clickRow(row) { // 点击table的row
+      this.$refs.tableOne.toggleRowSelection(row);
+      this.tableList = row;
+      this.checkedList(row);
+    },
+    checkedList(row) {
+      switch (parseInt(row.status)) {
+        case 1: // 提交审核
+          this.submitCost = false; // 提交
+          this.auditCost = true; // 审核
+          this.cancleCost = true; // 撤销审核
+          this.createCost = true; // 账单
+          this.cancellationCost = false; // 作废
+          break;
+        case 2: // 审核中
+          this.submitCost = true;
+          this.auditCost = false;
+          this.cancleCost = false;
+          this.createCost = true;
+          this.cancellationCost = false; // 作废
+          break;
+        case 3: // 确认取消
+          this.submitCost = true;
+          this.auditCost = true;
+          this.cancleCost = false;
+          this.createCost = false;
+          this.cancellationCost = false; // 作废
+          break;
+        case 4: // 作废
+          this.submitCost = true;
+          this.auditCost = true;
+          this.cancleCost = true;
+          this.createCost = true;
+          this.cancellationCost = false; // 作废
+          break;
+      }
+    },
+    createCheck() { // 生成账单
+      common.del('您将生成账单, 是否继续?', 'ChargeNotice/produceBill', { charge_notice_id: this.tableList.charge_notice_id },
+        'ChargeNotice/getList', this, 'costList');
+      this.cancel();
+    },
+    cancleList() { // 撤销审核
+      common.del('您将撤销审核, 是否继续?', 'ChargeNotice/editStatus', { charge_notice_id: this.tableList.charge_notice_id, status: 1 },
+        'ChargeNotice/getList', this, 'costList');
+      this.cancel();
+    },
+    submitList() { // 提交审核
+      common.del('您将提交审核, 是否继续?', 'ChargeNotice/editStatus', { charge_notice_id: this.tableList.charge_notice_id, status: 2 },
+        'ChargeNotice/getList', this, 'costList');
+      this.cancel();
+    },
+    auditList() { // 审核通过
+      common.del('您将审核通过, 是否继续?', 'ChargeNotice/editStatus', { charge_notice_id: this.tableList.charge_notice_id, status: 3 },
+        'ChargeNotice/getList', this, 'costList');
+      this.cancel();
+    },
+    cancellation() { // 作废
+      common.del('作废后将不再显示, 是否继续?', 'ChargeNotice/cancel', { charge_notice_id: this.tableList.charge_notice_id },
+        'ChargeNotice/getList', this, 'costList');
+      this.cancel();
+    },
+    cancel() {
+      this.submitCost = true;
+      this.auditCost = true;
+      this.cancleCost = true;
+      this.createCost = true;
+    },
+    checkCost(index, row) { // 查看
+      this.title = '查看临时费用单';
+      this.dialogVisible = true;
+      this.isEdit = true;
+      this.isCheck = false; // 隐藏按钮
+      this.http.post('ChargeNotice/getInfo', { charge_notice_id: row[index].charge_notice_id }).then(res => {
+        this.ruleForm = res.data.data;
+        this.tableDataSecond = res.data.data.list;
+        this.store_name = res.data.data.store_name;
+      });
+    },
+    editCost(index, row) { // 编辑
+      this.title = '编辑临时费用单';
+      this.dialogVisible = true;
+      this.isSave = 1;
+      this.isEdit = false;
+      this.http.post('ChargeNotice/getInfo', { charge_notice_id: row[index].charge_notice_id }).then(res => {
+        this.ruleForm = res.data.data;
+        this.tableDataSecond = res.data.data.list;
+        this.store_name = res.data.data.store_name;
+      });
+    },
+    addCost() { // 新增
+      this.title = '新增临时费用单';
+      this.dialogVisible = true;
+    },
+    editCostList(index, row) { // 编辑费用明细
+      this.isSHowCost = false;
+      this.tableIndex = index;
+      const d = row[index];
+      const g = [];
+      const str = d.note;
+      const s = building.find(str, ':', 0);
+      const e = building.find(str, ',', 0);
+      const w = building.find(str, ':', 1);
+      const a = str.substring(s + 1, e);
+      const b = str.substring(w + 1);
+      g.push(d.bill_date);g.push(d.pairable_date);
+      this.end_date = g;
+      this.costForm.price = a;this.costForm.number = b;
+      this.costForm.charge_type_id = d.charge_type_id;
+    },
+    deleteCostList(index, row) { // 删除费用明细
+      if (this.isSHowCost) {
+        row.splice(index, 1);
+      } else {
+        this.$message.error('正在编辑，请勿删除！');
+      }
+    },
+    addCostList(formName, index) { // 新增和编辑保存费用明细
+      const that = this;
+      const list = {};
+      list.charge_type_id = this.costForm.charge_type_id;
+      list.charge_amt = this.charge_amt;
+      list.bill_date = this.costForm.bill_date;
+      list.pairable_date = this.costForm.pairable_date;
+      list.note = '单价:' + this.costForm.price + ',数量:' + this.costForm.number;
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (that.end_date == '') {
+            that.$message.error('请填写起始日期');
+          } else if (index == 1) {
+            if (that.isSave == 1) {
+              list.charge_notice_detail_id = 0;
+              that.tableDataSecond.push(list);
+              this.end_date = ''; // 清楚验证
+              this.$refs[formName].resetFields();
+            } else {
+              that.tableDataSecond.push(list);
+              this.end_date = ''; // 清楚验证
+              this.$refs[formName].resetFields();
+            }
+          } else if (index == 2) {
+            that.tableDataSecond.splice(this.tableIndex, 1, list);
+            this.end_date = ''; // 清楚验证
+            this.$refs[formName].resetFields();
+            this.isSHowCost = true;
+          }
+        } else {
+          this.$message({
+            message: '请输入完整信息！！！',
+            type: 'warning'
+          })
+          return false;
+        }
+      });
+    },
+    saveCost(formName) { // 保存新增的临时费用
+      const that = this;
+      this.ruleForm.charge_amount = this.charge_amount;
+      this.ruleForm.notice_type = this.notice_type;
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          if (that.tableDataSecond.length < 1) {
+            that.$message.error('请填写新增临时费用明细列表');
+          } else {
+            if (this.isSave == 0) {
+              this.commonSave(that, 'ChargeNotice/addData');
+            } else if (this.isSave == 1) {
+              this.commonSave(that, 'ChargeNotice/editInfo');
+            }
+          }
+        } else {
+          this.$message({
+            message: '请输入完整信息！！！',
+            type: 'warning'
+          })
+          return false;
+        }
+      });
+    },
+    handleClose(formName) { // 弹窗关闭回调
+      this.isSHowCost = true; // 编辑保存按钮改变
+      this.isSave = 0; // 保存按钮为新增状态
+      this.isEdit = false;
+      this.store_name = '';
+      this.tableDataSecond = [];
+      this.$refs.costForm.resetFields();
+      this.$refs[formName].resetFields();
+      this.isCheck = true; // 显示按钮
+    },
+    pagination(val) { // 分页功能
+      const data = this.formInline;
+      data.page = val;
+      common.getPreData(data, 'ChargeNotice/getList', this, 'costList');
+      common.set('costList', { 'search': data });
+    },
+    handleSizeChange(val) {
+      const data = this.formInline;
+      data.limit = val;
+      common.getPreData(data, 'ChargeNotice/getList', this, 'costList');
+      common.set('costList', { 'search': data });
+    },
+    getRadio(row) { // 去除多选
+      building.radioBtn(row, this.$refs.tableOne, this);
+    },
+    moreSearch() { // 更多搜索
+      if (this.searchRight == 'el-icon-arrow-down') {
+        this.formShow = true;
+        this.searchRight = 'el-icon-arrow-up';
+        this.height = window.innerHeight - 345;
+      } else {
+        this.formShow = false;
+        this.searchRight = 'el-icon-arrow-down';
+        this.height = window.innerHeight - 300;
+      }
+    },
+    shopName(index) { // 弹框商铺名称
+      if (index == 1) {
+        if (!this.formInline.mall_id) {
+          this.$message({ message: '请选择门店', type: 'warning' });
+        } else {
+          this.chooseMall_id = this.formInline.mall_id;
+          this.dialogVisibleShop = true;
+        }
+      } else if (index == 2) {
+        if (!this.ruleForm.mall_id) {
+          this.$message({ message: '请选择门店', type: 'warning' });
+        } else {
+          this.chooseMall_id = this.ruleForm.mall_id;
+          this.dialogVisibleShop = true;
+        }
+      }
+    },
+    fieldData(data) { // 场地赋值
+      if (data.length == undefined) {
+        this.store_name = data.store_name;
+        this.formInline.store_id = data.store_id;
+        this.ruleForm.store_id = data.store_id;
+        this.ruleForm.customer_name = data.customer_name;
+      } else {
+        let store_id = '', store_name = '', customer_name = '';
+        data.forEach((index, i) => {
+          if (i != data.length - 1) {
+            store_id += index.store_id + ',';
+            store_name += index.store_name + ',';
+            customer_name += index.customer_name + ',';
+          } else {
+            store_id += index.store_id;
+            store_name += index.store_name;
+            customer_name += index.customer_name;
+          }
+          this.store_name = store_name;
+          this.formInline.store_id = store_id;
+          this.ruleForm.customer_name = customer_name;
+        });
+      }
+      this.dialogVisibleShop = false;
+    },
+    fieldClick() {
+      if (!this.store_name) {
+        this.$message.warning('请先选择商铺');
+      }
+    },
+    startDate(e, index) { // 搜索日期赋值
+      switch (index) {
+        case 1:
+          e ? this.formInline.start = e[0] : this.formInline.start = '';
+          e ? this.formInline.end = e[1] : this.formInline.end = '';
+          break;
+        case 2:
+          e ? this.costForm.bill_date = e[0] : this.costForm.bill_date = '';
+          e ? this.costForm.pairable_date = e[1] : this.costForm.pairable_date = '';
+          break;
+      }
+    },
+    commonSave(that, url) { // 保存的公共方法
+      const main = JSON.stringify(this.ruleForm);
+      const detail = JSON.stringify(this.tableDataSecond);
+      this.http.post(url, { main, detail }).then(res => {
+        that.dialogVisible = false;
+        that.$message({ message: '成功！', type: 'success' });
+        const data = this.formInline;
+        common.getPreData(data, 'ChargeNotice/getList', this, 'costList');
+      });
+    },
+    getCostType() { // 获取费用类型
+      this.http.post('ChargeType/getTypeList', { module: 'all' }).then(res => {
+        this.getCostTypeList = res.data.data;
+      });
+    }
+  }
+};
+</script>
+
+<style scoped>
+  .el-form-item {margin-bottom: 5px;}
+  .height{overflow: auto;height: calc(100vh - 20vh)}
+  .tableHeight{width: 100%;height: calc(100vh - 70vh)}
+</style>

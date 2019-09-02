@@ -1,0 +1,120 @@
+<template>
+  <div class="app-container">
+    <el-tabs v-model="activeName" @tab-click="handleClick" v-show="topNav">
+      <el-tab-pane label="审核通过" name="first">
+        <el-form :inline="true" :model="formInline" class="demo-form-inline">
+          <el-row>
+            <el-col :span="6">
+              <el-form-item label="品牌名称">
+                <el-input v-model="formInline.brand_name" placeholder="请输入品牌名称"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="品牌编号">
+                <el-input v-model="formInline.user" placeholder="请输入品牌编号"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="品类">
+                <el-input v-model="formInline.user" placeholder="请选择品类" prefix-icon="el-icon-search"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="品牌等级">
+                <el-select v-model="formInline.region" placeholder="全部" class="selectStyle">
+                  <el-option label="A" value="A"></el-option>
+                  <el-option label="B" value="B"></el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="6">
+              <el-form-item label="厂家名称">
+                <el-input v-model="formInline.user" placeholder="请输入厂家名称"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item label="品牌状态">
+                <el-select v-model="formInline.region" placeholder="全部" class="selectStyle">
+                  <el-option label="A" value="A"></el-option>
+                  <el-option label="B" value="B"></el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="6">
+              <el-form-item>
+                <el-button type="primary" @click="inquire">查询</el-button>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-form-item>
+            <el-button type="primary" @click="addBrand">新增品牌</el-button>
+          </el-form-item>
+        </el-form>
+        <BrandTable :tableData="inquireData"></BrandTable>
+      </el-tab-pane>
+      <el-tab-pane label="审核中" name="second">
+
+      </el-tab-pane>
+      <el-tab-pane label="草稿" name="third">
+
+      </el-tab-pane>
+    </el-tabs>
+  </div>
+</template>
+
+<script>
+  import BrandTable from '@/components/brandMange/brandTable.vue'
+export default {
+      components:{
+        BrandTable
+      },
+      data() {
+        return {
+          activeName: 'first',//导航默认显示第几个
+          topNav:true,//导航是否显示
+          formInline: {
+            brand_name:"",
+            user: '',
+            region: ''
+          },
+          inquireData:[]//查询获取的数据
+        };
+      },
+      methods: {
+        //tab 被选中时触发
+        handleClick(tab, event) {
+          console.log(tab, event);
+        },
+        //查询
+        inquire(){
+          let brand = {
+            brand_name :this.formInline.brand_name
+          };
+          this.axios({
+            method:'post',
+            data:brand,
+            url:process.env.BASE_API + 'brand_info/getBrandList'
+          }).then((res)=>{
+            if (res.status == 200) {
+              this.inquireData = res.data.data
+            }
+          }).catch(function(err) {
+            this.$message.error(err.response.data.msg)
+          })
+        },
+        //新增
+        addBrand() {
+            this.$router.push({path:'/brand/addBrand'})
+        }
+      }
+}
+</script>
+
+<style scoped>
+  .el-input--suffix .el-input__inner {
+    padding-right: 15px !important;
+  }
+</style>
+

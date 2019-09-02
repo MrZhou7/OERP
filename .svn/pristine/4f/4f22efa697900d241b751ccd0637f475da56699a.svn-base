@@ -1,0 +1,140 @@
+<template>
+  <div class="roleWrap">
+    <div class="roleWrapTitle">角色维护</div>
+    <el-form ref="form" :model="form" label-width="80px">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="角色名称">
+            <el-input v-model="form.role_name"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item>
+            <el-button type="primary" @click="search">搜索</el-button>
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+    <el-row>
+      <el-button type="success" @click="addRole=true">新增角色</el-button>
+    </el-row>
+    <el-dialog
+      title="新增角色"
+      top="0"
+      :close-on-click-modal="false"
+      :visible.sync="addRole"
+      width="80%" height="100%">
+      <AddRole></AddRole>
+    </el-dialog>
+    <el-table
+      v-loading="loading"
+      ref="multipleTable"
+      :data="tableData"
+      tooltip-effect="dark"
+      style="width: 100%"
+      border>
+      <el-table-column
+        type="selection"
+        width="55">
+      </el-table-column>
+      <el-table-column
+        prop="mall_id"
+        label="所属门店"
+        show-overflow-tooltip>
+      </el-table-column>
+      <el-table-column
+        prop="role_name"
+        label="角色名称">
+      </el-table-column>
+      <el-table-column
+        prop="subject_code"
+        label="角色描述">
+      </el-table-column>
+      <el-table-column
+        fixed="right"
+        label="操作"
+        width="120">
+        <template slot-scope="scope">
+          <el-button @click.native.prevent="deleteRow(scope.$index, tableData4)" type="text" size="small">移除</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <el-pagination
+      background
+      layout="prev, pager, next"
+      @current-change="pageinations"
+      :current-page.sync="currentPage"
+      :total="total">
+    </el-pagination>
+  </div>
+</template>
+
+<script>
+  var data = {}
+  import AddRole from '@/components/system/role/addRole'
+  import { common } from '@/common/common'
+
+  export default {
+    name: 'role',
+    components:{AddRole},
+    data() {
+      return{
+        form: {
+          role_name:'',
+          dept_code:-1,
+        },
+        loading:false,
+        total:0,
+        tableData:[],
+        currentPage:1,//页码
+        addRole:false,//新增角色弹窗
+      }
+    },
+    methods: {
+      pageinations(val) {//分页功能
+        data = this.form;
+        data.page = val;
+        data.limit = 10;
+        common.getPreData(data, 'Role/roleList',this,'roalSearch');
+        common.set('roalSearch',{'search': data});
+      },
+      search(){// 搜索
+        if(this.form.role_name == ""){
+          this.$message({
+            message: '角色名称不能为空',
+            type: 'warning'
+          })
+        }else{
+          data = this.form;
+          common.getPreData(data, 'Role/roleList',this,'roalSearch');
+          common.set('roalSearch',{'search': data});
+        }
+      },
+      getRoleList() {//获取角色列表
+        /*this.axios(process.env.BASE_API + 'Role/roleList',dept_code:1).then((res)=>{
+          console.log(res)
+        })*/
+      }
+    },
+    created() {
+      //this.getRoleList()
+    }
+  }
+</script>
+
+<style scoped lang="scss">
+  .roleWrap{
+    padding: 15px;
+  .roleWrapTitle{
+    position: relative;
+    height: 42px;
+    line-height: 42px;
+    padding: 0 15px;
+    border-bottom: 1px solid #f6f6f6;
+    color: #333;
+    border-radius: 2px 2px 0 0;
+    font-size: 14px;
+  }
+  }
+
+</style>

@@ -1,0 +1,71 @@
+<template>
+  <div class="content">
+    <el-form :model="create" :rules="rules" ref="create" label-width="80px">
+      <blockquote class="elem_quote">项目基础信息</blockquote>
+      <el-row :gutter="20">
+        <el-col :span="8">
+          <el-form-item label="租金总额">
+            <el-input v-model="create.rent.fixed_money" :disabled="true">
+              <template slot="append">元</template>
+            </el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+
+      <blockquote class="elem_quote">关联信息</blockquote>
+      <el-row :gutter="20">
+        <el-col :span="8">
+          <el-form-item label="租金总额">
+            <el-input v-model="create.rent.fixed_money" :disabled="true">
+              <template slot="append">元</template>
+            </el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="是否预收" class="label_required" prop="mall.advance">
+            <el-select v-model="create.rent.advance" placeholder="是否预收" :disabled="entry.viewNo">
+              <el-option :value='1' label="是"></el-option>
+              <el-option :value='0' label="否"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="8">
+          <el-form-item label="免租期管理费单价" class="label_required width_160" prop="rent.from_management_fee">
+            <el-input v-model="create.rent.from_management_fee" type="number" prop="region" :disabled="entry.viewNo">
+              <template slot="append">元/平米</template>
+            </el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="铺内电费单价" class="label_required width_110" prop="rent.shop_electricity_price">
+            <el-input v-model="create.rent.shop_electricity_price" type="number" prop="region" :disabled="entry.viewNo">
+              <template slot="append">元</template>
+            </el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="公共区域电费单价" class="label_required width_160" prop="rent.public_electricity_price">
+            <el-input v-model="create.rent.public_electricity_price" type="number" prop="region"
+                      :disabled="entry.viewNo">
+              <template slot="append">元</template>
+            </el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <blockquote class="elem_quote">面积信息</blockquote>
+      <blockquote class="elem_quote">同步信息</blockquote>
+    </el-form>
+  </div>
+</template>
+
+<script>
+  export default {
+    name: ''
+  }
+</script>
+
+<style scoped>
+
+</style>

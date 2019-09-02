@@ -1,0 +1,216 @@
+<template>
+    <div id="businessWrap">
+      <div class="businessWrapTitle">商戶管理</div>
+      <el-form :inline="true" :model="formInline" class="demo-form-inline">
+        <el-form-item label="商户编号">
+          <el-input v-model="formInline.customer_code" placeholder="请输入商户编号"></el-input>
+        </el-form-item>
+        <el-form-item label="商户名称">
+          <el-input v-model="formInline.customer_name" placeholder="请输入商户名称"></el-input>
+        </el-form-item>
+        <el-form-item label="商户状态">
+          <el-select v-model="formInline.enabled" placeholder="请选择商户状态">
+            <el-option label="无效" value="0"></el-option>
+            <el-option label="有效" value="1"></el-option>
+            <el-option label="全部" value="2"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="inquireSite">搜索</el-button>
+        </el-form-item>
+        <div class="demo-input-size">
+          <el-form-item>
+            <el-button type="primary" @click="addBusiness">新增商户</el-button>
+          </el-form-item>
+        </div>
+      </el-form>
+      <el-table
+        :data="tableData"
+        style="width: 100%;text-align:center;"
+        max-height="400"
+        :height="tableHeight">
+        <el-table-column
+          type="selection"
+          width="55">
+        </el-table-column>
+        <el-table-column
+          fixed
+          prop="customer_code"
+          label="商户编号"
+          width="150">
+        </el-table-column>
+        <el-table-column
+          prop="customer_name"
+          label="商户名称"
+          width="150">
+        </el-table-column>
+        <el-table-column
+          prop="cust_short_name"
+          label="商户简称"
+          width="150">
+        </el-table-column>
+        <el-table-column
+          prop="company_phone"
+          label="公司电话"
+          width="150">
+        </el-table-column>
+        <el-table-column
+          prop="legal"
+          label="法人"
+          width="300">
+        </el-table-column>
+        <el-table-column
+          prop="address"
+          label="商户地址"
+          width="300">
+        </el-table-column>
+        <el-table-column
+          fixed="right"
+          label="操作"
+          width="400">
+          <template slot-scope="scope">
+            <el-button @click.native.prevent="checkBrand(scope.$index, tableData)" type="text" size="small">查看</el-button>
+            <el-button type="text" size="small" @click.native.prevent="editClick(scope.$index, tableData)">编辑</el-button>
+            <el-button
+              @click.native.prevent="deleteRow(scope.$index, tableData)"
+              type="text"
+              size="small">
+              移除
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        background
+        layout="prev, pager, next"
+        @current-change="pageinations"
+        :total="total">
+      </el-pagination>
+      <el-dialog
+        title="查看商户信息"
+        :visible.sync="dialogVisibleThree"
+        width="90%">
+        <CheckBusiness :checkData="checkData"></CheckBusiness>
+        <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="dialogVisibleThree = false">确 定</el-button>
+      </span>
+      </el-dialog>
+      <el-dialog
+        title="编辑商户信息"
+        :visible.sync="dialogVisibleToo"
+        width="90%">
+        <EditBusiness :editData="editData" @through="through"></EditBusiness>
+        <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisibleToo = false">取 消</el-button>
+      </span>
+      </el-dialog>
+      <el-dialog
+        title="新增商户"
+        :visible.sync="dialogVisible"
+        width="90%">
+        <AddBusiness @success="success"></AddBusiness>
+        <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
+      </span>
+      </el-dialog>
+    </div>
+</template>
+
+<script>
+  import AddBusiness from '@/components/business/addBusiness'
+  import CheckBusiness from '@/components/business/checkBusiness'
+  import EditBusiness from '@/components/business/editBusiness'
+  import { common } from '@/common/common'
+    export default {
+        name: "businessManage",
+        components:{
+          AddBusiness,CheckBusiness,EditBusiness},
+        data() {
+          return {
+            dialogVisible:false,//新增商户弹窗
+            formInline: {
+              customer_code: '',
+              customer_name: '',
+              enabled:null
+            },
+            total: 0,//分页
+            tableHeight: window.innerHeight - 249,
+            tableData:[],//查询获取的数据
+            dialogVisibleThree:false,//查看弹窗隐藏
+            dialogVisibleToo:false,//编辑弹窗隐藏
+            checkData:{},//获取的当前查看商户信息
+            editData:{}//获取当前笔记的商户信息
+          }
+        },
+        methods: {
+          //搜索
+          inquireSite() {
+            /*let busine = {
+              customer_code :this.formInline.customer_code,
+              customer_name :this.formInline.customer_name
+            };*/
+            const data = this.formInline;
+            common.getPreData(data, "customer/getCustomerList", this);
+            common.set('businessSearch',{'search': data});
+          },
+          //分页
+          pageinations(val) {
+            data = this.formInline;
+            data.page = val;
+            data.limit = 10;
+            common.getPreData(data, "customer/getCustomerList", this);
+            common.set('businessSearch',{'search': data});
+          },
+          //新增商户
+          addBusiness :function(){
+            this.dialogVisible = true;
+          },
+          //接受子组件参数，关闭弹窗
+          success(data){
+            this.dialogVisible = data;
+          },
+          //编辑
+          editClick(index,table){
+            this.editData= table[index];
+            this.dialogVisibleToo = true;
+          },
+          //移除table
+          deleteRow(index, rows) {
+            rows.splice(index, 1);
+          },
+          //查看品牌信息
+          checkBrand(index,table){
+            this.checkData = table[index];
+            this.dialogVisibleThree = true;
+          },
+          through(data){
+            this.dialogVisibleToo = data;
+          }
+        },
+        created() {
+          const searchHistory = common.get('businessSearch');
+          console.log(searchHistory)
+          if (searchHistory != null) {
+            this.formInline = searchHistory.search;
+            common.getPreData(searchHistory.search, "customer/getCustomerList", this)
+          }
+        }
+    }
+</script>
+
+<style scoped lang="scss">
+  #businessWrap{
+    padding: 15px;
+    .businessWrapTitle{
+      position: relative;
+      height: 42px;
+      line-height: 42px;
+      padding: 0 15px;
+      border-bottom: 1px solid #f6f6f6;
+      color: #333;
+      border-radius: 2px 2px 0 0;
+      font-size: 14px;
+    }
+  }
+</style>

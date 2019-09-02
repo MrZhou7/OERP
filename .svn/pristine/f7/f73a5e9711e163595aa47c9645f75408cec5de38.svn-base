@@ -1,0 +1,461 @@
+<template>
+  <el-main>
+    <el-form ref="formInline" :model="formInline" label-width="100px" class="demo-ruleForm">
+      <el-row>
+        <el-col :span="5">
+          <el-form-item label="门店">
+            <el-select v-model="formInline.mall_id" placeholder="请选择门店名称" clearable>
+              <el-option v-for="mall in mall_name" :key="mall.mall_id" :label="mall.mall_name" :value="mall.mall_id"/>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="5">
+          <el-form-item label="商户名称">
+            <el-input v-model="formInline.start_money" clearable/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="5">
+          <el-form-item label="合同编号">
+            <el-input v-model="formInline.start_money" clearable/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="5">
+          <el-form-item label="押金编号">
+            <el-input v-model="formInline.start_money" clearable/>
+          </el-form-item>
+        </el-col>
+        <el-col :span="4">
+          <el-form-item>
+            <el-button type="primary" @click="submitForm('formInline')">查 询</el-button>
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+    <el-row style="padding: 0 10px;">
+      <el-col :span="10">
+        <blockquote class="topTitle">商户押金列表</blockquote>
+        <div class="contract_table">
+          <el-table
+            ref="table"
+            :height="height.heightOne"
+            :data="tableData"
+            :show-overflow-tooltip="true"
+            highlight-current-row
+            border
+            tooltip-effect="dark"
+            style="width: 100%">
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="pay_amt"
+              min-width="100"
+              label="商管公司"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="商户编号"
+              min-width="100"
+              label="分摊金额"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="商户名称"
+              min-width="100"
+              label="支付方式"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="fee_amt"
+              min-width="120"
+              label="可用押金余额"/>
+          </el-table>
+          <el-pagination
+            :page-sizes="[20, 30, 40, 50]"
+            :current-page.sync="currentPage"
+            :total="total.totalOne"
+            :page-size="20"
+            background
+            layout="prev, pager, next, total, sizes"
+            @current-change="pagination"
+            @size-change="handleSizeChange"/>
+        </div>
+      </el-col>
+      <el-col :span="14">
+        <div class="btn_bottom">
+          <el-button @click="depositHandle">押金处理</el-button>
+          <el-button @click="depositMake">押金补齐</el-button>
+          <el-button @click="amendTime">修改立账日期</el-button>
+        </div>
+        <div class="contract_table">
+          <el-table
+            ref="tableOne"
+            :height="height.heightTwo"
+            :data="tableDataOne"
+            :show-overflow-tooltip="true"
+            highlight-current-row
+            border
+            tooltip-effect="dark"
+            style="width: 100%"
+            @selection-change="getRadio"
+            @row-click="clickRow">
+            <el-table-column
+              type="index"
+              width="55"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="code"
+              min-width="100"
+              label="编号"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="pay_time"
+              min-width="100"
+              label="合同编号"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="trans_date"
+              min-width="100"
+              label="收费单号"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="contract_code"
+              min-width="100"
+              label="押金类型"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="store_code"
+              min-width="100"
+              label="押金金额"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="store_name"
+              min-width="100"
+              label="押金余额"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="pay_trans_type"
+              min-width="100"
+              label="已补押金">
+            </el-table-column>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="pay_in_flag"
+              min-width="100"
+              label="是否补齐">
+              <template slot-scope="scope">
+                <span v-if="scope.row.pay_in_flag == 0">未生成</span>
+                <span v-else-if="scope.row.pay_in_flag == 1">已生成</span>
+              </template>
+            </el-table-column>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="pay_amt"
+              min-width="100"
+              label="立账日期"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="paid_amt_by_store"
+              min-width="120"
+              label="是否同步"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="pay_name"
+              min-width="120"
+              label="同步时间"/>
+          </el-table>
+          <el-pagination
+            :page-sizes="[20, 30, 40, 50]"
+            :current-page.sync="currentPage"
+            :total="total.totalTwo"
+            :page-size="20"
+            background
+            layout="prev, pager, next, total, sizes"
+            @current-change="pagination"
+            @size-change="handleSizeChange"/>
+        </div>
+        <blockquote class="topTitle">商户押金变动日志</blockquote>
+        <div class="contract_table">
+          <el-table
+            ref="tableTwo"
+            :height="height.heightThree"
+            :data="tableDataTwo"
+            :show-overflow-tooltip="true"
+            highlight-current-row
+            border
+            tooltip-effect="dark"
+            style="width: 100%">
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="fee_amt"
+              min-width="120"
+              label="明细">
+              <template slot-scope="scope">
+                <el-button type = "text" size="small" @click.native.prevent="checkAgency(scope.$index, tableDataTwo)">明 细</el-button>
+              </template>
+            </el-table-column>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="pay_amt"
+              min-width="100"
+              label="变动类型"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="商户编号"
+              min-width="100"
+              label="变动金额"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="fee_amt"
+              min-width="100"
+              label="余额"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="fee_amt"
+              min-width="120"
+              label="变动日期"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="fee_amt"
+              min-width="120"
+              label="押金支付方式"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="fee_amt"
+              min-width="120"
+              label="操作人"/>
+            <el-table-column
+              :show-overflow-tooltip="true"
+              prop="fee_amt"
+              min-width="120"
+              label="状态"/>
+          </el-table>
+          <el-pagination
+            :page-sizes="[20, 30, 40, 50]"
+            :current-page.sync="currentPage"
+            :total="total.totalThree"
+            :page-size="20"
+            background
+            layout="prev, pager, next, total, sizes"
+            @current-change="pagination"
+            @size-change="handleSizeChange"/>
+        </div>
+      </el-col>
+    </el-row>
+    <!--押金补齐弹窗-->
+    <el-dialog
+      :visible.sync="dialogVisible.one"
+      :close-on-click-modal="false"
+      title="押金补齐"
+      top="5%"
+      width="40%">
+      <el-form :model="depositForm" label-width="100px" class="demo-ruleForm">
+        <el-form-item label="押金金额">
+          <el-input type="number" v-model="depositForm.mall_name" disabled/>
+        </el-form-item>
+        <el-form-item label="已收押金">
+          <el-input type="number" v-model="depositForm.mall_name" disabled/>
+        </el-form-item>
+        <el-form-item label="押金余额">
+          <el-input type="number" v-model="depositForm.mall_name" disabled/>
+        </el-form-item>
+        <el-form-item label="已补金额">
+          <el-input type="number" v-model="depositForm.mall_name" disabled/>
+        </el-form-item>
+        <el-form-item label="补齐金额">
+          <el-input type="number" v-model="depositForm.mall_name"/>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="savedeposit('depositForm')">保 存</el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
+    <!--押金处理弹窗-->
+    <el-dialog
+      :visible.sync="dialogVisible.one"
+      :close-on-click-modal="false"
+      title="押金处理"
+      top="5%"
+      width="40%">
+      <el-form :model="ruleForm" label-width="100px" class="demo-ruleForm">
+        <el-form-item label="处理方式">
+          <el-select v-model="ruleForm.pay_in_type" disabled>
+            <el-option :value="1" label="银行刷卡"/>
+            <el-option :value="2" label="银联代收"/>
+            <el-option :value="3" label="租赁代刷卡"/>
+            <el-option :value="4" label="其它1"/>
+            <el-option :value="5" label="其它2"/>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="余额">
+          <el-input type="number" v-model="ruleForm.mall_name" disabled/>
+        </el-form-item>
+        <el-form-item label="处理金额">
+          <el-input type="number" v-model="ruleForm.mall_name"/>
+        </el-form-item>
+        <el-form-item label="处理人">
+          <el-input v-model="ruleForm.customer_id" :readonly="true"/>
+        </el-form-item>
+        <el-form-item label="处理日期">
+          <el-input v-model="ruleForm.contract_code" :readonly="true"/>
+        </el-form-item>
+        <el-form-item label="押金支付大类">
+          <el-select v-model="ruleForm.pay_in_type" disabled>
+            <el-option :value="1" label="银行刷卡"/>
+            <el-option :value="2" label="银联代收"/>
+            <el-option :value="3" label="租赁代刷卡"/>
+            <el-option :value="4" label="其它1"/>
+            <el-option :value="5" label="其它2"/>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="押金支付方式">
+          <el-select v-model="ruleForm.pay_in_type" disabled>
+            <el-option :value="1" label="银行刷卡"/>
+            <el-option :value="2" label="银联代收"/>
+            <el-option :value="3" label="租赁代刷卡"/>
+            <el-option :value="4" label="其它1"/>
+            <el-option :value="5" label="其它2"/>
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="saveRuleForm('ruleForm')">保 存</el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
+    <!--立账日期弹框-->
+    <el-dialog
+      :visible.sync="dialogVisible.two"
+      :close-on-click-modal="false"
+      title="修改立账日期"
+      top="5%"
+      width="50%">
+      <el-form ref="form" :rules="rules" :model="form" label-width="100px">
+        <el-form-item label="原立账日期">
+          <el-date-picker
+            :readonly="true"
+            v-model="form.value1"
+            value-format="yyyy-MM-dd"
+            type="date">
+          </el-date-picker>
+        </el-form-item>
+        <el-form-item label="新立账日期" prop="value2">
+          <el-date-picker
+            v-model="form.value2"
+            align="right"
+            value-format="yyyy-MM-dd"
+            type="date"
+            placeholder="选择日期">
+          </el-date-picker>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="saveForm('form')">保 存</el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
+  </el-main>
+</template>
+
+<script>
+import building from '@/utils/building';
+import { common } from '@/common/common';
+export default {
+  name: 'BusinessDeposit',
+  data() {
+    return {
+      formInline: {}, // 搜索内容表单
+      ruleForm: {}, // 押金处理
+      depositForm: {}, // 押金补齐
+      mall_name: [], // 门店信息
+      height: {
+        heightOne: window.innerHeight - 280 + 'px',
+        heightTwo: window.innerHeight - 550 + 'px',
+        heightThree: window.innerHeight - 748 + 'px'
+      },
+      tableData: [], // 商户押金列表
+      tableDataOne: [],
+      tableDataTwo: [], // 押金变动日志
+      total: {
+        totalOne: 0,
+        totalTwo: 0,
+        totalThree: 0
+      },
+      dialogVisible: {
+        one: false, // 押金处理弹窗
+        two: false, // 立账日期弹窗
+      },
+      form: { value1: '', value2: '' }, // 立账日期
+      rules: { value2: [{ type: 'string', required: true, message: '请选择日期', trigger: 'change' }] }, // 立账日期
+      currentPage: 1, // 页码
+    };
+  },
+  created() {
+    building.Mall(this); // 先获取门店数据
+  },
+  methods: {
+    clickRow(row) { // 点击table的row获取当前行数据
+      this.$refs.table.toggleRowSelection(row);
+    },
+    getRadio(row) { // 去除多选
+      building.radioBtn(row, this.$refs.table);
+    },
+    depositHandle() { // 押金处理
+
+    },
+    depositMake() { // 押金补齐
+
+    },
+    amendTime() { // 修改立账日期
+
+    },
+    saveRuleForm() { // 押金处理保存
+
+    },
+    savedeposit() { // 押金补齐保存
+
+    },
+    saveForm(formName) { // 保存里長日期
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          var d1 = new Date(this.form.value1);
+          var d2 = new Date(this.form.value2);
+          if (d1 >= d2) {
+            this.$message({ message: '新立账日期不能小于或者等于原立账日期！', type: 'warning' });
+            return false;
+          } else {
+            this.axios.post(process.env.BASE_API + 'OrderPayingDetail/editPaying', { id: this.orderList.id, account_date: this.form.value2 })
+              .then((res) => {
+                this.dialogVisibleTime = false;
+                this.$message({ message: '修改立账日期成功！', type: 'success' });
+                const data = this.formInline;
+                common.getPreData(data, 'OrderPayingDetail/orderPayList', this, 'gatheringData');
+              }).catch((err) => {
+              this.$message.error(err.response.data.msg);
+            });
+          }
+        } else {
+          console.log('error submit!!');
+          return false;
+        }
+      });
+    },
+    pagination(val) { // 分页功能
+      const data = this.formInline;
+      data.page = val;
+      common.getPreData(data, 'PayTrans/getList', this, 'agencyData');
+      common.set('agencyData', { 'search': data });
+    },
+    handleSizeChange(val) {
+      const data = this.formInline;
+      data.limit = val;
+      common.getPreData(data, 'PayTrans/getList', this, 'agencyData');
+      common.set('agencyData', { 'search': data });
+    },
+  }
+};
+</script>
+
+<style scoped>
+  .topTitle{
+    margin-bottom: 10px;
+    padding: 10px 15px;
+    line-height: 22px;
+    border-left: 5px solid #009688;
+    border-radius: 0 2px 2px 0;
+    background-color: #f2f2f2;
+  }
+</style>

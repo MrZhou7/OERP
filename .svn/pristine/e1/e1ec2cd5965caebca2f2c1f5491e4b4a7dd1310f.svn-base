@@ -1,0 +1,198 @@
+<template>
+  <main>
+    <el-row>
+      <el-col :span="6">
+        <div class="category-tree-content">
+          <el-input
+            v-model="filterText"
+            placeholder="输入关键字进行品类搜索">
+          </el-input>
+          <el-tree
+            v-loading="loading"
+            ref="tree2"
+            :highlight-current="true"
+            :data="dataTree"
+            :props="defaultProps"
+            :filter-node-method="filterNode"
+            :load="loadNode"
+            node-key="id"
+            class="filter-tree"
+            lazy
+            @node-click="handleNodeClick"/>
+        </div>
+      </el-col>
+      <el-col :span="18">
+        <el-tabs type="border-card">
+          <el-tab-pane label="人力资源">
+            <el-table
+              ref="table"
+              :data="tableData"
+              :show-overflow-tooltip="true"
+              :height="height"
+              border
+              tooltip-effect="dark"
+              style="width: 100%;">
+              <el-table-column
+                type="selection">
+              </el-table-column>
+              <el-table-column
+                :show-overflow-tooltip="true"
+                prop="lastname"
+                min-width="100"
+                label="姓名">
+              </el-table-column>
+              <el-table-column
+                :show-overflow-tooltip="true"
+                prop="loginid"
+                min-width="100"
+                label="编号">
+              </el-table-column>
+              <el-table-column
+                :show-overflow-tooltip="true"
+                prop="status"
+                min-width="100"
+                label="状态">
+                <template slot-scope="scope">
+                  <span v-if="scope.row.status == 0">试 用</span>
+                  <span v-else-if="scope.row.status == 1">正 式</span>
+                  <span v-else-if="scope.row.status == 2">临 时</span>
+                  <span v-else-if="scope.row.status == 3">试用延期</span>
+                  <span v-else-if="scope.row.status == 4">解 聘</span>
+                  <span v-else-if="scope.row.status == 5">离 职</span>
+                  <span v-else-if="scope.row.status == 6">退 休</span>
+                  <span v-else-if="scope.row.status == 7">无 效</span>
+                </template>
+              </el-table-column>
+              <el-table-column
+                :show-overflow-tooltip="true"
+                prop="jobtitlename"
+                min-width="100"
+                label="岗位">
+              </el-table-column>
+              <el-table-column
+                :show-overflow-tooltip="true"
+                prop="loginid"
+                label="登录名"
+                min-width="100">
+              </el-table-column>
+            </el-table>
+            <!--<el-pagination-->
+              <!--:page-sizes="[20, 30, 40, 50]"-->
+              <!--:page-size="20"-->
+              <!--:current-page.sync="currentPage"-->
+              <!--:total="total"-->
+              <!--background-->
+              <!--layout="prev, pager, next, total, sizes">-->
+            <!--</el-pagination>-->
+          </el-tab-pane>
+        </el-tabs>
+      </el-col>
+    </el-row>
+  </main>
+</template>
+
+<script>
+import { common } from '@/common/common';
+export default {
+  name: 'UserOA',
+  data() {
+    return {
+      title: '',
+      dialogVisible: false,
+      filterText: '', // 查询过滤的初始值
+      dataTree: [], // 树状图显示数据
+      defaultProps: {
+        children: [],
+        label: 'name',
+        isLeaf: 'leaf'
+      },
+      loading: false,
+      param: {}, // 请求参数
+      tableData: [], // 表格数据
+      currentPage: 1, // 页码
+      total: 0,
+      height: window.innerHeight - 160 + 'px',
+    };
+  },
+  watch: {
+    filterText(val) {
+      this.$refs.tree2.filter(val);
+    }
+  },
+  created() {
+    this.loading = true;
+    this.getUserTree();
+  },
+  methods: {
+    filterNode(value, data) { // 组织架构的搜索查询
+      if (!value) return true;
+      return data.name.indexOf(value) !== -1;
+    },
+    // 异步树叶子节点懒加载逻辑
+    loadNode(node, resolve) {
+      // 一级节点处理
+      if (node.level === 0) {
+        this.getUserTree(resolve);
+      }
+      // 其余节点处理
+      if (node.level >= 1) {
+        // 注意！把resolve传到你自己的异步中去
+        this.getTree(node, resolve);
+      }
+    },
+    handleNodeClick(node, data) { // 点击传参给用户信息，并显示用户信息
+      console.log(node)
+      if (node.num == 0 && node.type == 'dev') {
+        this.getUser(node);
+      }
+    },
+    getUser(node) { // 获取部门人员详细信息
+      this.http.post('Organization/getUserList', { departmentid: node.id }).then(res => {
+        this.tableData = res.data.data;
+        this.loading = false;
+      })
+    },
+    getTree(node, resolve) { // 获取tree信息个表格的查询及点击组织架构获取信息
+      if (node.data.type == 'subcompany') {
+        this.param = {
+          company_id: 1,
+          sub_parent_id: node.data.id
+        };
+      } else {
+        this.param = {
+          company_id: 1,
+          sub_parent_id: node.parent.data.id,
+          supdepid: node.data.id
+        };
+      }
+      this.http.post('Organization/getSubList', this.param)
+        .then(res => {
+          //console.log(res.data.data);
+          // 此处需要后台传过来一个值来判断每个节点有无子节点,实际项目中必须加上（如isRealLeaf），不传都默认为叶子节点
+          //  out.data.data.forEach(value => {
+          //   if (value.isRealLeaf === 'Y') {
+          //     value.leaf = true//不为叶子节点
+          //   } else {
+          //     value.leaf = false//为叶子节点
+          //   }
+          // })
+          let data = res.data.data;
+          resolve(data);
+        });
+    },
+    getUserTree() { // 获取tree信息个表格的查询及点击组织架构获取信息
+      this.http.post('Organization/getSubList', { company_id: 1, sub_parent_id: 0 }).then(res => {
+        this.dataTree = res.data.data;
+        this.loading = false;
+      })
+    }
+  }
+};
+</script>
+
+<style scoped>
+  .userWrap{padding: 15px;}
+  .el-input--suffix .el-input__inner {padding-right:15px;}
+  .filter-tree{overflow: auto;height:calc(100vh - 100px);}
+  .category-tree-content{margin:0 10px;border: 1px solid #e2e2e2;}
+</style>

@@ -1,0 +1,258 @@
+<template>
+  <div>
+    <el-form :model="shopForm" label-width="100px" class="demo-ruleForm">
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="门店">
+            <el-select v-model="shopForm.mall_id" placeholder="请选择门店名称" @change="getBuild">
+              <el-option v-for="(maill ,index) in mall_name" :key="index" :label="maill.mall_name" :value="maill.mall_id"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="楼栋">
+            <el-select v-model="shopForm.building_id" placeholder="请选择所属楼栋" @change="getFloor">
+              <el-option v-for="(build, index) in building_name" :key="index" :label="build.building_name" :value="build.building_id"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="楼层">
+            <el-select v-model="shopForm.floor_id" placeholder="请选择所属楼层">
+              <el-option v-for="(floor,index) in floor_name" :key="index" :label="floor.floor_name" :value="floor.floor_id"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="品类">
+            <el-input v-model="shopForm.role_name" @click.native="categoryName" prefix-icon="el-icon-search" clearable></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="店铺状态">
+            <el-select v-model="shopForm.role_name" placeholder="请选择店铺状态">
+              <el-option label="无效" value="0"></el-option>
+              <el-option label="有效" value="1"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商铺编号">
+            <el-input v-model="shopForm.role_name"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商铺名称">
+            <el-input v-model="shopForm.role_name"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="合同编号">
+            <el-input v-model="shopForm.role_name"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6">
+          <el-form-item label="商户名称">
+            <el-input v-model="shopForm.role_name"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="商户编号">
+            <el-input v-model="shopForm.role_name"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item>
+            <el-button type="primary" @click="submitForm('formInline')">查 询</el-button>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item>
+            <el-button type="success" @click="chooseAll('formInline')">确定选择</el-button>
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+    <el-table
+      ref="table"
+      :height="height"
+      :data="tableData"
+      :show-overflow-tooltip="true"
+      border
+      tooltip-effect="dark"
+      style="width: 100%"
+      @row-click="clickRow">
+      <el-table-column
+        type="selection"
+        width="55">
+      </el-table-column>
+      <el-table-column
+        label="选择"
+        min-width="100">
+        <template slot-scope="scope">
+          <el-button type = "text" size="small" @click.native.prevent="chooseShop(scope.$index, tableData)">选 择</el-button>
+        </template>
+      </el-table-column>
+      <el-table-column
+        :show-overflow-tooltip="true"
+        prop="store_code"
+        min-width="180"
+        label="商铺编码">
+      </el-table-column>
+      <el-table-column
+        prop="role_name"
+        min-width="100"
+        label="store_name">
+      </el-table-column>
+      <el-table-column
+        prop="subject_code"
+        min-width="100"
+        label="商户名称">
+      </el-table-column>
+      <el-table-column
+        prop="subject_code"
+        min-width="100"
+        label="商户编号">
+      </el-table-column>
+      <el-table-column
+        prop="contract_code"
+        min-width="100"
+        label="合同编号">
+      </el-table-column>
+    </el-table>
+    <!--品类的弹窗-->
+    <el-dialog
+      :close-on-click-modal="false"
+      :modal-append-to-body="false"
+      :visible.sync="innerVisible"
+      title="选择品类"
+      top="5%"
+      width="30%"
+      append-to-body>
+      <el-input
+        placeholder="输入关键字进行品类搜索"
+        v-model="filterText">
+      </el-input>
+      <el-tree
+        v-loading="loading"
+        ref="tree2"
+        :data="dataTree"
+        :props="defaultProps"
+        :filter-node-method="filterNode"
+        default-expand-all
+        class="filter-tree"
+        @node-click="handleNodeClick"
+      />
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import { common } from '@/common/common';
+export default {
+  name: 'ChooseShop',
+  data() {
+    return {
+      shopForm: { // 多选商铺信息
+        mall_id: '',
+        building_id: '',
+        floor_id: '',
+        role_name: ''
+      },
+      loading: false,
+      mall_name: [], // 门店信息
+      building_name: [], // 楼栋信息
+      floor_name: [], // 楼层信息
+      height: window.innerHeight - 375 + 'px',
+      tableData: [],
+      defaultProps: {
+        children: 'children',
+        label: 'text'
+      },
+      filterText: '',
+      innerVisible: false, // 品类的弹窗
+      dataTree: [] // 品类的tree
+    };
+  },
+  watch: {
+    filterText(val) {
+      this.$refs.tree2.filter(val);
+    }
+  },
+  created() {
+    this.getMall(); // 先获取数据
+  },
+  methods: {
+    filterNode(value, data) {
+      if (!value) return true;
+      return data.text.indexOf(value) !== -1;
+    },
+    handleNodeClick(node, data) { // 点击树状图节点，获取信息
+      this.innerVisible = false;
+      this.shopForm.role_name = data.data.data.type_name;
+    },
+    submitForm() { // 查询商铺
+      common.getPreData(this.shopForm.mall_id, 'store/getStoreList', this);
+    },
+    chooseShop() { // 选择
+      this.$emit('closeShop', false);
+    },
+    chooseAll() { // 确定选择
+      this.$emit('closeShop', false);
+    },
+    clickRow() { // 点击table的row
+    },
+    categoryName() { // 品类弹框
+      this.loading = true;
+      this.innerVisible = true;
+      var list = common.set('List');
+      if (list != null) {
+        this.dataTree = list;
+        this.loading = false;
+      } else {
+        common.getTree('Operation_Type/cateList', this);
+      }
+    },
+    getMall() { // 获取项目名称信息
+      this.axios({
+        method: 'post',
+        url: process.env.BASE_API + 'mall_info/getAllMall'
+      }).then((res) => {
+        this.mall_name = res.data.data;
+      });
+    },
+    getBuild(index) { // 获取楼栋信息
+      this.shopForm.floor_id = '';
+      this.shopForm.building_id = '';
+      this.axios({
+        method: 'post',
+        data: { mall_id: index },
+        url: process.env.BASE_API + 'building_info/getAllBuild'
+      }).then((res) => {
+        this.building_name = res.data.data;
+      });
+    },
+    getFloor(index) { // 获取楼层信息
+      this.shopForm.floor_id = '';
+      this.axios({
+        method: 'post',
+        data: { building_id: index },
+        url: process.env.BASE_API + 'floor_info/getAllFloor'
+      }).then((res) => {
+        this.floor_name = res.data.data;
+      });
+    }
+  }
+};
+</script>
+
+<style scoped>
+  .el-dialog .filter-tree{
+    height:calc(100vh - 200px);
+    overflow: auto;
+  }
+</style>
