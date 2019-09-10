@@ -30,8 +30,8 @@ export default {
       'sidebar'
     ]),
     routes() {
-      return JSON.parse(sessionStorage.getItem('userUrl'));
-      //return this.$router.options.routes
+      //return JSON.parse(sessionStorage.getItem('dataInfo'));
+      return this.$router.options.routes
     },
     variables() {
       return variables;

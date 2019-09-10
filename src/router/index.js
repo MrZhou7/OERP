@@ -209,6 +209,13 @@ export const constantRouterMap = [
         component: () => import('@/views/personInfo/index'), // Parent router-view
         name: 'PersonInfo',
         meta: { title: '员工信息表' }
+      },
+      {
+        path: '/person/form',
+        component: () => import('@/views/personInfo/forms'), // Parent router-view
+        name: 'Form',
+        meta: { title: '信息表' },
+        hidden: true
       }
     ]
   },
@@ -220,6 +227,6 @@ export default new Router({
   mode: 'history',
   base: '/main/',
   scrollBehavior: () => ({ y: 0 }),
-  routes: constantRouterMap,
+  routes: constantRouterMap
 
 });

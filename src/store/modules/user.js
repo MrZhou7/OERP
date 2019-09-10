@@ -2,7 +2,7 @@ import { login, logout, getInfo } from '@/api/login'
 import { getToken, setToken, removeToken, getViews, recursionRouter } from '@/utils/auth'
 import basisData from '@/api/basisData'
 import axios from 'axios'
-import router from '@/router'
+import routers from '@/router'
 import { dynamicRoutes } from '@/router/index'
 
 const user = {
@@ -50,21 +50,19 @@ const user = {
   actions: {
     // 登录
     Login({ commit }, userInfo) {
-      const _this = this;
       const username = userInfo.staff_num.trim();
       return new Promise((resolve, reject) => {
         const u = process.env.BASE_API;
         const s = u.substring(0, u.length - 3);
         axios.post(s + 'permission/login/doLogin', { staff_num: username, password: userInfo.password }).then(res => {
-          const urlData = JSON.parse(res.data.data.list);
-          const useName = JSON.stringify(res.data.data.info);
-          sessionStorage.setItem('userUrl', JSON.stringify(urlData));
-          sessionStorage.setItem('useInfo', useName);
-          // const routes = recursionRouter(urlData, dynamicRoutes);
-          // router.options.routes.push.apply(router.options.routes, routes);
-          // router.addRoutes(routes);
-          // sessionStorage.setItem('routeData', JSON.stringify(routes));
-          commit('SET_TOKEN', urlData);
+          sessionStorage.setItem('useInfo', JSON.stringify(res.data.data.info));
+          // const routes = recursionRouter(JSON.parse(res.data.data.list), dynamicRoutes);
+          // routes.push.apply(routes, routers.options.routes);
+          // console.log(routes)
+          // routers.options.routes = routes
+          // routers.addRoutes(routes);
+          // sessionStorage.setItem('dataInfo', JSON.stringify(routes))
+          commit('SET_TOKEN', JSON.parse(res.data.data.list));
           resolve()
         }).catch((err) => {
           reject(err)
@@ -93,9 +91,9 @@ const user = {
 
     // 登出
     LogOut({ commit, state }) {
-      sessionStorage.removeItem('userUrl');
+      sessionStorage.removeItem('useInfo');
       sessionStorage.clear();
-      router.push({ path: '/login' });
+      routers.push({ path: '/login' });
       // return new Promise((resolve, reject) => {
       //   logout(state.token).then(() => {
       //     commit('SET_TOKEN', '')

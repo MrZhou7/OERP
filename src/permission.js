@@ -10,7 +10,7 @@ NProgress.configure({ showSpinner: false })// NProgress configuration
 
 const whiteList = ['/login'] // 不重定向白名单
 router.beforeEach((to, from, next) => {
-  const u = sessionStorage.getItem('userUrl');
+  const u = sessionStorage.getItem('useInfo');
   NProgress.start()
   if (u && u !== undefined && u !== null) {
     if (to.path === '/login') {
