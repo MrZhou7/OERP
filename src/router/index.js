@@ -198,27 +198,6 @@ export const constantRouterMap = [
       }
     ]
   },
-  {
-    path: '/person',
-    component: Layout,
-    name: 'Person',
-    meta: { title: '人事管理', icon: 'nested' },
-    children: [
-      {
-        path: '/person/personInfo',
-        component: () => import('@/views/personInfo/index'), // Parent router-view
-        name: 'PersonInfo',
-        meta: { title: '员工信息表' }
-      },
-      {
-        path: '/person/form',
-        component: () => import('@/views/personInfo/forms'), // Parent router-view
-        name: 'Form',
-        meta: { title: '信息表' },
-        hidden: true
-      }
-    ]
-  },
   { path: '*', redirect: '/404', hidden: true }
 ];
 
